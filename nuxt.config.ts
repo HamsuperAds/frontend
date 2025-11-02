@@ -14,6 +14,7 @@ export default defineNuxtConfig({
     "@nuxt/icon",
     "shadcn-nuxt",
     "@vueuse/nuxt",
+    "@pinia/nuxt",
   ],
   css: ["~/assets/css/tailwind.css"],
   vite: {
