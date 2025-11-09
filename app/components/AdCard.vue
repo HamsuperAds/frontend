@@ -4,7 +4,7 @@
     <div class="aspect-video bg-gray-200 relative">
       <img :src="ad?.image" :alt="ad.title" class="w-full h-full object-cover">
       <div class="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
-        {{ ad.category }}
+        {{ ad.condition }}
       </div>
     </div>
 
@@ -31,10 +31,13 @@
 </template>
 
 <script lang="ts" setup>
+import type { PropType } from 'vue'
+import type { Ad } from '@/types'
+
 defineProps({
   ad: {
-    type: Object,
-    default: null,
+    type: Object as PropType<Ad>,
+    required: true
   }
 });
 </script>
