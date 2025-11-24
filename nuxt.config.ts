@@ -6,6 +6,11 @@ export default defineNuxtConfig({
   devServer: {
     port: 3005,
   },
+  runtimeConfig: {
+    public: {
+      devApiUrl: process.env.DEV_API_URL,
+    },
+  },
   modules: [
     "@nuxt/eslint",
     "@nuxt/fonts",
