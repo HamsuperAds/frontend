@@ -1,5 +1,6 @@
 <template>
-  <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+  <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+    @click="navigateToDetails">
     <!-- Product Image -->
     <div class="aspect-video bg-gray-200 relative">
       <img :src="ad?.image" :alt="ad.title" class="w-full h-full object-cover">
@@ -33,13 +34,18 @@
 <script lang="ts" setup>
 import type { PropType } from 'vue'
 import type { Ad } from '@/types'
+import { navigateTo } from '#app';
 
-defineProps({
+const props = defineProps({
   ad: {
     type: Object as PropType<Ad>,
     required: true
   }
 });
+
+const navigateToDetails = () => {
+  navigateTo(`/ad-details?id=${props.ad.id}`)
+}
 </script>
 
 <style></style>
