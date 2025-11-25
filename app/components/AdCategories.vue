@@ -1,6 +1,6 @@
 <template>
-  <aside class="max-w-xl bg-white rounded-lg shadow-sm p-4 grid grid-cols-2">
-    <div class="space-y-4 col-span-1 border max-h-min">
+  <aside class="max-w-xl bg-white rounded-lg shadow-sm p-4">
+    <div class="space-y-4 col-span-1 max-h-min border-none">
       <!-- Category Item -->
       <div v-for="category in categories" :key="category.name"
         class="flex items-center gap-6 justify-between space-x-3 hover:bg-gray-50 rounded-md cursor-pointer">
@@ -13,9 +13,6 @@
         </div>
         <img src="/assets/images/svg/category-menu.svg" alt="category menu icon">
       </div>
-    </div>
-    <div class="col-span-1">
-      <p class="">This will contain the subcategories</p>
     </div>
   </aside>
 </template>

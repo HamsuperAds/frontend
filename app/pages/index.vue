@@ -8,7 +8,6 @@
 
                 <!-- Main Content -->
                 <main class="flex-1">
-                    <h1>Does this show up without manual reload</h1>
                     <!-- Product Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <AdCard v-for="ad in ads" :ad="ad" :key="ad.id"
@@ -34,7 +33,7 @@ const ads = [
         location: 'Windhoek East',
         date: '3 hrs ago',
         condition: 'Brand New',
-        image: '/images/placeholder.svg',
+        image: '/images/temp/electric-motorcycles.png',
         category: '',
         subcategory: '',
         status: 'available'
@@ -47,7 +46,7 @@ const ads = [
         location: 'Windhoek East',
         date: '3 hrs ago',
         condition: 'Brand New',
-        image: '/images/placeholder.svg',
+        image: '/images/temp/electric-motorcycles.png',
         category: '',
         subcategory: '',
         status: 'available'
@@ -60,7 +59,7 @@ const ads = [
         location: 'Windhoek East',
         date: '3 hrs ago',
         condition: 'Used',
-        image: '/images/placeholder.svg',
+        image: '/images/temp/electric-motorcycles.png',
         category: '',
         subcategory: '',
         status: 'available'
@@ -73,7 +72,7 @@ const ads = [
         location: 'Windhoek East',
         date: '3 hrs ago',
         condition: 'Brand New',
-        image: '/images/placeholder.svg',
+        image: '/images/temp/electric-motorcycles.png',
         category: '',
         subcategory: '',
         status: 'available'
@@ -86,7 +85,46 @@ const ads = [
         location: 'Windhoek East',
         date: '3 hrs ago',
         condition: 'Used',
-        image: '/images/placeholder.svg',
+        image: '/images/temp/electric-motorcycles.png',
+        category: '',
+        subcategory: '',
+        status: 'available'
+    },
+    {
+        id: 5,
+        title: 'New Motorcycle 2022 Blue',
+        price: 45845,
+        description: 'This is a rechargeable bike that can go a 200 km on a single charge',
+        location: 'Windhoek East',
+        date: '3 hrs ago',
+        condition: 'Used',
+        image: '/images/temp/electric-motorcycles.png',
+        category: '',
+        subcategory: '',
+        status: 'available'
+    },
+    {
+        id: 5,
+        title: 'New Motorcycle 2022 Blue',
+        price: 45845,
+        description: 'This is a rechargeable bike that can go a 200 km on a single charge',
+        location: 'Windhoek East',
+        date: '3 hrs ago',
+        condition: 'Used',
+        image: '/images/temp/electric-motorcycles.png',
+        category: '',
+        subcategory: '',
+        status: 'available'
+    },
+    {
+        id: 5,
+        title: 'New Motorcycle 2022 Blue',
+        price: 45845,
+        description: 'This is a rechargeable bike that can go a 200 km on a single charge',
+        location: 'Windhoek East',
+        date: '3 hrs ago',
+        condition: 'Used',
+        image: '/images/temp/electric-motorcycles.png',
         category: '',
         subcategory: '',
         status: 'available'
@@ -99,7 +137,7 @@ const ads = [
         location: 'Windhoek East',
         date: '3 hrs ago',
         condition: 'Used',
-        image: '/images/placeholder.svg',
+        image: '/images/temp/electric-motorcycles.png',
         category: '',
         subcategory: '',
         status: 'available'

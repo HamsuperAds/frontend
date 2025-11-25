@@ -1,7 +1,7 @@
 <template>
     <div class="default-layout">
         <!-- Navbar -->
-        <NavBar />
+        <NavBar :showSearch="true" />
 
         <main class="main-content">
             <slot />
