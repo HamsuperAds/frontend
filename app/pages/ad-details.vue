@@ -231,6 +231,9 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+    auth: false,
+});
 const images = [
     '/images/temp/electric-motorcycles.png',
     '/images/temp/electric-motorcycles1.png',
