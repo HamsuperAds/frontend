@@ -147,6 +147,12 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+    auth: {
+        unauthenticatedOnly: true,
+        navigateAuthenticatedTo: "/account",
+    },
+});
 const showVerification = ref(false)
 const showPassword = ref(false)
 

@@ -3,17 +3,18 @@
     @click="navigateToDetails">
     <!-- Product Image -->
     <div class="aspect-video bg-gray-200 relative">
-      <img :src="ad?.image" :alt="ad.title" class="w-full h-full object-cover">
-      <div class="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
-        {{ ad.condition }}
+      <img :src="ad?.primary_image?.image_path || 'https://via.placeholder.com/400x300?text=No+Image'" :alt="ad.title"
+        class="w-full h-full object-cover" @error="handleImageError">
+      <div class="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded text-xs capitalize">
+        {{ ad.promotion_type }}
       </div>
     </div>
 
     <!-- Product Info -->
     <div class="p-4">
-      <div class="text-blue-600 font-bold text-lg mb-1">{{ ad.price }}</div>
+      <div class="text-blue-600 font-bold text-lg mb-1">₦{{ Number(ad.price).toLocaleString() }}</div>
       <h3 class="font-semibold text-gray-800 mb-2">{{ ad.title }}</h3>
-      <p class="text-gray-600 text-sm mb-3">{{ ad.description }}</p>
+      <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ ad.description }}</p>
 
       <!-- Location and Date -->
       <div class="flex items-center justify-between text-xs text-gray-500">
@@ -23,18 +24,18 @@
               d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
               clip-rule="evenodd"></path>
           </svg>
-          <span>{{ ad.location }}</span>
+          <span>{{ ad.town }}, {{ ad.state?.name }}</span>
         </div>
-        <span>{{ ad.date }}</span>
+        <span>{{ formatDate(ad.created_at) }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import type { PropType } from 'vue'
-import type { Ad } from '@/types'
 import { navigateTo } from '#app';
+import type { PropType } from 'vue';
+import type { Ad } from '~/types'
 
 const props = defineProps({
   ad: {
@@ -45,6 +46,26 @@ const props = defineProps({
 
 const navigateToDetails = () => {
   navigateTo(`/ad-details?id=${props.ad.id}`)
+}
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+
+  if (diffInHours < 1) {
+    return 'Just now'
+  } else if (diffInHours < 24) {
+    return `${diffInHours} hrs ago`
+  } else {
+    const diffInDays = Math.floor(diffInHours / 24)
+    return `${diffInDays} days ago`
+  }
+}
+
+const handleImageError = (event: Event) => {
+  const target = event.target as HTMLImageElement
+  target.src = 'https://via.placeholder.com/400x300?text=No+Image'
 }
 </script>
 

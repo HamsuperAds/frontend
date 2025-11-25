@@ -9,7 +9,12 @@
         <div class="p-6">
             <div class="flex justify-center mb-6">
                 <div class="relative">
-                    <div class="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center">
+                    <!-- Avatar Image or Default Icon -->
+                    <div v-if="avatarUrl" class="w-24 h-24 rounded-full overflow-hidden">
+                        <img :src="avatarUrl" :alt="`${formData.firstName} ${formData.lastName}`"
+                            class="w-full h-full object-cover" />
+                    </div>
+                    <div v-else class="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center">
                         <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
                                 clip-rule="evenodd"></path>
@@ -104,19 +109,27 @@
 </template>
 
 <script setup lang="ts">
+
+import { definePageMeta } from '#imports'
+
 definePageMeta({
     layout: 'profile'
 })
 
+const { $getUser } = useNuxtApp()
+const user = $getUser()
+
 const formData = ref({
-    firstName: 'John',
-    lastName: 'Doe',
-    phoneNumber: '08023234345',
-    email: 'johndoe@example.com',
-    location: 'Enugu',
-    dateOfBirth: '1998-04-21',
-    gender: 'Male'
+    firstName: user?.first_name || '',
+    lastName: user?.last_name || '',
+    phoneNumber: user?.phone_number || '',
+    email: user?.email || '',
+    location: user?.location || 'Enugu',
+    dateOfBirth: user?.date_of_birth || '',
+    gender: user?.gender || 'Male'
 })
+
+const avatarUrl = computed(() => user?.avatar || null)
 
 const handleSave = () => {
     // Here you would make an API call to save the user's details

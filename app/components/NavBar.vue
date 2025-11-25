@@ -4,9 +4,9 @@
         <div class="px-6 py-4 shadow">
             <div class="container mx-auto flex items-center justify-between">
                 <!-- Logo -->
-                <div class="text-xl font-bold">
+                <NuxtLink to="/" class="text-xl font-bold hover:opacity-90 transition-opacity">
                     HamSuper
-                </div>
+                </NuxtLink>
 
                 <!-- Right Side Icons and Button -->
                 <div class="flex items-center space-x-6">

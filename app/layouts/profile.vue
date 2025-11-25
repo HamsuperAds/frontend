@@ -10,15 +10,20 @@
                     <div class="bg-white rounded-lg shadow p-6">
                         <!-- User Profile -->
                         <div class="text-center mb-6">
-                            <div
+                            <!-- Avatar Image or Default Icon -->
+                            <div v-if="user?.avatar" class="w-20 h-20 rounded-full overflow-hidden mx-auto mb-3">
+                                <img :src="user.avatar" :alt="`${user.first_name} ${user.last_name}`"
+                                    class="w-full h-full object-cover" />
+                            </div>
+                            <div v-else
                                 class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
                                         clip-rule="evenodd"></path>
                                 </svg>
                             </div>
-                            <h3 class="font-bold text-gray-900">John Doe</h3>
-                            <p class="text-sm text-gray-500">08023234345</p>
+                            <h3 class="font-bold text-gray-900">{{ user?.first_name }} {{ user?.last_name }}</h3>
+                            <p class="text-sm text-gray-500">{{ user?.phone_number || 'No phone number' }}</p>
                         </div>
 
                         <!-- Navigation Links -->
@@ -114,7 +119,12 @@
 </template>
 
 <script setup lang="ts">
+
+import { useRoute } from 'vue-router'
+
 const route = useRoute()
+const { $getUser } = useNuxtApp()
+const user = $getUser()
 
 const isActive = (path: string) => {
     if (path === '/account') {
@@ -124,9 +134,13 @@ const isActive = (path: string) => {
 }
 
 const handleLogout = () => {
-    // Handle logout logic here
-    console.log('Logging out...')
-    navigateTo('/auth/login')
+    // Clear auth data
+    if (process.client) {
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('user')
+    }
+    // Redirect to login
+    window.location.href = '/auth/login'
 }
 </script>
 

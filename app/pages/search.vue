@@ -146,6 +146,9 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+    auth: { auth: false }
+});
 const searchResults = [
     {
         id: 1,
