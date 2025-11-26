@@ -3,14 +3,15 @@
         <!-- Breadcrumb -->
         <div class="bg-white border-b">
             <div class="container mx-auto px-6 py-4">
-                <div class="flex items-center text-sm text-gray-600 space-x-2">
+                <div v-if="pending" class="h-5 bg-gray-200 rounded w-96 animate-pulse"></div>
+                <div v-else-if="ad" class="flex items-center text-sm text-gray-600 space-x-2">
                     <a href="/" class="hover:text-blue-600">All ads</a>
                     <span>›</span>
-                    <a href="#" class="hover:text-blue-600">Vehicles</a>
+                    <span class="hover:text-blue-600">{{ ad.category?.name }}</span>
                     <span>›</span>
-                    <a href="#" class="hover:text-blue-600">Motorcycles</a>
+                    <span class="hover:text-blue-600">{{ ad.subcategory?.name }}</span>
                     <span>›</span>
-                    <span class="text-gray-900">New Motorcycle 2022 Blue</span>
+                    <span class="text-gray-900">{{ ad.title }}</span>
                 </div>
             </div>
         </div>
@@ -20,13 +21,26 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Column - Images and Details -->
                 <div class="lg:col-span-2 space-y-6">
+                    <!-- Loading State -->
+                    <div v-if="pending" class="space-y-4">
+                        <div class="bg-gray-200 rounded-lg h-96 animate-pulse"></div>
+                        <div class="grid grid-cols-4 gap-4">
+                            <div v-for="i in 4" :key="i" class="bg-gray-200 rounded-lg h-24 animate-pulse"></div>
+                        </div>
+                    </div>
+
+                    <!-- Error State -->
+                    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                        <p class="text-red-600">Failed to load ad details. Please try again.</p>
+                    </div>
+
                     <!-- Main Image -->
-                    <div class="bg-white rounded-lg overflow-hidden shadow">
-                        <img :src="selectedImage" alt="Motorcycle" class="w-full h-auto" />
+                    <div v-else-if="ad" class="bg-white rounded-lg overflow-hidden shadow">
+                        <img :src="selectedImage" :alt="ad.title" class="w-full h-auto" />
                     </div>
 
                     <!-- Thumbnail Images -->
-                    <div class="grid grid-cols-4 gap-4">
+                    <div v-if="ad && images.length > 1" class="grid grid-cols-4 gap-4">
                         <img v-for="(image, index) in images" :key="index" :src="image" :alt="`Thumbnail ${index + 1}`"
                             class="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
                             :class="{ 'ring-2 ring-blue-500': selectedImage === image }"
@@ -34,9 +48,9 @@
                     </div>
 
                     <!-- Title and Location -->
-                    <div class="bg-white rounded-lg p-6 shadow">
+                    <div v-if="ad" class="bg-white rounded-lg p-6 shadow">
                         <div class="flex items-start justify-between mb-4">
-                            <h1 class="text-2xl font-bold text-gray-900">New Motorcycle 2022 Blue</h1>
+                            <h1 class="text-2xl font-bold text-gray-900">{{ ad.title }}</h1>
                             <button class="text-gray-400 hover:text-gray-600">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -52,7 +66,7 @@
                                         d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
                                         clip-rule="evenodd"></path>
                                 </svg>
-                                5th Mile, Enug.
+                                {{ ad.town }}, {{ ad.state?.name }}
                             </div>
                             <div class="flex items-center">
                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -61,49 +75,50 @@
                                         d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
                                         clip-rule="evenodd"></path>
                                 </svg>
-                                23 views
+                                {{ ad.views || 0 }} views
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                Posted {{ formatDate(ad.created_at) }}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Specifications -->
-                    <div class="bg-white rounded-lg p-6 shadow">
+                    <!-- Ad Details -->
+                    <div v-if="ad" class="bg-white rounded-lg p-6 shadow">
+                        <h2 class="font-semibold text-gray-900 mb-4">Ad Details</h2>
                         <div class="grid grid-cols-2 gap-6">
                             <div>
-                                <div class="text-sm text-gray-500 mb-1">Brand</div>
-                                <div class="font-semibold text-gray-900">New</div>
-                                <div class="text-xs text-gray-400 uppercase mt-1">CONDITION</div>
+                                <div class="text-xs text-gray-400 uppercase mb-1">Category</div>
+                                <div class="font-semibold text-gray-900">{{ ad.category?.name }}</div>
                             </div>
                             <div>
-                                <div class="text-sm text-gray-500 mb-1">QLink</div>
-                                <div class="font-semibold text-gray-900">MAKE</div>
+                                <div class="text-xs text-gray-400 uppercase mb-1">Subcategory</div>
+                                <div class="font-semibold text-gray-900">{{ ad.subcategory?.name }}</div>
                             </div>
                             <div>
-                                <div class="text-sm text-gray-500 mb-1">XP 200</div>
-                                <div class="font-semibold text-gray-900">CONDITION</div>
+                                <div class="text-xs text-gray-400 uppercase mb-1">Location</div>
+                                <div class="font-semibold text-gray-900">{{ ad.town }}, {{ ad.state?.name }}</div>
                             </div>
                             <div>
-                                <div class="text-sm text-gray-500 mb-1">2025</div>
-                                <div class="font-semibold text-gray-900">YEAR OF MANUFACTURE</div>
+                                <div class="text-xs text-gray-400 uppercase mb-1">Status</div>
+                                <div class="font-semibold text-gray-900 capitalize">{{ ad.status }}</div>
                             </div>
                             <div>
-                                <div class="text-sm text-gray-500 mb-1">Automatic</div>
-                                <div class="font-semibold text-gray-900">TRANSMISSION</div>
+                                <div class="text-xs text-gray-400 uppercase mb-1">Posted</div>
+                                <div class="font-semibold text-gray-900">{{ formatDate(ad.created_at) }}</div>
                             </div>
                             <div>
-                                <div class="text-sm text-gray-500 mb-1">Black</div>
-                                <div class="font-semibold text-gray-900">COLOR</div>
+                                <div class="text-xs text-gray-400 uppercase mb-1">Ad ID</div>
+                                <div class="font-semibold text-gray-900 text-xs">{{ ad.id }}</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Description -->
-                    <div class="bg-white rounded-lg p-6 shadow">
-                        <p class="text-gray-700 leading-relaxed">
-                            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Debent qui quod aperiam
-                            voluptatibus
-                            odio labore magni pariatur lure-quae at harum nis, dolorum ut est, aliquid numquam assumenda
-                            fugiat ipsum.
+                    <div v-if="ad" class="bg-white rounded-lg p-6 shadow">
+                        <h2 class="font-semibold text-gray-900 mb-3">Description</h2>
+                        <p class="text-gray-700 leading-relaxed whitespace-pre-line">
+                            {{ ad.description }}
                         </p>
                     </div>
 
@@ -120,11 +135,12 @@
                         </button>
 
                         <!-- Phone Number Display (Mobile) -->
-                        <div v-if="showPhoneNumber"
+                        <div v-if="showPhoneNumber && ad"
                             class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
                             <div class="text-sm text-gray-600 mb-1">Seller's Phone Number</div>
-                            <a :href="`tel:${phoneNumber}`" class="text-xl font-bold text-blue-600 hover:text-blue-700">
-                                {{ phoneNumber }}
+                            <a :href="`tel:${ad.user.phone_number}`"
+                                class="text-xl font-bold text-blue-600 hover:text-blue-700">
+                                {{ ad.user.phone_number }}
                             </a>
                         </div>
                     </div>
@@ -133,10 +149,10 @@
                 <!-- Right Column - Price and Seller Info -->
                 <div class="space-y-6">
                     <!-- Price Card -->
-                    <div class="bg-white rounded-lg p-6 shadow">
+                    <div v-if="ad" class="bg-white rounded-lg p-6 shadow">
                         <div class="flex items-center justify-between mb-4">
-                            <div class="text-3xl font-bold text-gray-900">₦645,845</div>
-                            <span class="text-xs text-gray-500">Fixed</span>
+                            <div class="text-3xl font-bold text-gray-900">₦{{ Number(ad.price).toLocaleString() }}</div>
+                            <span class="text-xs text-gray-500 capitalize">{{ ad.promotion_type }}</span>
                         </div>
 
                         <!-- Action Buttons -->
@@ -152,12 +168,12 @@
                             </button>
 
                             <!-- Phone Number Display -->
-                            <div v-if="showPhoneNumber"
+                            <div v-if="showPhoneNumber && ad"
                                 class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
                                 <div class="text-sm text-gray-600 mb-1">Seller's Phone Number</div>
-                                <a :href="`tel:${phoneNumber}`"
+                                <a :href="`tel:${ad.user.phone_number}`"
                                     class="text-xl font-bold text-blue-600 hover:text-blue-700">
-                                    {{ phoneNumber }}
+                                    {{ ad.user.phone_number }}
                                 </a>
                             </div>
 
@@ -174,17 +190,23 @@
                     </div>
 
                     <!-- Seller Info -->
-                    <div class="bg-white rounded-lg p-6 shadow">
+                    <div v-if="ad" class="bg-white rounded-lg p-6 shadow">
                         <div class="flex items-center mb-4">
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                            <img v-if="ad.user.avatar" :src="ad.user.avatar" :alt="ad.user.first_name"
+                                class="w-12 h-12 rounded-full object-cover mr-4" />
+                            <div v-else
+                                class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
                                 <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
                                         clip-rule="evenodd"></path>
                                 </svg>
                             </div>
                             <div>
-                                <div class="font-semibold text-gray-900">Hamsuper automobiles company Ltd</div>
-                                <div class="text-sm text-gray-500">Verified</div>
+                                <div class="font-semibold text-gray-900">{{ ad.user.first_name }} {{ ad.user.last_name
+                                }}</div>
+                                <div class="text-sm text-gray-500" v-if="ad.user.verified">
+                                    <span class="text-green-600">✓</span> Verified
+                                </div>
                             </div>
                         </div>
                         <button
@@ -231,17 +253,51 @@
 </template>
 
 <script setup lang="ts">
+import { useApi } from '#imports';
+import { useRoute } from 'vue-router';
+import { definePageMeta } from '#imports';
+import type { Ad } from '~/types';
+
 definePageMeta({
     auth: false,
 });
-const images = [
-    '/images/temp/electric-motorcycles.png',
-    '/images/temp/electric-motorcycles1.png',
-    '/images/temp/electric-motorcycles2.png',
-    '/images/temp/electric-motorcycles3.png',
-]
 
-const selectedImage = ref(images[0])
+// Get ad ID from query string
+const route = useRoute()
+const adId = route.query.id as string
+
+// Fetch ad details from API
+const { data: adData, pending, error } = await useApi().get<{
+    success: boolean
+    data: Ad
+}>(`/ads/${adId}`, {
+    requiresAuth: false
+})
+
+const ad = computed(() => adData.value?.data)
+
+// Images handling
+const images = computed(() => {
+    if (!ad.value?.images || ad.value.images.length === 0) {
+        return [ad.value?.primary_image?.image_path || 'https://via.placeholder.com/800x600?text=No+Image']
+    }
+    return ad.value.images.map(img => img.image_path)
+})
+
+const selectedImage = ref('')
+
+// Set initial selected image when ad loads
+watch(images, (newImages) => {
+    if (newImages.length > 0 && !selectedImage.value) {
+        selectedImage.value = newImages[0]
+    }
+}, { immediate: true })
+
 const showPhoneNumber = ref(false)
-const phoneNumber = '+234 803 456 7890'
+
+// Format date helper
+const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+}
 </script>
