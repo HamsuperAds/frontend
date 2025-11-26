@@ -124,7 +124,7 @@
                                             <h3 class="font-semibold text-gray-900 text-lg">{{ result.title }}</h3>
                                         </div>
                                         <div class="text-blue-600 font-bold text-xl">₦{{ result.price.toLocaleString()
-                                            }}</div>
+                                        }}</div>
                                     </div>
                                     <p class="text-gray-600 text-sm mb-2">{{ result.description }}</p>
                                 </div>
@@ -147,7 +147,7 @@
 
 <script setup lang="ts">
 definePageMeta({
-    auth: false
+    auth: { auth: false }
 });
 const searchResults = [
     {
