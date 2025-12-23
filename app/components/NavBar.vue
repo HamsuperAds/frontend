@@ -57,21 +57,22 @@
         <div v-if="showSearch" class="px-6 pb-6">
             <div class="container mx-auto flex justify-center py-20">
                 <form @submit.prevent="handleSearch" class="flex w-full max-w-2xl">
-                    <!-- Location Dropdown -->
-                    <select v-model="selectedRegion"
-                        class="bg-white text-gray-800 px-4 py-3 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer">
-                        <option>All Regions</option>
-                        <option>Region 1</option>
-                        <option>Region 2</option>
-                        <option>Region 3</option>
-                    </select>
+                    <!-- Location Button -->
+                    <button type="button" @click="showLocationModal = true"
+                        class="bg-white text-gray-800 px-4 py-3 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-2 min-w-[180px]">
+                        <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="truncate">{{ selectedLocationText }}</span>
+                    </button>
 
                     <!-- Search Input -->
                     <div class="relative flex-1">
                         <input v-model="searchQuery" type="text" placeholder="Search"
-                            class="w-full bg-white px-4 py-3 rounded-r-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            @keyup.enter="handleSearch" />
-                        <button type="button" @click="handleSearch"
+                            class="w-full bg-white px-4 py-3 rounded-r-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                        <button type="submit"
                             class="absolute right-0 top-0 h-full px-4 hover:bg-gray-50 rounded-r-md transition-colors">
                             <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -80,6 +81,10 @@
                         </button>
                     </div>
                 </form>
+
+                <!-- Location Modal -->
+                <LocationModal :is-open="showLocationModal" @close="showLocationModal = false"
+                    @select="handleLocationSelect" />
             </div>
         </div>
 
@@ -87,27 +92,55 @@
 </template>
 
 <script setup lang="ts">
-import { navigateTo } from '#app';
-
-import { defineProps } from 'vue';
-
 defineProps<{
     showSearch?: boolean
 }>()
 
 const searchQuery = ref('')
-const selectedRegion = ref('All Regions')
+const showLocationModal = ref(false)
+const selectedStateSlug = ref<string | null>(null)
+const selectedLgaSlug = ref<string | null>(null)
+const selectedLocationName = ref<string>('All Regions')
 
-const handleSearch = () => {
-    if (searchQuery.value.trim()) {
-        navigateTo({
-            path: '/search',
-            query: {
-                query: searchQuery.value.trim(),
-                region: selectedRegion.value !== 'All Regions' ? selectedRegion.value : undefined
-            }
-        })
+const selectedLocationText = computed(() => selectedLocationName.value)
+
+const handleLocationSelect = ({ stateSlug, lgaSlug }: { stateSlug: string; lgaSlug?: string }) => {
+    selectedStateSlug.value = stateSlug
+    selectedLgaSlug.value = lgaSlug || null
+
+    // Update display text (capitalize first letter of each word)
+    if (lgaSlug) {
+        selectedLocationName.value = lgaSlug.split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ')
+    } else {
+        selectedLocationName.value = stateSlug.split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ')
     }
+}
+
+const handleSearch = async () => {
+    const query: Record<string, string> = {}
+
+    if (searchQuery.value.trim()) {
+        query.query = searchQuery.value.trim()
+    }
+
+    if (selectedStateSlug.value) {
+        query.state = selectedStateSlug.value
+    }
+
+    if (selectedLgaSlug.value) {
+        query.lga = selectedLgaSlug.value
+    }
+
+    console.log('Navigating to search with query:', query)
+
+    await navigateTo({
+        path: '/search',
+        query
+    })
 }
 </script>
 
