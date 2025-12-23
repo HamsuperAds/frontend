@@ -38,8 +38,10 @@ export default defineNuxtConfig({
         getSession: {
           path: "auth/user",
           method: "get",
-          dataPointer: "data",
         },
+      },
+      session: {
+        dataResponsePointer: "/data",
       },
       token: {
         signInResponseTokenPointer: "data/token",
