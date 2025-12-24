@@ -39,9 +39,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useApi } from '#imports';
 import type { Ad } from '~/types';
+import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
+
+// Fetch ads from API
+const appResourceInfoStore = useAppResourceInfoStore()
 
 // Fetch ads from API
 const { data: adsData, pending, error } = await useApi().get<{
@@ -54,6 +58,47 @@ const { data: adsData, pending, error } = await useApi().get<{
 }>('/ads', {
     requiresAuth: false
 })
+
+const fetchAds = async () => {
+    try {
+        pending.value = true
+        let endpoint = '/ads'
+        const query: Record<string, any> = {}
+
+        if (appResourceInfoStore.lga) {
+            endpoint = '/ads/search'
+            query.lga_id = appResourceInfoStore.lga.id
+        } else if (appResourceInfoStore.state) {
+            endpoint = '/ads/search'
+            query.state_id = appResourceInfoStore.state.id
+        }
+
+        const { data } = await useApi().get<{
+            success: boolean
+            data: {
+                data: Ad[]
+                current_page: number
+                total: number
+            }
+        }>(endpoint, {
+            params: query,
+            requiresAuth: false
+        })
+
+        if (data.value) {
+            adsData.value = data.value
+        }
+    } catch (err) {
+        console.error('Error fetching ads:', err)
+        error.value = err as any
+    } finally {
+        pending.value = false
+    }
+}
+
+watch(() => [appResourceInfoStore.state, appResourceInfoStore.lga], async () => {
+    await fetchAds()
+}, { deep: true })
 
 // Use the fetched data or fallback to empty array
 const ads = computed(() => adsData.value?.data?.data || [])
