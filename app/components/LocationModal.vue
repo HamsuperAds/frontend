@@ -26,8 +26,10 @@
 
                     <!-- States List -->
                     <div v-else-if="!selectedState" class="space-y-2">
-                        <div v-for="state in states" :key="state.id" @click="selectState(state)"
-                            class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer border border-gray-200">
+                        <div v-for="state in states" :key="state.id"
+                            @click="state.adsCount > 0 ? selectState(state) : null"
+                            class="flex items-center justify-between p-3 rounded-lg border border-gray-200 transition-colors"
+                            :class="state.adsCount > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed bg-gray-50'">
                             <div class="flex items-center gap-3">
                                 <!-- State Image or Icon -->
                                 <div class="w-10 h-10 flex-shrink-0">
@@ -78,8 +80,13 @@
                         </div>
 
                         <!-- LGAs -->
-                        <div v-for="lga in selectedState.lgas" :key="lga.id" @click="selectLGA(lga)"
-                            class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer border border-gray-200">
+                        <div v-for="lga in selectedState.lgas" :key="lga.id"
+                            @click="lga.adsCount > 0 ? selectLGA(lga) : null"
+                            class="flex items-center justify-between p-3 rounded-lg border border-gray-200 transition-colors"
+                            :class="[
+                                lga.adsCount > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed bg-gray-50',
+                                { 'bg-blue-50 border-blue-400': appResourceInfoStore.lga?.id === lga.id }
+                            ]">
                             <div class="flex items-center gap-3">
                                 <!-- LGA Image or Icon -->
                                 <div class="w-10 h-10 flex-shrink-0">
@@ -114,6 +121,7 @@ import { computed } from 'vue';
 import { useApi } from '#imports';
 import { ref } from 'vue';
 import type { State, LGA } from '~/types';
+import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
 
 const props = defineProps<{
     isOpen: boolean
@@ -124,6 +132,7 @@ const emit = defineEmits<{
     select: [{ stateSlug: string; lgaSlug?: string }]
 }>()
 
+const appResourceInfoStore = useAppResourceInfoStore()
 const selectedState = ref<State | null>(null)
 
 // Fetch states from API
@@ -145,6 +154,7 @@ const selectState = (state: State) => {
 
 const selectWholeState = () => {
     if (selectedState.value) {
+        appResourceInfoStore.setLocation(selectedState.value)
         emit('select', { stateSlug: selectedState.value.slug })
         closeModal()
     }
@@ -152,6 +162,7 @@ const selectWholeState = () => {
 
 const selectLGA = (lga: LGA) => {
     if (selectedState.value) {
+        appResourceInfoStore.setLocation(selectedState.value, lga)
         emit('select', {
             stateSlug: selectedState.value.slug,
             lgaSlug: lga.slug
@@ -169,6 +180,11 @@ const closeModal = () => {
 watch(() => props.isOpen, (newValue) => {
     if (!newValue) {
         selectedState.value = null
+    } else {
+        // Initialize from store if available
+        if (appResourceInfoStore.state) {
+            selectedState.value = appResourceInfoStore.state
+        }
     }
 })
 </script>

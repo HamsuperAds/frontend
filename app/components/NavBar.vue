@@ -1,15 +1,3 @@
-import { computed } from "vue"
-
-import { ref } from "vue"
-
-import { ref } from "vue"
-
-import { ref } from "vue"
-
-import { ref } from "vue"
-
-import { ref } from "vue"
-
 <template>
     <nav class="bg-blue-600 text-white" :class="showSearch ? 'rounded-b-xl' : ''">
         <!-- Upper Section -->
