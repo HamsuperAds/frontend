@@ -6,6 +6,10 @@ export interface Ad {
   category: string;
   subcategory: string;
   image: string;
+  slug?: string;
+  primary_image?: {
+    image_path: string;
+  };
   location: string;
   date: string;
   seller?: {
@@ -13,7 +17,7 @@ export interface Ad {
     name: string;
     rating?: number;
   };
-  status: "available" | "sold" | "reserved";
+  status: "available" | "sold" | "reserved" | "active";
   condition: "new" | "used" | "refurbished";
   createdAt?: Date;
   updatedAt?: Date;

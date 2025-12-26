@@ -4,11 +4,9 @@
         <div class="bg-white border-b">
             <div class="container mx-auto px-6 py-4">
                 <div class="flex items-center text-sm text-gray-600 space-x-2">
-                    <a href="/" class="hover:text-blue-600">All ads</a>
+                    <a href="/" class="hover:text-blue-600">Home</a>
                     <span>›</span>
-                    <a href="#" class="hover:text-blue-600">Vehicles</a>
-                    <span>›</span>
-                    <span class="text-gray-900">254 results for <strong>tyre</strong></span>
+                    <span class="text-gray-900">Search Results</span>
                 </div>
             </div>
         </div>
@@ -16,8 +14,9 @@
         <!-- Main Content -->
         <div class="container mx-auto px-6 py-8">
             <h1 class="text-3xl font-bold text-gray-900 text-center mb-8">
-                Search results for "tyre"
+                Search results for "{{ route.query.query || 'all items' }}"
             </h1>
+            <p v-if="totalResults > 0" class="text-center text-gray-600 -mt-6 mb-8">{{ totalResults }} results found</p>
 
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <!-- Sidebar Filters -->
@@ -102,14 +101,43 @@
 
                 <!-- Search Results -->
                 <div class="lg:col-span-3 space-y-4">
-                    <div v-for="(result, index) in searchResults" :key="index"
-                        class="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
-                        @click="navigateTo(`/ad-details?id=${result.id}`)">
+                    <!-- Loading State -->
+                    <div v-if="loading" class="space-y-4">
+                        <div v-for="i in 5" :key="i" class="bg-white rounded-lg shadow p-4 animate-pulse flex gap-4">
+                            <div class="w-32 h-32 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                            <div class="flex-1 space-y-3">
+                                <div class="flex justify-between">
+                                    <div class="h-6 bg-gray-200 rounded w-1/3"></div>
+                                    <div class="h-6 bg-gray-200 rounded w-20"></div>
+                                </div>
+                                <div class="h-4 bg-gray-200 rounded w-full"></div>
+                                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- No Results -->
+                    <div v-else-if="searchResults.length === 0" class="bg-white rounded-lg shadow p-8 text-center">
+                        <div class="mb-4 text-gray-400">
+                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No results found</h3>
+                        <p class="text-gray-500">Try adjusting your search or filters to find what you're looking for.
+                        </p>
+                    </div>
+
+                    <!-- Results List -->
+                    <NuxtLink v-else v-for="result in searchResults" :key="result.id"
+                        class="block bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
+                        :to="`/ad-details?id=${result.id}`">
                         <div class="flex p-4 gap-4">
                             <!-- Image -->
                             <div class="w-32 h-32 flex-shrink-0">
-                                <img :src="result.image" :alt="result.title"
-                                    class="w-full h-full object-cover rounded-lg" />
+                                <img :src="result.primary_image?.image_path || '/images/placeholder.png'"
+                                    :alt="result.title" class="w-full h-full object-cover rounded-lg" />
                             </div>
 
                             <!-- Content -->
@@ -117,16 +145,16 @@
                                 <div>
                                     <div class="flex items-start justify-between mb-2">
                                         <div>
-                                            <span
+                                            <span v-if="result.status === 'active'"
                                                 class="inline-block bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded mb-2">
-                                                {{ result.condition }}
+                                                Active
                                             </span>
                                             <h3 class="font-semibold text-gray-900 text-lg">{{ result.title }}</h3>
                                         </div>
-                                        <div class="text-blue-600 font-bold text-xl">₦{{ result.price.toLocaleString()
-                                            }}</div>
+                                        <div class="text-blue-600 font-bold text-xl">₦{{
+                                            Number(result.price).toLocaleString() }}</div>
                                     </div>
-                                    <p class="text-gray-600 text-sm mb-2">{{ result.description }}</p>
+                                    <p class="text-gray-600 text-sm mb-2 line-clamp-2">{{ result.description }}</p>
                                 </div>
                                 <div class="flex items-center text-gray-500 text-xs">
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -138,7 +166,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </NuxtLink>
                 </div>
             </div>
         </div>
@@ -146,63 +174,64 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { useApi } from '#imports';
+import type { Ad } from '~/types';
+
 definePageMeta({
     auth: false
 });
-const searchResults = [
-    {
-        id: 1,
-        title: 'New Motorcycle 2022 Blue',
-        price: 645845,
-        description: 'This is a rechargeable bike that can go a 200 km on a single charge',
-        location: '5th Mile, Enugu',
-        condition: 'Brand New',
-        image: '/images/temp/electric-motorcycles.png',
-    },
-    {
-        id: 2,
-        title: 'New Motorcycle 2022 Blue',
-        price: 645845,
-        description: 'This is a rechargeable bike that can go a 200 km on a single charge',
-        location: '5th Mile, Enugu',
-        condition: 'Brand New',
-        image: '/images/temp/electric-motorcycles1.png',
-    },
-    {
-        id: 3,
-        title: 'New Motorcycle 2022 Blue',
-        price: 645845,
-        description: 'This is a rechargeable bike that can go a 200 km on a single charge',
-        location: '5th Mile, Enugu',
-        condition: 'Brand New',
-        image: '/images/temp/electric-motorcycles2.png',
-    },
-    {
-        id: 4,
-        title: 'New Motorcycle 2022 Blue',
-        price: 645845,
-        description: 'This is a rechargeable bike that can go a 200 km on a single charge',
-        location: '5th Mile, Enugu',
-        condition: 'Brand New',
-        image: '/images/temp/electric-motorcycles3.png',
-    },
-    {
-        id: 5,
-        title: 'New Motorcycle 2022 Blue',
-        price: 645845,
-        description: 'This is a rechargeable bike that can go a 200 km on a single charge',
-        location: '5th Mile, Enugu',
-        condition: 'Brand New',
-        image: '/images/temp/electric-motorcycles.png',
-    },
-    {
-        id: 6,
-        title: 'New Motorcycle 2022 Blue',
-        price: 645845,
-        description: 'This is a rechargeable bike that can go a 200 km on a single charge',
-        location: '5th Mile, Enugu',
-        condition: 'Brand New',
-        image: '/images/temp/electric-motorcycles1.png',
-    },
-]
+
+const route = useRoute();
+const searchResults = ref<Ad[]>([]);
+const totalResults = ref(0);
+const loading = ref(false);
+
+const fetchResults = async () => {
+    loading.value = true;
+    try {
+        const queryParams: Record<string, any> = {};
+
+        if (route.query.query) queryParams.q = route.query.query;
+        if (route.query.state) queryParams.state = route.query.state;
+        if (route.query.lga) queryParams.lga = route.query.lga;
+
+        const { data } = await useApi().fetchGet<{
+            success: boolean,
+            data: {
+                data: Ad[],
+                total: number,
+                current_page: number
+            }
+        }>('/ads/search', {
+            params: queryParams,
+            requiresAuth: false
+        });
+
+        if (data && data.data) {
+            searchResults.value = data.data;
+            totalResults.value = data.total;
+        } else {
+            searchResults.value = [];
+            totalResults.value = 0;
+        }
+    } catch (error) {
+        console.error('Error fetching search results:', error);
+        searchResults.value = [];
+        totalResults.value = 0;
+    } finally {
+        loading.value = false;
+    }
+};
+
+// Initial fetch
+onMounted(() => {
+    fetchResults();
+});
+
+// Watch for route changes to re-fetch
+watch(() => route.query, () => {
+    fetchResults();
+});
 </script>

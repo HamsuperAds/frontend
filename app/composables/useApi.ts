@@ -52,7 +52,7 @@ export const useApi = () => {
   // For immediate API calls (not reactive)
   const apiFetch = async <T>(
     endpoint: string,
-    options: RequestInit & { requiresAuth?: boolean } = {}
+    options: RequestInit & { requiresAuth?: boolean; params?: Record<string, any> } = {}
   ): Promise<T> => {
     const { requiresAuth = true, ...fetchOptions } = options;
 
@@ -73,6 +73,7 @@ export const useApi = () => {
         baseURL,
         ...fetchOptions,
         headers,
+        method: fetchOptions.method as any,
       });
     } catch (error: any) {
       if (error.response?.status === 401) {
@@ -119,7 +120,7 @@ export const useApi = () => {
   // Immediate fetch methods (for actions, not reactive data)
   const fetchGet = <T>(
     endpoint: string,
-    options?: RequestInit & { requiresAuth?: boolean }
+    options?: RequestInit & { requiresAuth?: boolean; params?: Record<string, any> }
   ) => {
     return apiFetch<T>(endpoint, { ...options, method: "GET" });
   };

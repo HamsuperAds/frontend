@@ -43,6 +43,9 @@ import { computed, watch } from 'vue';
 import { useApi } from '#imports';
 import type { Ad } from '~/types';
 import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
+definePageMeta({
+    auth: false
+});
 
 // Fetch ads from API
 const appResourceInfoStore = useAppResourceInfoStore()
