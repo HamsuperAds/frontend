@@ -72,13 +72,30 @@
                     <div class="relative flex-1">
                         <input v-model="searchQuery" type="text" placeholder="Search"
                             class="w-full bg-white px-4 py-3 rounded-r-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400" />
-                        <button type="submit"
-                            class="absolute right-0 top-0 h-full px-4 hover:bg-gray-50 rounded-r-md transition-colors">
-                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button v-if="loadingSuggestions" type="submit" disabled
+                            class="absolute right-0 top-0 h-full px-4 hover:bg-gray-50 rounded-r-md transition-colors cursor-default">
+                            <svg class="w-5 h-5 text-gray-600 animate-ping" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </button>
+
+                        <!-- Search Suggestions Dropdown -->
+                        <div v-if="showSuggestions && suggestions.length > 0"
+                            class="absolute top-full left-0 right-0 bg-white shadow-lg rounded-b-md z-50 mt-1 border border-gray-100 max-h-96 overflow-y-auto">
+                            <div v-for="category in suggestions" :key="category.id"
+                                @click="handleSuggestionClick(category)"
+                                class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-none flex items-center justify-between group text-black">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-gray-900">{{ searchQuery }}</span>
+                                    <span class="text-gray-500">in</span>
+                                    <span class="text-blue-600 font-medium group-hover:text-blue-700">{{ category.name
+                                    }}</span>
+                                </div>
+                                <span class="text-xs text-gray-400">{{ category.results_count }} results</span>
+                            </div>
+                        </div>
                     </div>
                 </form>
 
@@ -104,6 +121,11 @@ const selectedLocationName = ref<string>('All Regions')
 
 const selectedLocationText = computed(() => selectedLocationName.value)
 
+const suggestions = ref<any[]>([])
+const showSuggestions = ref(false)
+let debounceTimer: any = null;
+const loadingSuggestions = ref(false);
+
 const handleLocationSelect = ({ stateSlug, lgaSlug }: { stateSlug: string; lgaSlug?: string }) => {
     selectedStateSlug.value = stateSlug
     selectedLgaSlug.value = lgaSlug || null
@@ -120,11 +142,51 @@ const handleLocationSelect = ({ stateSlug, lgaSlug }: { stateSlug: string; lgaSl
     }
 }
 
-const handleSearch = async () => {
-    const query: Record<string, string> = {}
+// Watch for search query changes
+watch(searchQuery, (newQuery) => {
+    if (debounceTimer) clearTimeout(debounceTimer)
 
-    if (searchQuery.value.trim()) {
-        query.query = searchQuery.value.trim()
+    debounceTimer = setTimeout(async () => {
+        if (newQuery.length > 2) {
+            loadingSuggestions.value = true;
+            try {
+                const { data } = await useApi().fetchGet<{
+                    success: boolean,
+                    data: {
+                        categories: any[]
+                    }
+                }>('/ads/search-suggestions', {
+                    params: { q: newQuery },
+                    requiresAuth: false
+                })
+
+                if (data && data.categories) {
+                    suggestions.value = data.categories
+                    showSuggestions.value = suggestions.value.length > 0
+                } else {
+                    suggestions.value = []
+                    showSuggestions.value = false
+                }
+            } catch (error) {
+                console.error('Error fetching suggestions:', error)
+                suggestions.value = []
+                showSuggestions.value = false
+            } finally {
+                loadingSuggestions.value = false;
+            }
+        } else {
+            suggestions.value = []
+            showSuggestions.value = false
+        }
+    }, 300)
+})
+
+const handleSuggestionClick = async (category: any) => {
+    showSuggestions.value = false
+
+    const query: Record<string, string> = {
+        query: searchQuery.value,
+        category: category.slug
     }
 
     if (selectedStateSlug.value) {
@@ -135,12 +197,15 @@ const handleSearch = async () => {
         query.lga = selectedLgaSlug.value
     }
 
-    console.log('Navigating to search with query:', query)
-
     await navigateTo({
         path: '/search',
         query
     })
+}
+
+const handleSearch = () => {
+    // Disabled generic enter/button search
+    console.log('Search via enter/button disabled. Please use suggestions.')
 }
 </script>
 

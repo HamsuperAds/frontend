@@ -204,6 +204,7 @@ const fetchResults = async () => {
             queryParams.subcategory = route.query.subcategory;
             isSubcategorySearch.value = true;
         }
+        if (route.query.category) queryParams.category = route.query.category;
 
         const { data } = await useApi().fetchGet<{
             success: boolean,
