@@ -13,10 +13,13 @@
 
         <!-- Main Content -->
         <div class="container mx-auto px-6 py-8">
-            <h1 class="text-3xl font-bold text-gray-900 text-center mb-8">
-                Search results for "{{ route.query.query || 'all items' }}"
-            </h1>
-            <p v-if="totalResults > 0" class="text-center text-gray-600 -mt-6 mb-8">{{ totalResults }} results found</p>
+            <template v-if="!isSubcategorySearch">
+                <h1 class="text-3xl font-bold text-gray-900 text-center mb-8">
+                    Search results for "{{ route.query.query || 'all items' }}"
+                </h1>
+                <p v-if="totalResults > 0" class="text-center text-gray-600 -mt-6 mb-8">{{ totalResults }} results found
+                </p>
+            </template>
 
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <!-- Sidebar Filters -->
@@ -188,6 +191,7 @@ const searchResults = ref<Ad[]>([]);
 const totalResults = ref(0);
 const loading = ref(false);
 
+const isSubcategorySearch = ref(false);
 const fetchResults = async () => {
     loading.value = true;
     try {
@@ -196,6 +200,10 @@ const fetchResults = async () => {
         if (route.query.query) queryParams.q = route.query.query;
         if (route.query.state) queryParams.state = route.query.state;
         if (route.query.lga) queryParams.lga = route.query.lga;
+        if (route.query.subcategory) {
+            queryParams.subcategory = route.query.subcategory;
+            isSubcategorySearch.value = true;
+        }
 
         const { data } = await useApi().fetchGet<{
             success: boolean,
