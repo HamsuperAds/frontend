@@ -66,6 +66,8 @@ import { useApi } from '#imports';
 import { ref } from 'vue';
 import type { Category } from '~/types';
 
+import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
+
 // Track which category is being hovered
 const hoveredCategory = ref<number | null>(null)
 const isShowingSubcategory = ref(false);
@@ -83,16 +85,28 @@ function handleMouseLeftCategory() {
 function handleMouseEnteredSubcategory() {
   isShowingSubcategory.value = true
 }
-// Fetch categories from API
-const { data: categoriesData, pending } = await useApi().get<{
-  success: boolean
-  data: Category[]
-}>('/categories', {
-  requiresAuth: false
-})
+
+const appResourceInfoStore = useAppResourceInfoStore()
+const pending = ref(false)
+
+// Fetch categories from API if not already in store
+if (appResourceInfoStore.categories.length === 0) {
+  pending.value = true
+  const { data } = await useApi().get<{
+    success: boolean
+    data: Category[]
+  }>('/categories', {
+    requiresAuth: false
+  })
+
+  if (data.value?.data) {
+    appResourceInfoStore.setCategories(data.value.data)
+  }
+  pending.value = false
+}
 
 // Use the fetched data or fallback to empty array
-const categories = computed(() => categoriesData.value?.data || [])
+const categories = computed(() => appResourceInfoStore.categories || [])
 const targetCategory = computed(() => categories.value.find((c: Category) => c.id == hoveredCategory.value))
 </script>
 

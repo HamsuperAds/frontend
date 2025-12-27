@@ -27,34 +27,27 @@
                     <!-- Categories -->
                     <div class="bg-white rounded-lg shadow mb-6">
                         <div class="bg-blue-500 text-white px-4 py-3 rounded-t-lg font-semibold">
-                            Categories
+                            {{ sidebarCategoryName || 'Categories' }}
                         </div>
                         <div class="p-4 space-y-2">
-                            <div class="font-semibold text-gray-900 mb-2">Vehicles</div>
-                            <a href="#" class="block text-sm text-gray-700 hover:text-blue-600">
-                                Cars (14,1053)
-                            </a>
-                            <a href="#" class="block text-sm text-gray-700 hover:text-blue-600">
-                                Commercial Vehicles (38m)
-                            </a>
-                            <a href="#" class="block text-sm text-gray-700 hover:text-blue-600">
-                                Car Accessories & Heavy Machinery (1753)
-                            </a>
-                            <a href="#" class="block text-sm text-gray-700 hover:text-blue-600">
-                                Motorcycles & Scooters (2m)
-                            </a>
-                            <a href="#" class="block text-sm text-gray-700 hover:text-blue-600">
-                                Trucks & Trailers (1m)
-                            </a>
-                            <a href="#" class="block text-sm text-gray-700 hover:text-blue-600">
-                                Vehicle Parts & Accessories (1983201)
-                            </a>
-                            <a href="#" class="block text-sm text-gray-700 hover:text-blue-600">
-                                Watercraft & Boats (1400)
-                            </a>
-                            <a href="#" class="block text-sm text-gray-700 hover:text-blue-600">
-                                Auto Spares Services (5,442)
-                            </a>
+                            <div v-if="loadingSidebar" class="space-y-2 animate-pulse">
+                                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+                            </div>
+                            <div v-else-if="sidebarSubcategories.length > 0">
+                                <a v-for="sub in sidebarSubcategories" :key="sub.id"
+                                    @click.prevent="navigateTo(`/search?subcategory=${sub.slug}`)" :class="[
+                                        route.query.subcategory === sub.slug
+                                            ? 'font-bold'
+                                            : 'text-gray-700 hover:text-blue-600'
+                                    ]" class="block text-sm mb-2 cursor-pointer">
+                                    {{ sub.name }} ({{ sub.adsCount }})
+                                </a>
+                            </div>
+                            <div v-else class="text-gray-500 text-sm">
+                                No subcategories available
+                            </div>
                         </div>
                     </div>
 
@@ -206,21 +199,29 @@ const fetchResults = async () => {
         }
         if (route.query.category) queryParams.category = route.query.category;
 
-        const { data } = await useApi().fetchGet<{
+        const response = await useApi().fetchGet<{
             success: boolean,
             data: {
                 data: Ad[],
-                total: number,
-                current_page: number
+                total: number
             }
         }>('/ads/search', {
             params: queryParams,
             requiresAuth: false
         });
 
-        if (data && data.data) {
-            searchResults.value = data.data;
-            totalResults.value = data.total;
+        if (response && response.success) {
+            searchResults.value = response.data.data;
+            totalResults.value = response.data.total;
+
+            // If category search (explicit or inferred), fetch subcategories for sidebar
+            // We use the category of the first ad result if available
+            if (searchResults.value.length > 0) {
+                const firstAd = searchResults.value[0] as any; // Cast to avoid type error if Ad type incomplete
+                if (firstAd.category_id) {
+                    await fetchSidebarCategory(firstAd.category_id);
+                }
+            }
         } else {
             searchResults.value = [];
             totalResults.value = 0;
@@ -233,6 +234,34 @@ const fetchResults = async () => {
         loading.value = false;
     }
 };
+
+const sidebarSubcategories = ref<any[]>([]); // Dynamic subcategories
+const sidebarCategoryName = ref('');
+const loadingSidebar = ref(false);
+
+const fetchSidebarCategory = async (categoryId: number) => {
+    loadingSidebar.value = true;
+    try {
+        const response = await useApi().fetchGet<{
+            success: boolean,
+            data: {
+                name: string,
+                subcategories: any[]
+            }
+        }>(`/categories/${categoryId}`, {
+            requiresAuth: false
+        });
+
+        if (response && response.success && response.data) {
+            sidebarCategoryName.value = response.data.name;
+            sidebarSubcategories.value = response.data.subcategories;
+        }
+    } catch (error) {
+        console.error('Error fetching sidebar category:', error);
+    } finally {
+        loadingSidebar.value = false;
+    }
+}
 
 // Initial fetch
 onMounted(() => {
