@@ -62,13 +62,14 @@
                     <!-- Location -->
                     <div class="bg-white rounded-lg shadow mb-6 p-4">
                         <h3 class="font-semibold text-gray-900 mb-3">Location</h3>
-                        <select
+                        <!-- <select
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option>All Regions</option>
                             <option>Region 1</option>
                             <option>Region 2</option>
                             <option>Region 3</option>
-                        </select>
+                        </select> -->
+                        <AdLocations class="border rounded-lg -py-1" @change="handleLocationChange" />
                     </div>
 
                     <!-- Price -->
@@ -80,6 +81,9 @@
                             <span class="text-gray-500">-</span>
                             <input type="number" placeholder="Max"
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+                        <div class="flex justify-end mt-3">
+                            <button class="border text-sm px-4 py-1 rounded-lg">Apply</button>
                         </div>
                     </div>
 
@@ -288,4 +292,18 @@ onMounted(() => {
 watch(() => route.query, () => {
     fetchResults();
 });
+
+const handleLocationChange = async ({ state, lga }: { state: string; lga?: string }) => {
+    const query: Record<string, any> = { ...route.query, state };
+    if (lga) {
+        query.lga = lga;
+    } else {
+        delete query.lga;
+    }
+    // Reset to page 1 if needed (though not implemented yet, good practice)
+    await navigateTo({
+        path: '/search',
+        query
+    });
+};
 </script>
