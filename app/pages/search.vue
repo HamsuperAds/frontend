@@ -36,14 +36,22 @@
                                 <div class="h-4 bg-gray-200 rounded w-2/3"></div>
                             </div>
                             <div v-else-if="sidebarSubcategories.length > 0">
-                                <a v-for="sub in sidebarSubcategories" :key="sub.id"
-                                    @click.prevent="navigateTo(`/search?subcategory=${sub.slug}`)" :class="[
-                                        route.query.subcategory === sub.slug
-                                            ? 'font-bold'
-                                            : 'text-gray-700 hover:text-blue-600'
-                                    ]" class="block text-sm mb-2 cursor-pointer">
+                                <a v-for="sub in displayedSubcategories" :key="sub.id"
+                                    @click.prevent="sub.adsCount > 0 ? navigateTo(`/search?subcategory=${sub.slug}`) : null"
+                                    href="#" :class="[
+                                        route.query.subcategory === sub.slug ? 'font-bold' : '',
+                                        sub.adsCount === 0
+                                            ? 'text-gray-400 cursor-not-allowed'
+                                            : route.query.subcategory !== sub.slug ? 'text-gray-700 hover:text-blue-600' : ''
+                                    ]" class="block text-sm mb-2">
                                     {{ sub.name }} ({{ sub.adsCount }})
                                 </a>
+
+                                <button v-if="sidebarSubcategories.length > 7"
+                                    @click="showAllSubcategories = !showAllSubcategories"
+                                    class="text-blue-600 text-sm font-medium hover:underline focus:outline-none mt-2">
+                                    {{ showAllSubcategories ? 'Show less' : `Show all ${sidebarSubcategories.length}` }}
+                                </button>
                             </div>
                             <div v-else class="text-gray-500 text-sm">
                                 No subcategories available
@@ -238,6 +246,14 @@ const fetchResults = async () => {
 const sidebarSubcategories = ref<any[]>([]); // Dynamic subcategories
 const sidebarCategoryName = ref('');
 const loadingSidebar = ref(false);
+const showAllSubcategories = ref(false);
+
+const displayedSubcategories = computed(() => {
+    if (showAllSubcategories.value) {
+        return sidebarSubcategories.value;
+    }
+    return sidebarSubcategories.value.slice(0, 7);
+});
 
 const fetchSidebarCategory = async (categoryId: number) => {
     loadingSidebar.value = true;
