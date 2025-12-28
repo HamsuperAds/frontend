@@ -62,13 +62,6 @@
                     <!-- Location -->
                     <div class="bg-white rounded-lg shadow mb-6 p-4">
                         <h3 class="font-semibold text-gray-900 mb-3">Location</h3>
-                        <!-- <select
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option>All Regions</option>
-                            <option>Region 1</option>
-                            <option>Region 2</option>
-                            <option>Region 3</option>
-                        </select> -->
                         <AdLocations class="border rounded-lg -py-1" @change="handleLocationChange" />
                     </div>
 
@@ -76,14 +69,20 @@
                     <div class="bg-white rounded-lg shadow mb-6 p-4">
                         <h3 class="font-semibold text-gray-900 mb-3">Price</h3>
                         <div class="flex items-center space-x-2">
-                            <input type="number" placeholder="Min"
+                            <input type="number" placeholder="Min" v-model="minPrice"
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                             <span class="text-gray-500">-</span>
-                            <input type="number" placeholder="Max"
+                            <input type="number" placeholder="Max" v-model="maxPrice"
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                         <div class="flex justify-end mt-3">
-                            <button class="border text-sm px-4 py-1 rounded-lg">Apply</button>
+                            <button @click="applyPriceFilter" :disabled="!minPrice && !maxPrice" :class="[
+                                !minPrice && !maxPrice
+                                    ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                                    : 'border-blue-600 text-blue-600 hover:bg-blue-50'
+                            ]" class="border text-sm px-4 py-1 rounded-lg transition-colors">
+                                Apply
+                            </button>
                         </div>
                     </div>
 
@@ -210,6 +209,8 @@ const fetchResults = async () => {
             isSubcategorySearch.value = true;
         }
         if (route.query.category) queryParams.category = route.query.category;
+        if (route.query.min_price) queryParams.min_price = route.query.min_price;
+        if (route.query.max_price) queryParams.max_price = route.query.max_price;
 
         const response = await useApi().fetchGet<{
             success: boolean,
@@ -300,10 +301,39 @@ const handleLocationChange = async ({ state, lga }: { state: string; lga?: strin
     } else {
         delete query.lga;
     }
-    // Reset to page 1 if needed (though not implemented yet, good practice)
     await navigateTo({
         path: '/search',
         query
     });
 };
+
+const minPrice = ref<number | null>(null);
+const maxPrice = ref<number | null>(null);
+
+const applyPriceFilter = async () => {
+    const query: Record<string, any> = { ...route.query };
+
+    if (minPrice.value) {
+        query.min_price = minPrice.value;
+    } else {
+        delete query.min_price;
+    }
+
+    if (maxPrice.value) {
+        query.max_price = maxPrice.value;
+    } else {
+        delete query.max_price;
+    }
+
+    await navigateTo({
+        path: '/search',
+        query
+    });
+}
+
+// Initialize price inputs from route query
+watch(() => route.query, (newQuery) => {
+    if (newQuery.min_price) minPrice.value = Number(newQuery.min_price);
+    if (newQuery.max_price) maxPrice.value = Number(newQuery.max_price);
+}, { immediate: true });
 </script>
