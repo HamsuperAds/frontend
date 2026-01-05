@@ -6,8 +6,9 @@ export const useApi = () => {
 
   // Get token from localStorage or cookie
   const getToken = () => {
+    const {token} = useAuth();
     if (process.client) {
-      return localStorage.getItem("authToken") || "";
+      return token || "";
     }
     return "";
   };
