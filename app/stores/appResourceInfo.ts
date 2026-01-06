@@ -4,14 +4,14 @@ import type { State, LGA, Category } from "~/types";
 export const useAppResourceInfoStore = defineStore("appResourceInfoStore", {
   state: () => ({
     userName: "Donzoby",
-    state: null as State | null,
+    states: [] as State[],
     lga: null as LGA | null,
     categories: [] as Category[],
   }),
   getters: {},
   actions: {
-    setLocation(state: State, lga?: LGA) {
-        this.state = state;
+    setLocation(states: State[], lga?: LGA) {
+        this.states = states;
         this.lga = lga || null;
     },
     setCategories(categories: Category[]) {

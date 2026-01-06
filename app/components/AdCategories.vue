@@ -2,7 +2,7 @@
   <div class="relative max-w-xs" @mouseleave="handleMouseLeftCategory">
     <aside class=" bg-white rounded-lg shadow-sm p-4 max-h-[90vh] overflow-y-auto custom-scroll">
       <!-- Loading State -->
-      <div v-if="pending" class="space-y-4">
+      <div v-if="loading" class="space-y-4">
         <div v-for="i in 5" :key="i" class="flex items-center gap-6 justify-between animate-pulse">
           <div class="flex gap-2 items-center">
             <div class="w-10 h-10 bg-gray-200 rounded"></div>
@@ -15,7 +15,7 @@
       </div>
 
       <!-- Categories List -->
-      <div v-else-if="categories.length > 0" class="space-y-2">
+      <div v-else-if="categories && categories.length > 0" class="space-y-2">
         <!-- Category Item -->
         <div v-for="category in categories" :key="category.id" class="relative group"
           @mouseenter="hoveredCategory = category.id">
@@ -61,14 +61,10 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
-import { useApi } from '#imports';
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useCategories } from '~/composables/useCategories';
 import type { Category } from '~/types';
 
-import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
-
-// Track which category is being hovered
 const hoveredCategory = ref<number | null>(null)
 const isShowingSubcategory = ref(false);
 function handleMouseLeftSubcategory() {
@@ -86,27 +82,14 @@ function handleMouseEnteredSubcategory() {
   isShowingSubcategory.value = true
 }
 
-const appResourceInfoStore = useAppResourceInfoStore()
-const pending = ref(false)
+const { categories, loading, fetchCategories } = useCategories()
 
-// Fetch categories from API if not already in store
-if (appResourceInfoStore.categories.length === 0) {
-  pending.value = true
-  const { data } = await useApi().get<{
-    success: boolean
-    data: Category[]
-  }>('/categories', {
-    requiresAuth: false
-  })
+// Fetch categories on mount
+onMounted(async () => {
+  await fetchCategories();
+  console.log('categories', categories);
+})
 
-  if (data.value?.data) {
-    appResourceInfoStore.setCategories(data.value.data)
-  }
-  pending.value = false
-}
-
-// Use the fetched data or fallback to empty array
-const categories = computed(() => appResourceInfoStore.categories || [])
 const targetCategory = computed(() => categories.value.find((c: Category) => c.id == hoveredCategory.value))
 </script>
 

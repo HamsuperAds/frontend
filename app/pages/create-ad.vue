@@ -45,7 +45,7 @@
                         <!-- Title -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                            <input v-model="formData.title" type="text" placeholder="enter ad title"
+                            <input v-model="adForm.title" type="text" placeholder="enter ad title"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required />
                         </div>
@@ -54,7 +54,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                                <select v-model="formData.category"
+                                <select v-model="adForm.category"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required>
                                     <option value="">select category</option>
@@ -65,7 +65,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Subcategory</label>
-                                <select v-model="formData.subcategory"
+                                <select v-model="adForm.subcategory"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required>
                                     <option value="">select subcategory</option>
@@ -79,7 +79,7 @@
                         <!-- Description -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea v-model="formData.description" placeholder="enter ad description" rows="4"
+                            <textarea v-model="adForm.description" placeholder="enter ad description" rows="4"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required></textarea>
                         </div>
@@ -88,7 +88,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Condition</label>
-                                <select v-model="formData.condition"
+                                <select v-model="adForm.condition"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required>
                                     <option value="">select condition</option>
@@ -99,7 +99,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                                <input v-model="formData.quantity" type="number" placeholder="1" min="1"
+                                <input v-model="adForm.quantity" type="number" placeholder="1" min="1"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required />
                             </div>
@@ -129,11 +129,11 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
                             <div class="flex items-center gap-4">
-                                <input v-model="formData.price" type="number" placeholder="enter price"
+                                <input v-model="adForm.price" type="number" placeholder="enter price"
                                     class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required />
                                 <label class="flex items-center">
-                                    <input v-model="formData.negotiable" type="checkbox" class="mr-2" />
+                                    <input v-model="adForm.negotiable" type="checkbox" class="mr-2" />
                                     <span class="text-sm text-gray-700">Negotiable</span>
                                 </label>
                             </div>
@@ -144,15 +144,15 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Promotion</label>
                             <div class="space-y-2">
                                 <label class="flex items-center">
-                                    <input v-model="formData.promotion" type="radio" value="bronze" class="mr-2" />
+                                    <input v-model="adForm.promotion" type="radio" value="bronze" class="mr-2" />
                                     <span class="text-sm text-gray-700">Bronze (free)</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input v-model="formData.promotion" type="radio" value="silver" class="mr-2" />
+                                    <input v-model="adForm.promotion" type="radio" value="silver" class="mr-2" />
                                     <span class="text-sm text-gray-700">Silver (₦4,500)</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input v-model="formData.promotion" type="radio" value="gold" class="mr-2" />
+                                    <input v-model="adForm.promotion" type="radio" value="gold" class="mr-2" />
                                     <span class="text-sm text-gray-700">Gold (16,000)</span>
                                 </label>
                             </div>
@@ -408,7 +408,7 @@
 const currentStep = ref(1)
 const showPricingDialog = ref(false)
 
-const formData = ref({
+const adForm = ref({
     title: '',
     category: '',
     subcategory: '',
@@ -418,7 +418,18 @@ const formData = ref({
     price: '',
     negotiable: false,
     promotion: 'bronze'
-})
+});
+const adFormRules = ref<Record<string, any>>({
+    title: { minLength: 2, maxLength: 50 },
+    category: { minLength: 2, maxLength: 50 },
+    subcategory: { minLength: 2, maxLength: 50 },
+    description: { minLength: 2, maxLength: 50 },
+    condition: { minLength: 2, maxLength: 50 },
+    quantity: { minLength: 2, maxLength: 50 },
+    price: { minLength: 2, maxLength: 50 },
+    negotiable: { minLength: 2, maxLength: 50 },
+    promotion: { minLength: 2, maxLength: 50 },
+});
 
 const additionalInfo = ref({
     brand: '',

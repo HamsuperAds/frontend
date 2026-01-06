@@ -2,6 +2,11 @@
     color: #434343;
 }
 
+.errorText {
+    color: rgb(172, 32, 32);
+    font-size: 0.75rem;
+}
+
 .custom-scroll {
     scrollbar-width: thin;
     /* Firefox */
