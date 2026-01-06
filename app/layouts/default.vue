@@ -1,7 +1,7 @@
 <template>
     <div class="default-layout">
         <!-- Navbar -->
-        <NavBar :showSearch="true" />
+        <NavBar :showSearch="showSearch" />
 
         <main class="main-content">
             <slot />
@@ -13,6 +13,18 @@
         <PageFooter />
     </div>
 </template>
+
+<script setup lang="ts">
+import { useRoute } from '#app'
+import { computed } from 'vue'
+
+const route = useRoute()
+const excludedRoutes = ['create-ad', 'search', 'login', 'register', 'faqs', 'about', 'contact', 'terms', 'privacy']
+
+const showSearch = computed(() => {
+    return !excludedRoutes.includes(route.name as string)
+})
+</script>
 
 <style scoped>
 .default-layout {
