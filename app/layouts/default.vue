@@ -19,7 +19,7 @@ import { useRoute } from '#app'
 import { computed } from 'vue'
 
 const route = useRoute()
-const excludedRoutes = ['create-ad', 'search', 'login', 'register', 'faqs', 'about', 'contact', 'terms', 'privacy']
+const excludedRoutes = ['create-ad', 'search', 'login', 'register', 'faqs', 'about', 'contact-us', 'terms-and-conditions', 'privacy-policy']
 
 const showSearch = computed(() => {
     return !excludedRoutes.includes(route.name as string)
