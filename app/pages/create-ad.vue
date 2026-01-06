@@ -165,21 +165,16 @@
                             </div>
                         </div>
 
-                        <!-- Promotion -->
+                        <!-- Promotion plan -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Promotion</label>
-                            <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input v-model="adForm.promotion" type="radio" value="bronze" class="mr-2" />
-                                    <span class="text-sm text-gray-700">Bronze (free)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input v-model="adForm.promotion" type="radio" value="silver" class="mr-2" />
-                                    <span class="text-sm text-gray-700">Silver (₦4,500)</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input v-model="adForm.promotion" type="radio" value="gold" class="mr-2" />
-                                    <span class="text-sm text-gray-700">Gold (16,000)</span>
+                            <div v-if="promotionPlansLoading" class="text-sm text-gray-500">Loading plans...</div>
+                            <div v-else class="space-y-2">
+                                <label v-for="plan in promotionPlans" :key="plan.id" class="flex items-center">
+                                    <input v-model="adForm.promotion_plan_id" type="radio" :value="plan.id"
+                                        class="mr-2" />
+                                    <span class="text-sm text-gray-700">{{ plan.name }} ({{ Number(plan.price) === 0 ?
+                                        'free' : '₦' + Number(plan.price).toLocaleString() }})</span>
                                 </label>
                             </div>
                             <button type="button" @click="showPricingDialog = true"
@@ -441,23 +436,50 @@ const showPricingDialog = ref(false)
 const { categories, loading: categoriesLoading, fetchCategories } = useCategories()
 const { states, loading: statesLoading, fetchStates } = useStates()
 
+const promotionPlans = ref<any[]>([])
+const promotionPlansLoading = ref(false)
+
+const fetchPromotionPlans = async () => {
+    promotionPlansLoading.value = true
+    try {
+        const { data } = await useApi().fetchGet<{
+            success: boolean;
+            data: any[];
+        }>('/promotion-plans', {
+            requiresAuth: false
+        })
+        if (data) {
+            promotionPlans.value = data
+            if (data.length > 0) {
+                adForm.value.promotion_plan_id = data[0].id
+            }
+        }
+    } catch (err) {
+        console.error('Error fetching promotion plans:', err)
+    } finally {
+        promotionPlansLoading.value = false
+    }
+}
+
 onMounted(async () => {
     await Promise.all([
         fetchCategories(),
-        fetchStates()
+        fetchStates(),
+        fetchPromotionPlans()
     ])
 })
 
 const adForm = ref({
-    title: '',
-    category_id: '',
-    subcategory_id: '',
-    description: '',
-    state_id: '',
-    lga_id: '',
-    price: '',
+    title: 'Test Ad',
+    category_id: '1',
+    subcategory_id: '2',
+    description: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio.',
+    state_id: '1',
+    lga_id: '2',
+    price: '1000',
     negotiable: false,
-    promotion: 'bronze'
+    promotion_plan_id: '',
+    images: [],
 });
 
 const subcategories = computed(() => {
