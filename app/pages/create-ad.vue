@@ -54,24 +54,24 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                                <select v-model="adForm.category"
+                                <select v-model="adForm.category_id"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required>
+                                    required @change="adForm.subcategory_id = ''">
                                     <option value="">select category</option>
-                                    <option value="electronics">Electronics</option>
-                                    <option value="vehicles">Vehicles</option>
-                                    <option value="real-estate">Real Estate</option>
+                                    <option v-for="category in categories" :key="category.id" :value="category.id">
+                                        {{ category.name }}
+                                    </option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Subcategory</label>
-                                <select v-model="adForm.subcategory"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                <select v-model="adForm.subcategory_id" :disabled="!adForm.category_id"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     required>
                                     <option value="">select subcategory</option>
-                                    <option value="laptops">Laptops</option>
-                                    <option value="phones">Phones</option>
-                                    <option value="tablets">Tablets</option>
+                                    <option v-for="sub in subcategories" :key="sub.id" :value="sub.id">
+                                        {{ sub.name }}
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -91,7 +91,7 @@
                                 <select v-model="adForm.state_id"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required>
-                                    <option value="">select category</option>
+                                    <option value="">select state</option>
                                     <option value="electronics">Electronics</option>
                                     <option value="vehicles">Vehicles</option>
                                     <option value="real-estate">Real Estate</option>
@@ -102,7 +102,7 @@
                                 <select v-model="adForm.lga_id"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required>
-                                    <option value="">select subcategory</option>
+                                    <option value="">select lga</option>
                                     <option value="laptops">Laptops</option>
                                     <option value="phones">Phones</option>
                                     <option value="tablets">Tablets</option>
@@ -431,20 +431,36 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useCategories } from '~/composables/useCategories';
+
 const currentStep = ref(1)
 const showPricingDialog = ref(false)
+
+const { categories, loading: categoriesLoading, fetchCategories } = useCategories()
+
+onMounted(async () => {
+    await fetchCategories()
+})
 
 const adForm = ref({
     title: '',
     category_id: '',
     subcategory_id: '',
     description: '',
-    state_id: 1,
+    state_id: '',
     lga_id: '',
     price: '',
     negotiable: false,
     promotion: 'bronze'
 });
+
+const subcategories = computed(() => {
+    if (!adForm.value.category_id) return []
+    const category = categories.value.find(c => c.id === Number(adForm.value.category_id))
+    return category ? category.subcategories : []
+})
+
 const adFormRules = ref<Record<string, any>>({
     title: { minLength: 5, maxLength: 100 },
     category_id: { min: 1, max: 16 },
@@ -469,13 +485,13 @@ const additionalInfo = ref({
 
 const clearForm = () => {
     if (currentStep.value === 1) {
-        formData.value = {
+        adForm.value = {
             title: '',
             category_id: '',
             subcategory_id: '',
             description: '',
-            condition: '',
-            quantity: 1,
+            state_id: 1,
+            lga_id: '',
             price: '',
             negotiable: false,
             promotion: 'bronze'
@@ -504,18 +520,18 @@ const skipAndSubmit = () => {
 }
 
 const submitAd = () => {
-    console.log('Submitting ad:', { ...formData.value, ...additionalInfo.value })
+    console.log('Submitting ad:', { ...adForm.value, ...additionalInfo.value })
     currentStep.value = 3
 }
 
 const resetForm = () => {
-    formData.value = {
+    adForm.value = {
         title: '',
-        category: '',
-        subcategory: '',
+        category_id: '',
+        subcategory_id: '',
         description: '',
-        condition: '',
-        quantity: 1,
+        state_id: 1,
+        lga_id: '',
         price: '',
         negotiable: false,
         promotion: 'bronze'
