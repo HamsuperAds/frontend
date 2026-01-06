@@ -137,7 +137,6 @@ const selectedState = ref<State | null>(null)
 // Fetch states on mount
 onMounted(async () => {
     await fetchStates();
-    console.log('states', states.value);
 })
 
 const selectState = (state: State) => {

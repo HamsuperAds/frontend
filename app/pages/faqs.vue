@@ -71,10 +71,6 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-    layout: 'profile'
-})
-
 const searchQuery = ref('')
 
 const leftColumnFaqs = ref([
@@ -164,10 +160,14 @@ const rightColumnFaqs = ref([
 ])
 
 const toggleFaq = (index: number) => {
-    leftColumnFaqs.value[index].isOpen = !leftColumnFaqs.value[index].isOpen
+    if (leftColumnFaqs.value[index]) {
+        leftColumnFaqs.value[index].isOpen = !leftColumnFaqs.value[index].isOpen
+    }
 }
 
 const toggleRightFaq = (index: number) => {
-    rightColumnFaqs.value[index].isOpen = !rightColumnFaqs.value[index].isOpen
+    if (rightColumnFaqs.value[index]) {
+        rightColumnFaqs.value[index].isOpen = !rightColumnFaqs.value[index].isOpen
+    }
 }
 </script>

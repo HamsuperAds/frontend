@@ -22,7 +22,7 @@
               <li><a href="#" class="hover:text-blue-200">About Hamsuper</a></li>
               <li><a href="#" class="hover:text-blue-200">Terms & Conditions</a></li>
               <li><a href="#" class="hover:text-blue-200">Privacy Policy</a></li>
-              <li><a href="#" class="hover:text-blue-200">FAQ</a></li>
+              <li><a href="/faqs" class="hover:text-blue-200">FAQ</a></li>
               <li><a href="#" class="hover:text-blue-200">Contact Us</a></li>
             </ul>
           </div>

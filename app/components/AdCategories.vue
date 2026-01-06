@@ -87,7 +87,6 @@ const { categories, loading, fetchCategories } = useCategories()
 // Fetch categories on mount
 onMounted(async () => {
   await fetchCategories();
-  console.log('categories', categories);
 })
 
 const targetCategory = computed(() => categories.value.find((c: Category) => c.id == hoveredCategory.value))
