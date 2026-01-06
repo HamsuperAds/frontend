@@ -11,12 +11,14 @@
 
         <!-- Footer -->
         <PageFooter />
+        <Toaster />
     </div>
 </template>
 
 <script setup lang="ts">
 import { useRoute } from '#app'
 import { computed } from 'vue'
+import { Toaster } from '@/components/ui/sonner'
 
 const route = useRoute()
 const excludedRoutes = ['create-ad', 'search', 'login', 'register', 'faqs', 'about', 'contact-us', 'terms-and-conditions', 'privacy-policy']

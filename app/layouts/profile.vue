@@ -104,12 +104,14 @@
 
         <!-- Footer -->
         <PageFooter />
+        <Toaster />
     </div>
 </template>
 
 <script setup lang="ts">
 
 import { useRoute } from 'vue-router'
+import { Toaster } from '@/components/ui/sonner'
 
 const route = useRoute()
 const { $getUser } = useNuxtApp()
