@@ -51,7 +51,7 @@
                 <!-- Phone Number -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
-                    <input v-model="formData.phoneNumber" type="tel"
+                    <input v-model="formData.phoneNumber" readonly type="tel"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="08023234345" />
                 </div>
@@ -59,7 +59,7 @@
                 <!-- Email -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input v-model="formData.email" type="email"
+                    <input v-model="formData.email" readonly type="email"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="johndoe@example.com" />
                 </div>
@@ -67,14 +67,24 @@
                 <!-- Location -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                    <select v-model="formData.location"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="Enugu">Enugu</option>
-                        <option value="Lagos">Lagos</option>
-                        <option value="Abuja">Abuja</option>
-                        <option value="Port Harcourt">Port Harcourt</option>
-                        <option value="Kano">Kano</option>
-                    </select>
+                    <div class="flex">
+                        <select v-model="formData.state"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Enugu">Enugu</option>
+                            <option value="Lagos">Lagos</option>
+                            <option value="Abuja">Abuja</option>
+                            <option value="Port Harcourt">Port Harcourt</option>
+                            <option value="Kano">Kano</option>
+                        </select>
+                        <select v-model="formData.lga"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Enugu">Enugu</option>
+                            <option value="Lagos">Lagos</option>
+                            <option value="Abuja">Abuja</option>
+                            <option value="Port Harcourt">Port Harcourt</option>
+                            <option value="Kano">Kano</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Date of Birth -->

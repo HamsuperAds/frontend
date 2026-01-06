@@ -1,11 +1,12 @@
 import { useAppResourceInfoStore } from "#imports";
+import type { User } from "~/types";
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig();
   const apiBaseUrl = config.public.apiBaseUrl;
   const appResourceStore = useAppResourceInfoStore();
   const appResourceState = appResourceStore.$state;
-  const { data } = useAuth();
+  const { data, status } = useAuth();
   return {
     provide: {
       apiBaseUrl,
@@ -31,9 +32,12 @@ export default defineNuxtPlugin((nuxtApp) => {
           return typeStr;
         }
       },
+      isLoggedIn: () => {
+        return status.value === "authenticated";
+      },
       getUser: () => {
-        if (data) {
-          return { ...data.value?.data };
+        if (data.value) {
+          return data.value as User;
         }
         return null;
       },

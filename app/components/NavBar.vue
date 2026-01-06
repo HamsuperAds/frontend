@@ -11,31 +11,31 @@
                 <!-- Right Side Icons and Button -->
                 <div class="flex items-center space-x-6">
                     <!-- Heart Icon -->
-                    <button @click="navigateTo('/account/favorites')" class="hover:opacity-80 transition-opacity">
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
-                            </path>
-                        </svg>
-                    </button>
-
-                    <!-- Bell Icon -->
-                    <button class="hover:opacity-80 transition-opacity">
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                            </path>
-                        </svg>
-                    </button>
-
-                    <!-- Message Icon -->
-                    <button @click="navigateTo('/messages')" class="hover:opacity-80 transition-opacity">
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
-                            </path>
-                        </svg>
-                    </button>
+                    <template v-if="$isLoggedIn()">
+                        <button @click="navigateTo('/account/favorites')" class="hover:opacity-80 transition-opacity">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                                </path>
+                            </svg>
+                        </button>
+                        <!-- Bell Icon -->
+                        <button class="hover:opacity-80 transition-opacity">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                </path>
+                            </svg>
+                        </button>
+                        <!-- Message Icon -->
+                        <button @click="navigateTo('/messages')" class="hover:opacity-80 transition-opacity">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                        </button>
+                    </template>
 
                     <!-- User Icon -->
                     <button @click="navigateTo('/auth/register')" class="hover:opacity-80 transition-opacity">
@@ -91,7 +91,7 @@
                                     <span class="font-medium text-gray-900">{{ searchQuery }}</span>
                                     <span class="text-gray-500">in</span>
                                     <span class="text-blue-600 font-medium group-hover:text-blue-700">{{ category.name
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <span class="text-xs text-gray-400">{{ category.results_count }} results</span>
                             </div>

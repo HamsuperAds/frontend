@@ -71,17 +71,6 @@
                                 Change Password
                             </NuxtLink>
 
-                            <NuxtLink to="/account/faqs"
-                                class="flex items-center px-4 py-2 text-sm rounded-lg transition-colors"
-                                :class="isActive('/account/faqs') ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'">
-                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
-                                        clip-rule="evenodd"></path>
-                                </svg>
-                                FAQs
-                            </NuxtLink>
-
                             <NuxtLink to="/account/delete"
                                 class="flex items-center px-4 py-2 text-sm rounded-lg transition-colors"
                                 :class="isActive('/account/delete') ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'">
@@ -93,7 +82,7 @@
                                 Delete My Account
                             </NuxtLink>
 
-                            <button @click="handleLogout"
+                            <button @click="useLogout()"
                                 class="w-full flex items-center px-4 py-2 text-sm rounded-lg transition-colors text-gray-700 hover:bg-gray-100">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"
@@ -131,16 +120,6 @@ const isActive = (path: string) => {
         return route.path === '/account'
     }
     return route.path.startsWith(path)
-}
-
-const handleLogout = () => {
-    // Clear auth data
-    if (process.client) {
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('user')
-    }
-    // Redirect to login
-    window.location.href = '/auth/login'
 }
 </script>
 
