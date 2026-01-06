@@ -90,22 +90,22 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
                                 <select v-model="adForm.state_id"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required>
+                                    required @change="adForm.lga_id = ''">
                                     <option value="">select state</option>
-                                    <option value="electronics">Electronics</option>
-                                    <option value="vehicles">Vehicles</option>
-                                    <option value="real-estate">Real Estate</option>
+                                    <option v-for="state in states" :key="state.id" :value="state.id">
+                                        {{ state.name }}
+                                    </option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Local govt. area</label>
-                                <select v-model="adForm.lga_id"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                <select v-model="adForm.lga_id" :disabled="!adForm.state_id"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     required>
                                     <option value="">select lga</option>
-                                    <option value="laptops">Laptops</option>
-                                    <option value="phones">Phones</option>
-                                    <option value="tablets">Tablets</option>
+                                    <option v-for="lga in lgas" :key="lga.id" :value="lga.id">
+                                        {{ lga.name }}
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -433,14 +433,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useCategories } from '~/composables/useCategories';
+import { useStates } from '~/composables/useStates';
 
 const currentStep = ref(1)
 const showPricingDialog = ref(false)
 
 const { categories, loading: categoriesLoading, fetchCategories } = useCategories()
+const { states, loading: statesLoading, fetchStates } = useStates()
 
 onMounted(async () => {
-    await fetchCategories()
+    await Promise.all([
+        fetchCategories(),
+        fetchStates()
+    ])
 })
 
 const adForm = ref({
@@ -459,6 +464,12 @@ const subcategories = computed(() => {
     if (!adForm.value.category_id) return []
     const category = categories.value.find(c => c.id === Number(adForm.value.category_id))
     return category ? category.subcategories : []
+})
+
+const lgas = computed(() => {
+    if (!adForm.value.state_id) return []
+    const state = states.value.find(s => s.id === Number(adForm.value.state_id))
+    return state ? state.lgas : []
 })
 
 const adFormRules = ref<Record<string, any>>({
