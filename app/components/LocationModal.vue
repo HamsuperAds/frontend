@@ -116,10 +116,8 @@
 </template>
 
 <script setup lang="ts">
-import { watch } from 'vue';
-import { computed } from 'vue';
-import { useApi } from '#imports';
-import { ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useStates } from '~/composables/useStates';
 import type { State, LGA } from '~/types';
 import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
 
@@ -133,19 +131,13 @@ const emit = defineEmits<{
 }>()
 
 const appResourceInfoStore = useAppResourceInfoStore()
+const { states, loading: pending, fetchStates } = useStates()
 const selectedState = ref<State | null>(null)
 
-// Fetch states from API
-const { data: statesData, pending } = await useApi().get<{
-    success: boolean
-    data: State[]
-}>('/states', {
-    requiresAuth: false
-})
-
-const states = computed(() => {
-    const result = statesData.value?.data || []
-    return result
+// Fetch states on mount
+onMounted(async () => {
+    await fetchStates();
+    console.log('states', states.value);
 })
 
 const selectState = (state: State) => {

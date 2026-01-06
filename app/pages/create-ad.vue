@@ -84,8 +84,34 @@
                                 required></textarea>
                         </div>
 
-                        <!-- Condition and Quantity -->
+                        <!-- State and lga -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                                <select v-model="adForm.state_id"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required>
+                                    <option value="">select category</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="vehicles">Vehicles</option>
+                                    <option value="real-estate">Real Estate</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Local govt. area</label>
+                                <select v-model="adForm.lga_id"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required>
+                                    <option value="">select subcategory</option>
+                                    <option value="laptops">Laptops</option>
+                                    <option value="phones">Phones</option>
+                                    <option value="tablets">Tablets</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Condition and Quantity -->
+                        <!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Condition</label>
                                 <select v-model="adForm.condition"
@@ -103,7 +129,7 @@
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required />
                             </div>
-                        </div>
+                        </div> -->
 
                         <!-- Photos -->
                         <div>
@@ -410,25 +436,23 @@ const showPricingDialog = ref(false)
 
 const adForm = ref({
     title: '',
-    category: '',
-    subcategory: '',
+    category_id: '',
+    subcategory_id: '',
     description: '',
-    condition: '',
-    quantity: 1,
+    state_id: 1,
+    lga_id: '',
     price: '',
     negotiable: false,
     promotion: 'bronze'
 });
 const adFormRules = ref<Record<string, any>>({
-    title: { minLength: 2, maxLength: 50 },
-    category: { minLength: 2, maxLength: 50 },
-    subcategory: { minLength: 2, maxLength: 50 },
-    description: { minLength: 2, maxLength: 50 },
-    condition: { minLength: 2, maxLength: 50 },
-    quantity: { minLength: 2, maxLength: 50 },
-    price: { minLength: 2, maxLength: 50 },
-    negotiable: { minLength: 2, maxLength: 50 },
-    promotion: { minLength: 2, maxLength: 50 },
+    title: { minLength: 5, maxLength: 100 },
+    category_id: { min: 1, max: 16 },
+    subcategory_id: { min: 1, max: 200 },
+    description: { minLength: 5, maxLength: 500 },
+    state_id: { min: 1, max: 37 },
+    lga_id: { min: 1, max: 774 },
+    price: { min: 5, max: 100000000 },
 });
 
 const additionalInfo = ref({
@@ -447,8 +471,8 @@ const clearForm = () => {
     if (currentStep.value === 1) {
         formData.value = {
             title: '',
-            category: '',
-            subcategory: '',
+            category_id: '',
+            subcategory_id: '',
             description: '',
             condition: '',
             quantity: 1,
