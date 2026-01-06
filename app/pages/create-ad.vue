@@ -317,105 +317,46 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Bronze Plan -->
-                        <div class="border-2 border-blue-500 rounded-lg overflow-hidden">
-                            <div class="bg-blue-500 text-white px-6 py-4 flex items-center justify-between">
-                                <h3 class="text-xl font-bold">Bronze</h3>
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                    <path
-                                        d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z">
-                                    </path>
-                                </svg>
+                        <div v-for="plan in promotionPlans" :key="plan.id" class="border-2 rounded-lg overflow-hidden"
+                            :style="{ borderColor: plan.color }">
+                            <div class="text-white px-6 py-4 flex items-center justify-between"
+                                :style="{ backgroundColor: plan.color }">
+                                <h3 class="text-xl font-bold">{{ plan.name }}</h3>
+                                <img :src="plan.icon" :alt="plan.name" class="w-6 h-6" />
                             </div>
                             <div class="p-6 space-y-4">
                                 <div class="flex justify-between items-center py-3 border-b">
                                     <span class="text-gray-700">On-top</span>
-                                    <span class="text-blue-600 font-semibold">24hrs</span>
+                                    <span class="font-semibold" :style="{ color: plan.color }">{{
+                                        formatDuration(plan.on_top_duration_hours) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center py-3 border-b">
                                     <span class="text-gray-700">Auto Renew</span>
-                                    <span class="text-blue-400">N/A</span>
+                                    <span class="font-semibold"
+                                        :class="plan.auto_renew_interval_hours ? '' : 'text-gray-400'"
+                                        :style="plan.auto_renew_interval_hours ? { color: plan.color } : {}">{{
+                                            plan.auto_renew_interval_hours ? formatDuration(plan.auto_renew_interval_hours)
+                                                : 'N/A' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center py-3 border-b">
                                     <span class="text-gray-700">SRP Promotion</span>
-                                    <span class="text-blue-400">N/A</span>
+                                    <span class="font-semibold" :class="plan.srp_promotion_days ? '' : 'text-gray-400'"
+                                        :style="plan.srp_promotion_days ? { color: plan.color } : {}">{{
+                                            plan.srp_promotion_days ? plan.srp_promotion_days + ' days' : 'N/A' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center py-3 border-b">
                                     <span class="text-gray-700">Email marketing</span>
-                                    <span class="text-blue-400">N/A</span>
+                                    <span class="font-semibold"
+                                        :class="plan.email_marketing_enabled ? '' : 'text-gray-400'"
+                                        :style="plan.email_marketing_enabled ? { color: plan.color } : {}">{{
+                                            plan.email_marketing_enabled ? 'Yes' : 'N/A' }}</span>
                                 </div>
                             </div>
-                            <div class="bg-blue-500 text-white px-6 py-4 flex items-center justify-between">
+                            <div class="text-white px-6 py-4 flex items-center justify-between"
+                                :style="{ backgroundColor: plan.color }">
                                 <span class="font-semibold">Price:</span>
-                                <span class="text-2xl font-bold">₦0</span>
-                            </div>
-                        </div>
-
-                        <!-- Silver Plan -->
-                        <div class="border-2 border-blue-500 rounded-lg overflow-hidden">
-                            <div class="bg-blue-500 text-white px-6 py-4 flex items-center justify-between">
-                                <h3 class="text-xl font-bold">Silver</h3>
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                    <path
-                                        d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z">
-                                    </path>
-                                </svg>
-                            </div>
-                            <div class="p-6 space-y-4">
-                                <div class="flex justify-between items-center py-3 border-b">
-                                    <span class="text-gray-700">On-top</span>
-                                    <span class="text-blue-600 font-semibold">7 days</span>
-                                </div>
-                                <div class="flex justify-between items-center py-3 border-b">
-                                    <span class="text-gray-700">Auto Renew</span>
-                                    <span class="text-blue-600 font-semibold">24hrs</span>
-                                </div>
-                                <div class="flex justify-between items-center py-3 border-b">
-                                    <span class="text-gray-700">SRP Promotion</span>
-                                    <span class="text-blue-600 font-semibold">3 days</span>
-                                </div>
-                                <div class="flex justify-between items-center py-3 border-b">
-                                    <span class="text-gray-700">Email marketing</span>
-                                    <span class="text-blue-400">N/A</span>
-                                </div>
-                            </div>
-                            <div class="bg-blue-500 text-white px-6 py-4 flex items-center justify-between">
-                                <span class="font-semibold">Price:</span>
-                                <span class="text-2xl font-bold">₦4,500</span>
-                            </div>
-                        </div>
-
-                        <!-- Gold Plan -->
-                        <div class="border-2 border-blue-500 rounded-lg overflow-hidden">
-                            <div class="bg-blue-500 text-white px-6 py-4 flex items-center justify-between">
-                                <h3 class="text-xl font-bold">Gold</h3>
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                    <path
-                                        d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z">
-                                    </path>
-                                </svg>
-                            </div>
-                            <div class="p-6 space-y-4">
-                                <div class="flex justify-between items-center py-3 border-b">
-                                    <span class="text-gray-700">On-top</span>
-                                    <span class="text-blue-600 font-semibold">30 days</span>
-                                </div>
-                                <div class="flex justify-between items-center py-3 border-b">
-                                    <span class="text-gray-700">Auto Renew</span>
-                                    <span class="text-blue-600 font-semibold">6hrs</span>
-                                </div>
-                                <div class="flex justify-between items-center py-3 border-b">
-                                    <span class="text-gray-700">SRP Promotion</span>
-                                    <span class="text-blue-600 font-semibold">14 days</span>
-                                </div>
-                                <div class="flex justify-between items-center py-3 border-b">
-                                    <span class="text-gray-700">Email marketing</span>
-                                    <span class="text-blue-600 font-semibold">Yes</span>
-                                </div>
-                            </div>
-                            <div class="bg-blue-500 text-white px-6 py-4 flex items-center justify-between">
-                                <span class="font-semibold">Price:</span>
-                                <span class="text-2xl font-bold">₦16,000</span>
+                                <span class="text-2xl font-bold">{{ Number(plan.price) === 0 ? 'Free' : '₦' +
+                                    Number(plan.price).toLocaleString() }}</span>
                             </div>
                         </div>
                     </div>
@@ -429,6 +370,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useCategories } from '~/composables/useCategories';
 import { useStates } from '~/composables/useStates';
+import type { PromotionPlan } from '~/types/promotionPlan';
 
 const currentStep = ref(1)
 const showPricingDialog = ref(false)
@@ -436,8 +378,16 @@ const showPricingDialog = ref(false)
 const { categories, loading: categoriesLoading, fetchCategories } = useCategories()
 const { states, loading: statesLoading, fetchStates } = useStates()
 
-const promotionPlans = ref<any[]>([])
+const promotionPlans = ref<PromotionPlan[]>([])
 const promotionPlansLoading = ref(false)
+
+const formatDuration = (hours: number) => {
+    if (hours >= 24) {
+        const days = Math.floor(hours / 24)
+        return days + (days === 1 ? ' day' : ' days')
+    }
+    return hours + 'hrs'
+}
 
 const fetchPromotionPlans = async () => {
     promotionPlansLoading.value = true
