@@ -19,11 +19,11 @@
           <div class="max-w-min whitespace-nowrap">
             <h3 class="font-semibold mb-4">Company Info</h3>
             <ul class="space-y-2 text-sm">
-              <li><a href="#" class="hover:text-blue-200">About Hamsuper</a></li>
-              <li><a href="#" class="hover:text-blue-200">Terms & Conditions</a></li>
-              <li><a href="#" class="hover:text-blue-200">Privacy Policy</a></li>
+              <li><a href="/about" class="hover:text-blue-200">About Hamsuper</a></li>
+              <li><a href="/terms-and-conditions" class="hover:text-blue-200">Terms & Conditions</a></li>
+              <li><a href="/privacy-policy" class="hover:text-blue-200">Privacy Policy</a></li>
               <li><a href="/faqs" class="hover:text-blue-200">FAQ</a></li>
-              <li><a href="#" class="hover:text-blue-200">Contact Us</a></li>
+              <li><a href="/contact-us" class="hover:text-blue-200">Contact Us</a></li>
             </ul>
           </div>
         </div>
