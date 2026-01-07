@@ -2,6 +2,10 @@
     color: #434343;
 }
 
+button:not(:disabled) {
+    cursor: pointer;
+}
+
 .errorText {
     color: rgb(172, 32, 32);
     font-size: 0.75rem;

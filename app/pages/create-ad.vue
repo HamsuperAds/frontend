@@ -151,18 +151,34 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Photos</label>
                             <p class="text-xs text-gray-500 mb-2">Note: the first image will be used as the primary
                                 image for the ad</p>
-                            <div
-                                class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer">
-                                <input type="file" multiple accept="image/*" class="hidden" id="photo-upload" />
-                                <label for="photo-upload" class="cursor-pointer">
-                                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-2" fill="currentColor"
-                                        viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd"
-                                            d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                                            clip-rule="evenodd"></path>
-                                    </svg>
-                                    <p class="text-gray-500 text-sm">Click to upload photos</p>
-                                </label>
+                            <div id="adImages" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <!-- Image Previews -->
+                                <div v-for="(preview, index) in imagePreviews" :key="preview.id"
+                                    class="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
+                                    <img :src="preview.url" :alt="'Image ' + (index + 1)"
+                                        class="w-full h-full object-cover" />
+                                    <button type="button" @click="removeImage(index)"
+                                        class="absolute top-1 right-1 bg-black bg-opacity-60 hover:bg-opacity-80 rounded-full px-1 transition-colors">
+                                        <Icon name="heroicons:x-mark" class="w-4 h-4 text-white" />
+                                    </button>
+                                    <span v-if="index === 0"
+                                        class="absolute bottom-1 left-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded">Primary</span>
+                                </div>
+                                <!-- Upload Button -->
+                                <div
+                                    class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer aspect-square flex flex-col items-center justify-center">
+                                    <input type="file" multiple accept="image/*" class="hidden" id="photo-upload"
+                                        @change="handleImageSelect" />
+                                    <label for="photo-upload" class="cursor-pointer flex flex-col items-center">
+                                        <svg class="w-12 h-12 text-gray-400 mb-2" fill="currentColor"
+                                            viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                                                clip-rule="evenodd"></path>
+                                        </svg>
+                                        <p class="text-gray-500 text-sm">Click to upload</p>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
@@ -446,8 +462,46 @@ const adForm = ref<Record<string, any>>({
     negotiable: false,
     promotion_plan_id: '',
     images: [],
+    primary_image_index: 0,
 });
 const adFormHasError = ref(true);
+
+// Image preview handling
+interface ImagePreview {
+    id: string;
+    url: string;
+    file: File;
+}
+const imagePreviews = ref<ImagePreview[]>([]);
+
+const handleImageSelect = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+
+    const files = Array.from(input.files);
+    files.forEach((file) => {
+        const preview: ImagePreview = {
+            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            url: URL.createObjectURL(file),
+            file: file,
+        };
+        imagePreviews.value.push(preview);
+        adForm.value.images.push(file);
+    });
+
+    // Reset input to allow selecting the same file again
+    input.value = '';
+};
+
+const removeImage = (index: number) => {
+    const preview = imagePreviews.value[index];
+    if (preview) {
+        // Revoke the object URL to free memory
+        URL.revokeObjectURL(preview.url);
+    }
+    imagePreviews.value.splice(index, 1);
+    adForm.value.images.splice(index, 1);
+};
 
 const subcategories = computed(() => {
     if (!adForm.value.category_id) return []
@@ -497,8 +551,17 @@ const additionalInfo = ref({
     youtubeLink: ''
 })
 
+const clearImagePreviews = () => {
+    // Revoke all object URLs to free memory
+    imagePreviews.value.forEach((preview) => {
+        URL.revokeObjectURL(preview.url);
+    });
+    imagePreviews.value = [];
+};
+
 const clearForm = () => {
     if (currentStep.value === 1) {
+        clearImagePreviews();
         adForm.value = {
             title: '',
             category_id: '',
@@ -508,7 +571,8 @@ const clearForm = () => {
             lga_id: '',
             price: '',
             negotiable: false,
-            promotion: 'bronze'
+            promotion: 'bronze',
+            images: []
         }
     } else {
         additionalInfo.value = {
@@ -539,6 +603,7 @@ const submitAd = () => {
 }
 
 const resetForm = () => {
+    clearImagePreviews();
     adForm.value = {
         title: '',
         category_id: '',
@@ -548,7 +613,8 @@ const resetForm = () => {
         lga_id: '',
         price: '',
         negotiable: false,
-        promotion: 'bronze'
+        promotion: 'bronze',
+        images: []
     }
     additionalInfo.value = {
         brand: '',
