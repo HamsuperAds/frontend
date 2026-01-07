@@ -124,6 +124,15 @@
                                     adFormRules.lga_id.message }}</span>
                             </div>
                         </div>
+                        <!-- Place -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Place/town</label>
+                            <input v-model="adForm.place" type="text" placeholder="enter ad title"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required />
+                            <span v-if="adFormHasError && adFormRules.place.hasError" class="errorText">{{
+                                adFormRules.place.message }}</span>
+                        </div>
 
                         <!-- Condition and Quantity -->
                         <!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -292,19 +301,31 @@
                             </div>
                         </div>
 
+                        <!-- Error Message -->
+                        <div v-if="submitError"
+                            class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                            {{ submitError }}
+                        </div>
+
                         <!-- Action Buttons -->
                         <div class="flex justify-between pt-4">
-                            <button type="button" @click="skipAndSubmit"
-                                class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                            <button type="button" @click="skipAndSubmit" :disabled="isSubmitting"
+                                class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                <Icon v-if="isSubmitting && isSkipSubmit" name="svg-spinners:ring-resize"
+                                    class="w-5 h-5" />
                                 Skip & Submit
                             </button>
-                            <button type="submit"
-                                class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2">
-                                Create Ad
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4v16m8-8H4"></path>
-                                </svg>
+                            <button type="submit" :disabled="isSubmitting"
+                                class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                <Icon v-if="isSubmitting && !isSkipSubmit" name="svg-spinners:ring-resize"
+                                    class="w-5 h-5" />
+                                <template v-else>
+                                    Create Ad
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                </template>
                             </button>
                         </div>
                     </form>
@@ -323,7 +344,8 @@
                         <button @click="showPricingDialog = false" class="text-gray-400 hover:text-gray-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"></path>
+                                    d="M6 18L18 6M6 6l12 12">
+                                </path>
                             </svg>
                         </button>
                     </div>
@@ -431,6 +453,9 @@ onMounted(async () => {
         fetchStates(),
         fetchPromotionPlans()
     ])
+    if (adForm.value.subcategory_id) {
+        fetchSubcategoryAttributes(adForm.value.subcategory_id);
+    }
 })
 
 const adForm = ref<Record<string, any>>({
@@ -440,6 +465,7 @@ const adForm = ref<Record<string, any>>({
     description: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio.',
     state_id: '1',
     lga_id: '2',
+    place: 'Nkwa',
     price: '1000',
     negotiable: false,
     promotion_plan_id: '',
@@ -505,6 +531,7 @@ const adFormRules = ref<Record<string, any>>({
     state_id: { min: 1, max: 37 },
     lga_id: { min: 1, max: 774, customMessage: 'Please select an LGA' },
     price: { min: 5, max: 100000000 },
+    place: { minLength: 3, maxLength: 100 },
 });
 
 const checkAdForm = () => {
@@ -603,14 +630,80 @@ const goToNextStep = () => {
     currentStep.value = 2
 }
 
+// Submit state
+const isSubmitting = ref(false);
+const isSkipSubmit = ref(false);
+const submitError = ref('');
+
 const skipAndSubmit = () => {
-    submitAd()
+    isSkipSubmit.value = true;
+    submitAd(true);
 }
 
-const submitAd = () => {
-    adForm.value.additional_info = additionalInfo.value;
-    console.log('Submitting ad:', adForm.value)
-    currentStep.value = 3
+const submitAd = async (skipDetails = false) => {
+    submitError.value = '';
+    isSubmitting.value = true;
+    if (!skipDetails) {
+        isSkipSubmit.value = false;
+    }
+
+    try {
+        // Build FormData for the request
+        const formData = new FormData();
+
+        // Add basic form fields
+        formData.append('title', adForm.value.title);
+        formData.append('category_id', adForm.value.category_id);
+        formData.append('subcategory_id', adForm.value.subcategory_id);
+        formData.append('description', adForm.value.description);
+        formData.append('state_id', adForm.value.state_id);
+        formData.append('lga_id', adForm.value.lga_id);
+        formData.append('place', adForm.value.place);
+        formData.append('price', adForm.value.price);
+        formData.append('negotiable', adForm.value.negotiable ? '1' : '0');
+        formData.append('promotion_plan_id', adForm.value.promotion_plan_id);
+        formData.append('primary_image_index', adForm.value.primary_image_index.toString());
+
+        // Add images
+        adForm.value.images.forEach((image: File, index: number) => {
+            formData.append(`images[${index}]`, image);
+        });
+
+        // Handle additional info - filter out empty values
+        if (!skipDetails) {
+            const filteredAdditionalInfo: Record<string, any> = {};
+            let hasValidInfo = false;
+
+            Object.entries(additionalInfo.value).forEach(([key, value]) => {
+                if (value !== null && value !== '' && value !== undefined) {
+                    filteredAdditionalInfo[key] = value;
+                    hasValidInfo = true;
+                }
+            });
+
+            // Only add additional_info if there are non-empty values
+            if (hasValidInfo) {
+                formData.append('additional_info', JSON.stringify(filteredAdditionalInfo));
+            }
+        }
+
+        // Make API call
+        await useApi().fetchPost<{
+            success: boolean;
+            message: string;
+            data: any;
+        }>('/ads', formData);
+
+        // Success - move to step 3
+        currentStep.value = 3;
+    } catch (error: any) {
+        // Handle error
+        const errorMessage = error?.data?.message || error?.message || 'An error occurred while creating the ad. Please try again.';
+        submitError.value = errorMessage;
+        console.error('Error creating ad:', error);
+    } finally {
+        isSubmitting.value = false;
+    }
 }
 
 const resetForm = () => {

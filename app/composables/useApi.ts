@@ -22,6 +22,7 @@ export const useApi = () => {
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      "Accept": "application/json",
       ...((fetchOptions.headers as Record<string, string>) || {}),
     };
 
@@ -29,7 +30,8 @@ export const useApi = () => {
     if (requiresAuth) {
       const token = getToken();
       if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+        // Check if token already includes Bearer prefix
+        headers["Authorization"] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       }
     }
 
@@ -55,19 +57,21 @@ export const useApi = () => {
     endpoint: string,
     options: RequestInit & { requiresAuth?: boolean; params?: Record<string, any> } = {}
   ): Promise<T> => {
-    const { requiresAuth = true, ...fetchOptions } = options;
+    const { requiresAuth = true, body, ...fetchOptions } = options;
 
-    const isFormData = fetchOptions.body instanceof FormData;
+    const isFormData = body instanceof FormData;
 
     const headers: Record<string, string> = {
       ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      "Accept": "application/json",
       ...((fetchOptions.headers as Record<string, string>) || {}),
     };
 
     if (requiresAuth) {
       const token = getToken();
       if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+        // Check if token already includes Bearer prefix
+        headers["Authorization"] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       }
     }
 
@@ -77,6 +81,7 @@ export const useApi = () => {
         ...fetchOptions,
         headers,
         method: fetchOptions.method as any,
+        body,
       });
     } catch (error: any) {
       if (error.response?.status === 401) {
