@@ -4,8 +4,11 @@
             <div class="max-w-3xl mx-auto bg-white rounded-lg shadow">
                 <!-- Header -->
                 <div class="bg-blue-500 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
-                    <h2 class="text-xl font-semibold">
-                        {{ currentStep === 1 ? 'Create Ad' : 'Additional info: HP Laptop firefly G8' }}</h2>
+                    <h2 class="text-xl font-semibold flex items-center">
+                        <Icon v-if="currentStep !== 1" @click="currentStep--" name="heroicons:chevron-left"
+                            class="w-6 h-6 mr-2" />
+                        {{ currentStep === 1 ? 'Create Ad' : 'Additional info: ' + adForm.title }}
+                    </h2>
                     <button @click="clearForm" class="text-sm hover:underline">Clear</button>
                 </div>
 
@@ -48,6 +51,8 @@
                             <input v-model="adForm.title" type="text" placeholder="enter ad title"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required />
+                            <span v-if="adFormHasError && adFormRules.title.hasError" class="errorText">{{
+                                adFormRules.title.message }}</span>
                         </div>
 
                         <!-- Category and Subcategory -->
@@ -62,6 +67,8 @@
                                         {{ category.name }}
                                     </option>
                                 </select>
+                                <span v-if="adFormHasError && adFormRules.category_id.hasError" class="errorText">{{
+                                    adFormRules.category_id.message }}</span>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Subcategory</label>
@@ -73,6 +80,8 @@
                                         {{ sub.name }}
                                     </option>
                                 </select>
+                                <span v-if="adFormHasError && adFormRules.subcategory_id.hasError" class="errorText">{{
+                                    adFormRules.subcategory_id.message }}</span>
                             </div>
                         </div>
 
@@ -82,6 +91,8 @@
                             <textarea v-model="adForm.description" placeholder="enter ad description" rows="4"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required></textarea>
+                            <span v-if="adFormHasError && adFormRules.description.hasError" class="errorText">{{
+                                adFormRules.description.message }}</span>
                         </div>
 
                         <!-- State and lga -->
@@ -96,6 +107,8 @@
                                         {{ state.name }}
                                     </option>
                                 </select>
+                                <span v-if="adFormHasError && adFormRules.state_id.hasError" class="errorText">{{
+                                    adFormRules.state_id.message }}</span>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Local govt. area</label>
@@ -107,6 +120,8 @@
                                         {{ lga.name }}
                                     </option>
                                 </select>
+                                <span v-if="adFormHasError && adFormRules.lga_id.hasError" class="errorText">{{
+                                    adFormRules.lga_id.message }}</span>
                             </div>
                         </div>
 
@@ -163,6 +178,8 @@
                                     <span class="text-sm text-gray-700">Negotiable</span>
                                 </label>
                             </div>
+                            <span v-if="adFormHasError && adFormRules.price.hasError" class="errorText">{{
+                                adFormRules.price.message }}</span>
                         </div>
 
                         <!-- Promotion plan -->
@@ -185,14 +202,12 @@
 
                         <!-- Next Button -->
                         <div class="flex justify-end pt-4">
-                            <button type="submit"
-                                class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2">
+                            <Button type="submit"
+                                class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2"
+                                :disabled="adFormHasError">
                                 Next
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                                </svg>
-                            </button>
+                                <Icon name="lucide:arrow-right" class="h-5 w-5" />
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -374,6 +389,7 @@ import type { PromotionPlan } from '~/types/promotionPlan';
 
 const currentStep = ref(1)
 const showPricingDialog = ref(false)
+const validate = useValidate();
 
 const { categories, loading: categoriesLoading, fetchCategories } = useCategories()
 const { states, loading: statesLoading, fetchStates } = useStates()
@@ -419,7 +435,7 @@ onMounted(async () => {
     ])
 })
 
-const adForm = ref({
+const adForm = ref<Record<string, any>>({
     title: 'Test Ad',
     category_id: '1',
     subcategory_id: '2',
@@ -431,6 +447,7 @@ const adForm = ref({
     promotion_plan_id: '',
     images: [],
 });
+const adFormHasError = ref(true);
 
 const subcategories = computed(() => {
     if (!adForm.value.category_id) return []
@@ -447,12 +464,26 @@ const lgas = computed(() => {
 const adFormRules = ref<Record<string, any>>({
     title: { minLength: 5, maxLength: 100 },
     category_id: { min: 1, max: 16 },
-    subcategory_id: { min: 1, max: 200 },
+    subcategory_id: { min: 1, max: 200, customMessage: 'Please select a Subcategory' },
     description: { minLength: 5, maxLength: 500 },
     state_id: { min: 1, max: 37 },
-    lga_id: { min: 1, max: 774 },
+    lga_id: { min: 1, max: 774, customMessage: 'Please select an LGA' },
     price: { min: 5, max: 100000000 },
 });
+
+const checkAdForm = () => {
+    adFormRules.value = validate(adForm.value, adFormRules.value);
+    adFormHasError.value = false;
+    for (const field in adFormRules.value) {
+        if (adFormRules.value[field]?.hasError || !adForm.value[field]) {
+            adFormHasError.value = true;
+            break;
+        }
+    }
+}
+watch(adForm.value, () => {
+    checkAdForm()
+})
 
 const additionalInfo = ref({
     brand: '',
