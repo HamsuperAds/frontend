@@ -5,7 +5,7 @@
                 <!-- Header -->
                 <div class="bg-blue-500 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
                     <h2 class="text-xl font-semibold flex items-center">
-                        <Icon v-if="currentStep !== 1" @click="currentStep--" name="heroicons:chevron-left"
+                        <Icon v-if="currentStep === 2" @click="currentStep--" name="heroicons:chevron-left"
                             class="w-6 h-6 mr-2" />
                         {{ currentStep === 1 ? 'Create Ad' : 'Additional info: ' + adForm.title }}
                     </h2>
@@ -180,6 +180,8 @@
                                     </label>
                                 </div>
                             </div>
+                            <span v-if="adFormHasError && adFormRules?.images?.hasError" class="errorText">{{
+                                adFormRules.images.message }}</span>
                         </div>
 
                         <!-- Price -->
@@ -242,73 +244,52 @@
                     </div>
 
                     <form @submit.prevent="submitAd" class="space-y-4">
-                        <!-- Brand and Model -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-                                <input v-model="additionalInfo.brand" type="text" placeholder="enter brand"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                                <input v-model="additionalInfo.model" type="text" placeholder="enter model"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            </div>
+                        <!-- Loading State -->
+                        <div v-if="subcategoryAttributesLoading" class="text-sm text-gray-500 py-4 text-center">
+                            Loading attributes...
                         </div>
 
-                        <!-- RAM and Screen Size -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">RAM (MB)</label>
-                                <input v-model="additionalInfo.ram" type="text" placeholder="enter ram"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Screen size (inches)</label>
-                                <input v-model="additionalInfo.screenSize" type="text" placeholder="enter screen size"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            </div>
+                        <!-- No Attributes Message -->
+                        <div v-else-if="subcategoryAttributes.length === 0"
+                            class="text-sm text-gray-500 py-4 text-center">
+                            No additional attributes for this subcategory.
                         </div>
 
-                        <!-- Storage Type and Size -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Storage type</label>
-                                <select v-model="additionalInfo.storageType"
+                        <!-- Dynamic Attribute Fields -->
+                        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div v-for="attr in subcategoryAttributes" :key="attr.id">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    {{ attr.name }}
+                                    <span v-if="attr.unit" class="text-gray-500 font-normal">({{ attr.unit }})</span>
+                                </label>
+
+                                <!-- String type: text input -->
+                                <input v-if="attr.type === 'string'" v-model="additionalInfo[attr.slug]" type="text"
+                                    :placeholder="'enter ' + attr.name.toLowerCase()" :minlength="attr.rules?.minLength"
+                                    :maxlength="attr.rules?.maxLength"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+                                <!-- Number type: number input -->
+                                <input v-else-if="attr.type === 'number'" v-model="additionalInfo[attr.slug]"
+                                    type="number" :placeholder="'enter ' + attr.name.toLowerCase()"
+                                    :min="attr.rules?.min" :max="attr.rules?.max"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+                                <!-- Select type: dropdown -->
+                                <select v-else-if="attr.type === 'select'" v-model="additionalInfo[attr.slug]"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="">select storage type</option>
-                                    <option value="ssd">SSD</option>
-                                    <option value="hdd">HDD</option>
-                                    <option value="hybrid">Hybrid</option>
+                                    <option value="">select {{ attr.name.toLowerCase() }}</option>
+                                    <option v-for="option in attr.options" :key="option" :value="option">
+                                        {{ option }}
+                                    </option>
                                 </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Storage size (GB)</label>
-                                <input v-model="additionalInfo.storageSize" type="text" placeholder="select subcategory"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            </div>
-                        </div>
 
-                        <!-- Processor and Generation -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Processor</label>
-                                <input v-model="additionalInfo.processor" type="text" placeholder="enter processor"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                <!-- Text type: textarea -->
+                                <textarea v-else-if="attr.type === 'text'" v-model="additionalInfo[attr.slug]" rows="3"
+                                    :placeholder="'enter ' + attr.name.toLowerCase()" :minlength="attr.rules?.minLength"
+                                    :maxlength="attr.rules?.maxLength"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Generation</label>
-                                <input v-model="additionalInfo.generation" type="text" placeholder="enter generation"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            </div>
-                        </div>
-
-                        <!-- YouTube Link -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Link to Youtube video
-                                link</label>
-                            <input v-model="additionalInfo.youtubeLink" type="url" placeholder="enter ad description"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
 
                         <!-- Action Buttons -->
@@ -398,10 +379,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useCategories } from '~/composables/useCategories';
 import { useStates } from '~/composables/useStates';
 import type { PromotionPlan } from '~/types/promotionPlan';
+import type { SubcategoryAttribute } from '~/types/subcategoryAttribute';
 
 const currentStep = ref(1)
 const showPricingDialog = ref(false)
@@ -534,22 +516,57 @@ const checkAdForm = () => {
             break;
         }
     }
+    if (adForm.value.images.length == 0) {
+        adFormHasError.value = true;
+        adFormRules.value.images = { hasError: true, message: 'Please select at least one image' };
+    } else {
+        adFormRules.value.images = { hasError: false, message: '' };
+    }
 }
 watch(adForm.value, () => {
     checkAdForm()
 })
 
-const additionalInfo = ref({
-    brand: '',
-    model: '',
-    ram: '',
-    screenSize: '',
-    storageType: '',
-    storageSize: '',
-    processor: '',
-    generation: '',
-    youtubeLink: ''
-})
+// Subcategory attributes (dynamic additional info)
+const subcategoryAttributes = ref<SubcategoryAttribute[]>([]);
+const subcategoryAttributesLoading = ref(false);
+const additionalInfo = ref<Record<string, any>>({});
+
+const fetchSubcategoryAttributes = async (subcategoryId: string | number) => {
+    if (!subcategoryId) {
+        subcategoryAttributes.value = [];
+        additionalInfo.value = {};
+        return;
+    }
+
+    subcategoryAttributesLoading.value = true;
+    try {
+        const { data } = await useApi().fetchGet<{
+            success: boolean;
+            data: SubcategoryAttribute[];
+        }>(`/subcategories/${subcategoryId}/attributes`, {
+            requiresAuth: false
+        });
+        if (data) {
+            subcategoryAttributes.value = data;
+            // Initialize additionalInfo with empty values for each attribute
+            const newAdditionalInfo: Record<string, any> = {};
+            data.forEach((attr) => {
+                newAdditionalInfo[attr.slug] = '';
+            });
+            additionalInfo.value = newAdditionalInfo;
+        }
+    } catch (err) {
+        console.error('Error fetching subcategory attributes:', err);
+    } finally {
+        subcategoryAttributesLoading.value = false;
+    }
+};
+
+// Watch for subcategory changes to fetch attributes
+watch(() => adForm.value.subcategory_id, (newSubcategoryId) => {
+    fetchSubcategoryAttributes(newSubcategoryId);
+});
 
 const clearImagePreviews = () => {
     // Revoke all object URLs to free memory
@@ -575,17 +592,10 @@ const clearForm = () => {
             images: []
         }
     } else {
-        additionalInfo.value = {
-            brand: '',
-            model: '',
-            ram: '',
-            screenSize: '',
-            storageType: '',
-            storageSize: '',
-            processor: '',
-            generation: '',
-            youtubeLink: ''
-        }
+        // Reset all attribute values to empty strings
+        Object.keys(additionalInfo.value).forEach((key) => {
+            additionalInfo.value[key] = '';
+        });
     }
 }
 
@@ -598,7 +608,8 @@ const skipAndSubmit = () => {
 }
 
 const submitAd = () => {
-    console.log('Submitting ad:', { ...adForm.value, ...additionalInfo.value })
+    adForm.value.additional_info = additionalInfo.value;
+    console.log('Submitting ad:', adForm.value)
     currentStep.value = 3
 }
 
@@ -616,17 +627,9 @@ const resetForm = () => {
         promotion: 'bronze',
         images: []
     }
-    additionalInfo.value = {
-        brand: '',
-        model: '',
-        ram: '',
-        screenSize: '',
-        storageType: '',
-        storageSize: '',
-        processor: '',
-        generation: '',
-        youtubeLink: ''
-    }
+    // Reset attributes and additionalInfo
+    subcategoryAttributes.value = [];
+    additionalInfo.value = {};
     currentStep.value = 1
 }
 </script>
