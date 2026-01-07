@@ -651,23 +651,23 @@ const submitAd = async (skipDetails = false) => {
         // Build FormData for the request
         const formData = new FormData();
 
-        // Add basic form fields
-        formData.append('title', adForm.value.title);
-        formData.append('category_id', adForm.value.category_id);
-        formData.append('subcategory_id', adForm.value.subcategory_id);
-        formData.append('description', adForm.value.description);
-        formData.append('state_id', adForm.value.state_id);
-        formData.append('lga_id', adForm.value.lga_id);
-        formData.append('place', adForm.value.place);
-        formData.append('price', adForm.value.price);
-        formData.append('negotiable', adForm.value.negotiable ? '1' : '0');
-        formData.append('promotion_plan_id', adForm.value.promotion_plan_id);
-        formData.append('primary_image_index', adForm.value.primary_image_index.toString());
+        // Add form fields using a loop
+        for (const key in adForm.value) {
+            const value = adForm.value[key];
 
-        // Add images
-        adForm.value.images.forEach((image: File, index: number) => {
-            formData.append(`images[${index}]`, image);
-        });
+            if (key === 'images') {
+                // Add images properly
+                (value as File[]).forEach((image, index) => {
+                    formData.append(`images[${index}]`, image);
+                });
+            } else if (typeof value === 'boolean') {
+                // Convert boolean to 1 or 0
+                formData.append(key, value ? '1' : '0');
+            } else if (value !== null && value !== undefined) {
+                // Add other basic fields
+                formData.append(key, value.toString());
+            }
+        }
 
         // Handle additional info - filter out empty values
         if (!skipDetails) {

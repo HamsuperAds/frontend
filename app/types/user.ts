@@ -13,10 +13,11 @@ export interface User {
   lga: string | null;
   town: string | null;
   date_of_birth: string | null;
-  verified: number;
+  verified: boolean;
   avatar: string | null;
   device_token: string | null;
   notification_pref: string | null;
+  adsCount: number;
   status: string;
   created_at: string;
   updated_at: string;
