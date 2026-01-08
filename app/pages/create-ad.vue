@@ -252,7 +252,7 @@
                         </p>
                     </div>
 
-                    <form @submit.prevent="submitAd" class="space-y-4">
+                    <form @submit.prevent="submitAd(false)" class="space-y-4">
                         <!-- Loading State -->
                         <div v-if="subcategoryAttributesLoading" class="text-sm text-gray-500 py-4 text-center">
                             Loading attributes...
@@ -309,7 +309,7 @@
 
                         <!-- Action Buttons -->
                         <div class="flex justify-between pt-4">
-                            <button type="button" @click="skipAndSubmit" :disabled="isSubmitting"
+                            <button type="button" @click="skipAndSubmit(true)" :disabled="isSubmitting"
                                 class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                 <Icon v-if="isSubmitting && isSkipSubmit" name="svg-spinners:ring-resize"
                                     class="w-5 h-5" />
@@ -671,6 +671,7 @@ const submitAd = async (skipDetails = false) => {
 
         // Handle additional info - filter out empty values
         if (!skipDetails) {
+            console.log('adding additional info', additionalInfo);
             const filteredAdditionalInfo: Record<string, any> = {};
             let hasValidInfo = false;
 
@@ -683,6 +684,7 @@ const submitAd = async (skipDetails = false) => {
 
             // Only add additional_info if there are non-empty values
             if (hasValidInfo) {
+                console.log('adding additional info');
                 formData.append('additional_info', JSON.stringify(filteredAdditionalInfo));
             }
         }
@@ -693,6 +695,7 @@ const submitAd = async (skipDetails = false) => {
             message: string;
             data: any;
         }>('/ads', formData);
+        console.log(formData);
 
         // Success - move to step 3
         currentStep.value = 3;
