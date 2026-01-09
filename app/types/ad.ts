@@ -42,19 +42,6 @@ export interface Ad {
   images: AdImage[];
   primary_image: AdImage;
   promotion_type?: string;
-  phone_tablet: any | null;
-  electronic: any | null;
-  vehicle: any | null;
-  property: any | null;
-  home_appliance: any | null;
-  health_beauty: any | null;
-  fashion: any | null;
-  sports_arts_outdoor: any | null;
-  need_employment: any | null;
-  vacancy: any | null;
-  babies_kid: any | null;
-  animals_pet: any | null;
-  commercial_equipment_tool: any | null;
-  repair_construction: any | null;
+  additional_info: Record<string, any> | null;
   is_liked: boolean;
 }

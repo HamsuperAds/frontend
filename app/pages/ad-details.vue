@@ -84,32 +84,12 @@
                     </div>
 
                     <!-- Ad Details -->
-                    <div v-if="ad" class="bg-white rounded-lg p-6 shadow">
+                    <div v-if="displayDetails.length > 0" class="bg-white rounded-lg p-6 shadow">
                         <h2 class="font-semibold text-gray-900 mb-4">Ad Details</h2>
                         <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <div class="text-xs text-gray-400 uppercase mb-1">Category</div>
-                                <div class="font-semibold text-gray-900">{{ ad.category?.name }}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-400 uppercase mb-1">Subcategory</div>
-                                <div class="font-semibold text-gray-900">{{ ad.subcategory?.name }}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-400 uppercase mb-1">Location</div>
-                                <div class="font-semibold text-gray-900">{{ ad.place }}, {{ ad.state?.name }}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-400 uppercase mb-1">Status</div>
-                                <div class="font-semibold text-gray-900 capitalize">{{ ad.status }}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-400 uppercase mb-1">Posted</div>
-                                <div class="font-semibold text-gray-900">{{ formatDate(ad.created_at) }}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-400 uppercase mb-1">Ad ID</div>
-                                <div class="font-semibold text-gray-900 text-xs">{{ ad.id }}</div>
+                            <div v-for="detail in displayDetails" :key="detail.label">
+                                <div class="text-xs text-gray-400 uppercase mb-1">{{ detail.label }}</div>
+                                <div class="font-semibold text-gray-900">{{ detail.value }}</div>
                             </div>
                         </div>
                     </div>
@@ -292,6 +272,33 @@ watch(images, (newImages) => {
         selectedImage.value = newImages[0]
     }
 }, { immediate: true })
+
+const displayDetails = computed(() => {
+    if (!ad.value?.additional_info) return [];
+
+    return Object.entries(ad.value.additional_info)
+        .filter(([key, value]) => {
+            // Ignore fields with 'id'
+            if (key.toLowerCase().includes('id')) return false;
+            // Ignore internal metadata
+            if (['created_at', 'updated_at', 'deleted_at'].includes(key)) return false;
+            // Ignore null/undefined/empty values
+            return value !== null && value !== undefined && value !== '';
+        })
+        .map(([key, value]) => {
+            // Format label (snake_case to Title Case)
+            const label = key
+                .split('_')
+                .map(word => {
+                    // Handle special cases like RAM
+                    if (word.toLowerCase() === 'ram') return 'RAM';
+                    return word.charAt(0).toUpperCase() + word.slice(1);
+                })
+                .join(' ');
+
+            return { label, value };
+        });
+});
 
 const showPhoneNumber = ref(false)
 
