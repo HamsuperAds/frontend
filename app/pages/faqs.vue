@@ -71,6 +71,9 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+    auth: false,
+});
 const searchQuery = ref('')
 
 const leftColumnFaqs = ref([

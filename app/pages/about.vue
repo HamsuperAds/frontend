@@ -69,5 +69,7 @@
 </template>
 
 <script setup lang="ts">
-// No special logic needed for static content
+definePageMeta({
+    auth: false,
+});
 </script>
