@@ -51,12 +51,14 @@
                     <div v-if="ad" class="bg-white rounded-lg p-6 shadow">
                         <div class="flex items-start justify-between mb-4">
                             <h1 class="text-2xl font-bold text-gray-900">{{ ad.title }}</h1>
-                            <button class="text-gray-400 hover:text-gray-600">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
-                                    </path>
-                                </svg>
+                            <button @click="toggleLike" :disabled="isLiking"
+                                class="flex items-center gap-1 transition-colors" :class="[
+                                    ad.is_liked ? 'text-blue-500 hover:text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                                ]">
+                                <Icon v-if="isLiking" name="svg-spinners:ring-resize" class="w-4 h-4" />
+                                <SvgHeart v-else :fillColor="ad.is_liked ? 'blue' : 'white'" class="w-4 h-4"
+                                    :strokeColor="ad.is_liked ? 'blue' : 'gray'" />
+                                <span>{{ ad.likes }}</span>
                             </button>
                         </div>
                         <div class="flex justify-between items-center text-gray-600 text-sm space-x-4">
@@ -183,7 +185,7 @@
                             </div>
                             <div>
                                 <div class="font-semibold text-gray-900">{{ ad.user.first_name }} {{ ad.user.last_name
-                                    }}</div>
+                                }}</div>
                                 <div class="text-sm text-gray-500" v-if="ad.user.verified">
                                     <span class="text-green-600">✓</span> Verified
                                 </div>
@@ -233,10 +235,11 @@
 </template>
 
 <script setup lang="ts">
-import { useApi } from '#imports';
-import { useRoute } from 'vue-router';
-import { definePageMeta } from '#imports';
+import { useApi, useAuth } from '#imports';
+import { useRoute, useRouter } from 'vue-router';
+import { definePageMeta, navigateTo } from '#imports';
 import type { Ad } from '~/types';
+import { toast } from 'vue-sonner';
 
 definePageMeta({
     auth: false,
@@ -250,9 +253,7 @@ const adId = route.query.id as string
 const { data: adData, pending, error } = await useApi().get<{
     success: boolean
     data: Ad
-}>(`/ads/${adId}`, {
-    requiresAuth: false
-})
+}>(`/ads/${adId}`)
 
 const ad = computed(() => adData.value?.data)
 
@@ -299,6 +300,42 @@ const displayDetails = computed(() => {
             return { label, value };
         });
 });
+
+const isLiking = ref(false);
+const { status } = useAuth();
+const router = useRouter();
+
+const toggleLike = async () => {
+    if (status.value !== 'authenticated') {
+        toast.error('Please login to like this ad');
+        return navigateTo('/auth/login');
+    }
+
+    if (!ad.value || isLiking.value) return;
+
+    isLiking.value = true;
+    try {
+        const response = await useApi().fetchPost<{
+            success: boolean;
+            message: string;
+            is_liked: boolean;
+            likes_count: number;
+        }>(`/ads/${ad.value.id}/toggle-like`);
+
+        if (response.success) {
+            // Update local state
+            if (adData.value) {
+                adData.value.data.is_liked = response.is_liked;
+                adData.value.data.likes = response.likes_count;
+            }
+            toast.success(response.message);
+        }
+    } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to toggle like');
+    } finally {
+        isLiking.value = false;
+    }
+};
 
 const showPhoneNumber = ref(false)
 

@@ -21,7 +21,7 @@ import { computed } from 'vue'
 import { Toaster } from '@/components/ui/sonner'
 
 const route = useRoute()
-const excludedRoutes = ['create-ad', 'search', 'login', 'register', 'faqs', 'about', 'contact-us', 'terms-and-conditions', 'privacy-policy']
+const excludedRoutes = ['create-ad', 'search', 'auth-login', 'auth-register', 'faqs', 'about', 'contact-us', 'terms-and-conditions', 'privacy-policy']
 
 const showSearch = computed(() => {
     return !excludedRoutes.includes(route.name as string)
