@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import { useRoute } from '#app'
 import { computed } from 'vue'
+import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
 
 const route = useRoute()

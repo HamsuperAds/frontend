@@ -185,7 +185,7 @@
                             </div>
                             <div>
                                 <div class="font-semibold text-gray-900">{{ ad.user.first_name }} {{ ad.user.last_name
-                                }}</div>
+                                    }}</div>
                                 <div class="text-sm text-gray-500" v-if="ad.user.verified">
                                     <span class="text-green-600">✓</span> Verified
                                 </div>
