@@ -49,16 +49,7 @@
                                 My Adverts
                             </NuxtLink>
 
-                            <NuxtLink to="/account/feedback"
-                                class="flex items-center px-4 py-2 text-sm rounded-lg transition-colors"
-                                :class="isActive('/account/feedback') ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'">
-                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                                        clip-rule="evenodd"></path>
-                                </svg>
-                                Feedback
-                            </NuxtLink>
+
 
                             <NuxtLink to="/account/change-password"
                                 class="flex items-center px-4 py-2 text-sm rounded-lg transition-colors"
