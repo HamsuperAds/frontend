@@ -12,7 +12,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Old Password</label>
                     <div class="relative">
-                        <input v-model="formData.oldPassword" :type="showOldPassword ? 'text' : 'password'"
+                        <input v-model="formData.old_password" :type="showOldPassword ? 'text' : 'password'"
                             placeholder="enter old password"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
                             required />
@@ -33,13 +33,15 @@
                             </svg>
                         </button>
                     </div>
+                    <span v-if="formDataHasError && formDataRules.old_password.hasError" class="errorText">{{
+                        formDataRules.old_password.message }}</span>
                 </div>
 
                 <!-- New Password -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
                     <div class="relative">
-                        <input v-model="formData.newPassword" :type="showNewPassword ? 'text' : 'password'"
+                        <input v-model="formData.new_password" :type="showNewPassword ? 'text' : 'password'"
                             placeholder="enter new password"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
                             required />
@@ -60,22 +62,26 @@
                             </svg>
                         </button>
                     </div>
+                    <span v-if="formDataHasError && formDataRules.new_password.hasError" class="errorText">{{
+                        formDataRules.new_password.message }}</span>
                 </div>
 
                 <!-- Confirm Password -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                    <input v-model="formData.confirmPassword" type="password" placeholder="repeat new password"
+                    <input v-model="formData.confirm_password" type="password" placeholder="repeat new password"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required />
+                    <span v-if="formDataHasError && formDataRules.confirm_password.hasError" class="errorText">{{
+                        formDataRules.confirm_password.message }}</span>
                 </div>
 
                 <!-- Submit Button -->
                 <div class="pt-4">
-                    <button type="submit"
-                        class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                    <Button type="submit" :disabled="formDataHasError || isSubmitting">
+                        <Icon v-if="isSubmitting" name="svg-spinners:ring-resize" class="w-4 h-4 mr-2" />
                         Submit
-                    </button>
+                    </Button>
                 </div>
             </form>
         </div>
@@ -83,26 +89,81 @@
 </template>
 
 <script setup lang="ts">
+import { toast } from 'vue-sonner';
+import { useApi } from '~/composables/useApi';
+
 definePageMeta({
     layout: 'profile'
 })
 
 const showOldPassword = ref(false)
 const showNewPassword = ref(false)
+const { $getUser } = useNuxtApp()
+const user = $getUser()
+const validate = useValidate();
 
-const formData = ref({
-    oldPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+const formDataHasError = ref(true)
+const isSubmitting = ref(false)
+
+const formData = ref<Record<string, any>>({
+    email: user?.email || '',
+    old_password: '',
+    new_password: '',
+    confirm_password: ''
 })
 
-const handleSubmit = () => {
-    if (formData.value.newPassword !== formData.value.confirmPassword) {
-        alert('New passwords do not match!')
-        return
+const formDataRules = ref<Record<string, any>>({
+    old_password: { minLength: 8, maxLength: 255 },
+    new_password: { minLength: 8, maxLength: 255 },
+    confirm_password: { hasError: false, message: '' }
+})
+
+const checkPasswordForm = () => {
+    formDataRules.value = validate(formData.value, formDataRules.value);
+
+    // Manual check for confirm password match
+    if (formData.value.new_password && formData.value.confirm_password && formData.value.new_password !== formData.value.confirm_password) {
+        formDataRules.value.confirm_password.hasError = true;
+        formDataRules.value.confirm_password.message = 'Passwords do not match';
+    } else {
+        formDataRules.value.confirm_password.hasError = false;
+        formDataRules.value.confirm_password.message = '';
     }
-    // Here you would make an API call to change the password
-    console.log('Changing password')
-    alert('Password changed successfully!')
+
+    formDataHasError.value = false;
+    for (const field in formDataRules.value) {
+        if (formDataRules.value[field]?.hasError || !formData.value[field]) {
+            formDataHasError.value = true;
+            break;
+        }
+    }
+}
+
+watch(formData.value, () => {
+    checkPasswordForm()
+})
+
+const handleSubmit = async () => {
+    if (formDataHasError.value || isSubmitting.value) return;
+
+    isSubmitting.value = true;
+    try {
+        const response = await useApi().fetchPost<{
+            status: string;
+            message?: string;
+        }>('/auth/change-password', formData.value);
+
+        if (response.status === 'success' || response.status === 'true') {
+            toast.success(response.message || 'Password changed successfully!');
+            // Reset form
+            formData.value.old_password = '';
+            formData.value.new_password = '';
+            formData.value.confirm_password = '';
+        }
+    } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to change password');
+    } finally {
+        isSubmitting.value = false;
+    }
 }
 </script>
