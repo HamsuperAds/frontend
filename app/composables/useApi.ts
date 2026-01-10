@@ -6,12 +6,7 @@ export const useApi = () => {
   const baseURL = config.public.devApiUrl;
 
   // Get token from localStorage or cookie
-  const getToken = () => {
-    if (process.client) {
-      return token.value || "";
-    }
-    return "";
-  };
+  const getToken = () => token.value || "";
 
   // Generic API call function
   const apiCall = async <T>(
