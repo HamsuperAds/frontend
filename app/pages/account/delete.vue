@@ -140,9 +140,10 @@
                     </button>
 
                     <!-- Confirm Delete Button -->
-                    <button @click="confirmDelete"
-                        class="w-full bg-white border border-red-600 text-red-600 py-3 px-6 rounded-lg font-semibold hover:bg-red-50 transition-colors">
-                        Yes, Delete Permanently
+                    <button @click="confirmDelete" :disabled="isLoading"
+                        class="w-full bg-white border border-red-600 text-red-600 py-3 px-6 rounded-lg font-semibold hover:bg-red-50 transition-colors flex items-center justify-center">
+                        <Icon v-if="isLoading" name="svg-spinners:ring-resize" class="w-5 h-5 mr-2" />
+                        {{ isLoading ? 'Deleting...' : 'Yes, Delete Permanently' }}
                     </button>
                 </div>
             </div>
@@ -151,28 +152,33 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import { toast } from 'vue-sonner'
+
 definePageMeta({
     layout: 'profile'
 })
 
 const showConfirmDialog = ref(false)
+const isLoading = ref(false)
+// useLogout is auto-imported in Nuxt/composables
 
 const handleCancel = () => {
     // Navigate back to account page or dashboard
     navigateTo('/account')
 }
 
-const confirmDelete = () => {
-    // Here you would make an API call to delete the account
-    console.log('Deleting account...')
-
-    // Show success message and redirect to home
-    alert('Your account has been deleted successfully.')
-
-    // Clear any stored auth tokens/data
-    // localStorage.removeItem('authToken')
-
-    // Redirect to home page
-    navigateTo('/')
+const confirmDelete = async () => {
+    isLoading.value = true
+    try {
+        const response = await useApi().fetchDelete<{ status: string; message: string }>('/auth/delete-account')
+        toast.success(response?.message || 'Account deletion request received.')
+        await useLogout();
+    } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to delete account')
+    } finally {
+        isLoading.value = false
+        showConfirmDialog.value = false
+    }
 }
 </script>
