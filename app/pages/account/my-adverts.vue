@@ -3,7 +3,7 @@
         <!-- Header -->
         <div class="bg-blue-500 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
             <h2 class="text-xl font-semibold">My Adverts</h2>
-            <span class="text-sm">(23)</span>
+            <span class="text-sm">({{ totalCount }})</span>
         </div>
 
         <!-- Search and Filter -->
@@ -45,21 +45,46 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y">
-                    <tr v-for="(advert, index) in adverts" :key="index" class="hover:bg-gray-50">
-                        <td class="px-6 py-4 text-sm">{{ index + 1 }}</td>
+                    <tr v-if="isLoading">
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            <Icon name="svg-spinners:ring-resize" class="w-8 h-8 mx-auto mb-2" />
+                            Loading adverts...
+                        </td>
+                    </tr>
+                    <tr v-else-if="adverts.length === 0">
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            No adverts found matching your search.
+                        </td>
+                    </tr>
+                    <tr v-for="(advert, index) in adverts" :key="advert.id" class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm">{{ (currentPage - 1) * perPage + index + 1 }}</td>
                         <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <img :src="advert.image" :alt="advert.title" class="w-12 h-12 object-cover rounded" />
-                                <span class="text-sm font-medium text-gray-900">{{ advert.title }}</span>
-                            </div>
+                            <NuxtLink :to="`/ad-details?id=${advert.id}`">
+                                <div class="flex items-center gap-3">
+                                    <img :src="advert.primary_image?.image_path || '/images/placeholder.png'"
+                                        :alt="advert.title" class="w-12 h-12 object-cover rounded" />
+                                    <div class="">
+                                        <span class="text-sm font-medium text-gray-900 line-clamp-1">{{ advert.title
+                                            }}</span>
+                                        <!-- show ad price -->
+                                        <span class="text-sm text-gray-600 block">₦{{
+                                            Number(advert.price).toLocaleString()
+                                            }}</span>
+                                    </div>
+                                </div>
+                            </NuxtLink>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="text-sm text-gray-600">{{ advert.type }}</span>
+                            <span class="text-sm text-gray-600">{{ advert.promotion_plan?.name }}/{{
+                                advert.subcategory?.name }}</span>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="text-sm text-gray-600">{{ advert.status }}</span>
+                            <span class="text-xs px-2 py-1 rounded-full uppercase font-semibold"
+                                :class="statusClasses[advert.status.toLowerCase()]">
+                                {{ advert.status }}
+                            </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-500">{{ advert.created }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(advert.created_at) }}</td>
                         <td class="px-6 py-4">
                             <div class="relative">
                                 <button @click="toggleDropdown(index)" class="text-gray-400 hover:text-gray-600">
@@ -106,14 +131,17 @@
         </div>
 
         <!-- Pagination -->
-        <div class="flex items-center justify-between p-6 border-t">
-            <button class="flex items-center text-sm text-gray-600 hover:text-gray-900">
+        <div v-if="totalPages > 1" class="flex items-center justify-between p-6 border-t font-medium">
+            <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1"
+                class="flex items-center text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
                 Prev
             </button>
-            <button class="flex items-center text-sm text-gray-600 hover:text-gray-900">
+            <span class="text-sm text-gray-500">Page {{ currentPage }} of {{ totalPages }}</span>
+            <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages"
+                class="flex items-center text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed">
                 Next
                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -135,8 +163,9 @@
                         class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
                         Cancel
                     </button>
-                    <button @click="confirmDelete"
-                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    <button @click="confirmDelete" :disabled="isDeleting"
+                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 flex items-center justify-center">
+                        <Icon v-if="isDeleting" name="svg-spinners:ring-resize" class="w-4 h-4 mr-2" />
                         Delete
                     </button>
                 </div>
@@ -146,87 +175,76 @@
 </template>
 
 <script setup lang="ts">
+import { toast } from 'vue-sonner';
+
 definePageMeta({
     layout: 'profile'
 })
 
+const isLoading = ref(true)
+const isDeleting = ref(false)
 const searchQuery = ref('')
 const activeDropdown = ref<number | null>(null)
 const showDeleteConfirm = ref(false)
 const selectedAdvert = ref<any>(null)
 
-const adverts = ref([
-    {
-        title: 'HP Elitebook GB 16gb RAM 254GB SSD',
-        type: 'Bronze',
-        status: 'Available',
-        created: '23/04/2025',
-        image: '/images/temp/electric-motorcycles.png'
-    },
-    {
-        title: 'Qlinq Motorcycle 2024 Black',
-        type: 'Silver',
-        status: 'Available',
-        created: '23/04/2025',
-        image: '/images/temp/electric-motorcycles1.png'
-    },
-    {
-        title: 'Samsung Galaxy S25 4gb RAM',
-        type: 'Gold',
-        status: 'Available',
-        created: '23/04/2025',
-        image: '/images/temp/electric-motorcycles2.png'
-    },
-    {
-        title: 'HP Elitebook GB 16gb RAM 254GB',
-        type: 'Bronze',
-        status: 'Unavailable',
-        created: '23/04/2025',
-        image: '/images/temp/electric-motorcycles3.png'
-    },
-    {
-        title: 'Toyota Camry 2012 Black',
-        type: 'Silver',
-        status: 'Available',
-        created: '23/04/2025',
-        image: '/images/temp/electric-motorcycles.png'
-    },
-    {
-        title: 'Canadian Solar Panel 450watts',
-        type: 'Gold',
-        status: 'Available',
-        created: '23/04/2025',
-        image: '/images/temp/electric-motorcycles1.png'
-    },
-    {
-        title: 'Oraim H210 earpod, 5hr listening time',
-        type: 'Gold',
-        status: 'Available',
-        created: '23/04/2025',
-        image: '/images/temp/electric-motorcycles2.png'
-    },
-    {
-        title: 'Sharp AR2340 # in-one printer',
-        type: 'Silver',
-        status: 'Available',
-        created: '23/04/2025',
-        image: '/images/temp/electric-motorcycles3.png'
-    },
-    {
-        title: 'HP high resolution A4 scanner',
-        type: 'Bronze',
-        status: 'Available',
-        created: '23/04/2025',
-        image: '/images/temp/electric-motorcycles.png'
-    },
-    {
-        title: 'HP Elitebook GB 16gb RAM 254GB SSD',
-        type: 'Bronze',
-        status: 'Available',
-        created: '23/04/2025',
-        image: '/images/temp/electric-motorcycles1.png'
+const adverts = ref<any[]>([])
+const currentPage = ref(1)
+const totalPages = ref(1)
+const totalCount = ref(0)
+const perPage = ref(10)
+
+const statusClasses: Record<string, string> = {
+    active: 'bg-green-100 text-green-700',
+    pending: 'bg-yellow-100 text-yellow-700',
+    unavailable: 'bg-gray-100 text-gray-700',
+    rejected: 'bg-red-100 text-red-700'
+}
+
+const fetchAds = async (page = 1) => {
+    isLoading.value = true
+    try {
+        const response = await useApi().fetchGet<{
+            success: boolean;
+            data: {
+                current_page: number;
+                data: any[];
+                last_page: number;
+                total: number;
+                per_page: number;
+            };
+        }>(`/my-ads?per_page=${perPage.value}&page=${page}`)
+
+        if (response.success) {
+            adverts.value = response.data.data
+            currentPage.value = response.data.current_page
+            totalPages.value = response.data.last_page
+            totalCount.value = response.data.total
+        }
+    } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to fetch adverts')
+    } finally {
+        isLoading.value = false
     }
-])
+}
+
+onMounted(async () => {
+    await fetchAds()
+})
+
+watch(searchQuery, () => {
+    // Simple local filtering if needed, or trigger new API fetch with search param
+    // For now, let's stick to initial fetch
+})
+
+const changePage = (page: number) => {
+    if (page < 1 || page > totalPages.value) return
+    fetchAds(page)
+}
+
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-GB')
+}
 
 const toggleDropdown = (index: number) => {
     activeDropdown.value = activeDropdown.value === index ? null : index
@@ -235,6 +253,8 @@ const toggleDropdown = (index: number) => {
 const editAdvert = (advert: any) => {
     console.log('Edit advert:', advert)
     activeDropdown.value = null
+    // Navigate to edit page
+    navigateTo(`/account/edit-ad/${advert.id}`)
 }
 
 const promoteAdvert = (advert: any) => {
@@ -248,9 +268,26 @@ const showDeleteDialog = (advert: any) => {
     activeDropdown.value = null
 }
 
-const confirmDelete = () => {
-    adverts.value = adverts.value.filter(a => a !== selectedAdvert.value)
-    showDeleteConfirm.value = false
-    selectedAdvert.value = null
+const confirmDelete = async () => {
+    if (!selectedAdvert.value || isDeleting.value) return
+
+    isDeleting.value = true
+    try {
+        const response = await useApi().fetchDelete<{
+            success: boolean;
+            message: string;
+        }>(`/ads/${selectedAdvert.value.id}`)
+
+        if (response.success) {
+            toast.success(response.message || 'Advert deleted successfully')
+            fetchAds(currentPage.value) // Refresh current page
+            showDeleteConfirm.value = false
+            selectedAdvert.value = null
+        }
+    } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to delete advert')
+    } finally {
+        isDeleting.value = false
+    }
 }
 </script>
