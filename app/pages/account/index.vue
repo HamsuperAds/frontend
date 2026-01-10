@@ -11,7 +11,7 @@
                 <div class="relative">
                     <!-- Avatar Image or Default Icon -->
                     <div v-if="avatarUrl" class="w-24 h-24 rounded-full overflow-hidden">
-                        <img :src="avatarUrl" :alt="`${formData.firstName} ${formData.lastName}`"
+                        <img :src="avatarUrl" :alt="`${formData.first_name} ${formData.last_name}`"
                             class="w-full h-full object-cover" />
                     </div>
                     <div v-else class="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center">
@@ -35,7 +35,7 @@
                 <!-- First Name -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">First name</label>
-                    <input v-model="formData.firstName" type="text"
+                    <input v-model="formData.first_name" type="text"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="John" />
                 </div>
@@ -43,7 +43,7 @@
                 <!-- Last Name -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Last name</label>
-                    <input v-model="formData.lastName" type="text"
+                    <input v-model="formData.last_name" type="text"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Doe" />
                 </div>
@@ -51,7 +51,7 @@
                 <!-- Phone Number -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
-                    <input v-model="formData.phoneNumber" readonly type="tel"
+                    <input v-model="formData.phone_number" readonly type="tel"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="08023234345" />
                 </div>
@@ -67,22 +67,20 @@
                 <!-- Location -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                    <div class="flex">
-                        <select v-model="formData.state"
+                    <div class="flex gap-2">
+                        <select v-model="formData.state_id"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="Enugu">Enugu</option>
-                            <option value="Lagos">Lagos</option>
-                            <option value="Abuja">Abuja</option>
-                            <option value="Port Harcourt">Port Harcourt</option>
-                            <option value="Kano">Kano</option>
+                            <option value="">select state</option>
+                            <option v-for="state in states" :key="state.id" :value="state.id">
+                                {{ state.name }}
+                            </option>
                         </select>
-                        <select v-model="formData.lga"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="Enugu">Enugu</option>
-                            <option value="Lagos">Lagos</option>
-                            <option value="Abuja">Abuja</option>
-                            <option value="Port Harcourt">Port Harcourt</option>
-                            <option value="Kano">Kano</option>
+                        <select v-model="formData.lga_id" :disabled="!formData.state_id"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400">
+                            <option value="">select lga</option>
+                            <option v-for="lga in lgas" :key="lga.id" :value="lga.id">
+                                {{ lga.name }}
+                            </option>
                         </select>
                     </div>
                 </div>
@@ -90,7 +88,7 @@
                 <!-- Date of Birth -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Date of birth</label>
-                    <input v-model="formData.dateOfBirth" type="date"
+                    <input v-model="formData.date_of_birth" type="date"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="21/04/1998" />
                 </div>
@@ -120,7 +118,8 @@
 
 <script setup lang="ts">
 
-import { definePageMeta } from '#imports'
+import { definePageMeta, onMounted, computed, ref } from '#imports'
+import { useStates } from '~/composables/useStates'
 
 definePageMeta({
     layout: 'profile'
@@ -129,14 +128,27 @@ definePageMeta({
 const { $getUser } = useNuxtApp()
 const user = $getUser()
 
+const { states, fetchStates } = useStates()
+
+onMounted(() => {
+    fetchStates()
+})
+
 const formData = ref({
-    firstName: user?.first_name || '',
-    lastName: user?.last_name || '',
-    phoneNumber: user?.phone_number || '',
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    phone_number: user?.phone_number || '',
     email: user?.email || '',
-    location: user?.location || 'Enugu',
-    dateOfBirth: user?.date_of_birth || '',
-    gender: user?.gender || 'Male'
+    state_id: user?.state_id || '',
+    lga_id: user?.lga_id || '',
+    date_of_birth: user?.date_of_birth || '',
+    town: user?.town || '',
+    gender: user?.gender || ''
+})
+
+const lgas = computed(() => {
+    const selectedState = states.value.find(s => s.id === Number(formData.value.state_id))
+    return selectedState?.lgas || []
 })
 
 const avatarUrl = computed(() => user?.avatar || null)
