@@ -38,7 +38,8 @@
                                 <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded mb-2">
                                     {{ ad.status }}
                                 </span>
-                                <h3 class="font-semibold text-gray-900 line-clamp-1">{{ ad.title }}</h3>
+                                <NuxtLink :to="`/ad-details?id=${ad.id}`"
+                                    class="font-semibold text-gray-900 line-clamp-1">{{ ad.title }}</NuxtLink>
                                 <p class="text-sm text-gray-600 mt-1 line-clamp-2">{{ ad.description }}</p>
                             </div>
                             <div class="text-blue-600 font-bold text-lg whitespace-nowrap ml-4">
@@ -55,14 +56,16 @@
                                 <span>{{ ad.lga?.name }}, {{ ad.state?.name }}</span>
                             </div>
                             <div class="flex items-center gap-4">
-                                <button @click="removeFavorite(ad.id)"
-                                    class="flex items-center text-sm text-red-600 hover:text-red-700">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <button @click="removeFavorite(ad.id)" :disabled="removingId === ad.id"
+                                    class="flex items-center text-sm text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <Icon v-if="removingId === ad.id" name="svg-spinners:ring-resize"
+                                        class="w-4 h-4 mr-1" />
+                                    <svg v-else class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path
                                             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
                                         </path>
                                     </svg>
-                                    Remove
+                                    {{ removingId === ad.id ? 'Removing' : 'Remove' }}
                                 </button>
                             </div>
                         </div>
@@ -70,9 +73,7 @@
                 </div>
             </div>
 
-            <!-- Pagination (if needed later, implied by response list but currently API returns simpler list structure or similar to my-ads) -->
-            <!-- The provided sample response for /liked-ads was { success: true, data: [...] } which is a flat list, not paginated object. -->
-            <!-- So pagination UI is removed until pagination structure is confirmed or provided. -->
+            <!-- Pagination (if needed later) -->
         </div>
     </div>
 </template>
@@ -87,6 +88,7 @@ definePageMeta({
 
 const favoriteAds = ref<any[]>([])
 const isLoading = ref(true)
+const removingId = ref<string | null>(null)
 
 const fetchFavorites = async () => {
     isLoading.value = true
@@ -107,9 +109,17 @@ onMounted(() => {
 })
 
 const removeFavorite = async (id: string) => {
-    // Placeholder removal logic - just removes from list as requested to use fetched data
-    // Real implementation would likely call an API endpoint
-    favoriteAds.value = favoriteAds.value.filter(ad => ad.id !== id)
-    toast.success('Ad removed from favorites')
+    if (removingId.value) return
+    removingId.value = id
+    try {
+        await useApi().fetchDelete(`/ads/${id}/unlike`)
+        favoriteAds.value = favoriteAds.value.filter(ad => ad.id !== id)
+        toast.success('Ad removed from favorites')
+    } catch (error: any) {
+        console.error(error);
+        toast.error(error?.data?.message || 'Failed to remove ad from favorites')
+    } finally {
+        removingId.value = null
+    }
 }
 </script>
