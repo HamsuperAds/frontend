@@ -38,6 +38,8 @@
                     <input v-model="formData.first_name" type="text"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="John" />
+                    <span v-if="formDataHasError && formDataRules.first_name.hasError" class="errorText">{{
+                        formDataRules.first_name.message }}</span>
                 </div>
 
                 <!-- Last Name -->
@@ -46,6 +48,8 @@
                     <input v-model="formData.last_name" type="text"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Doe" />
+                    <span v-if="formDataHasError && formDataRules.last_name.hasError" class="errorText">{{
+                        formDataRules.last_name.message }}</span>
                 </div>
 
                 <!-- Phone Number -->
@@ -67,7 +71,7 @@
                 <!-- Location -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 mb-2">
                         <select v-model="formData.state_id"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="">select state</option>
@@ -82,7 +86,14 @@
                                 {{ lga.name }}
                             </option>
                         </select>
+                        <span v-if="formDataHasError && formDataRules.lga_id.hasError" class="errorText">{{
+                            formDataRules.lga_id.message }}</span>
                     </div>
+                    <input v-model="formData.town" type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Town" />
+                    <span v-if="formDataHasError && formDataRules.town.hasError" class="errorText">{{
+                        formDataRules.town.message }}</span>
                 </div>
 
                 <!-- Date of Birth -->
@@ -91,6 +102,8 @@
                     <input v-model="formData.date_of_birth" type="date"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="21/04/1998" />
+                    <span v-if="formDataHasError && formDataRules.date_of_birth.hasError" class="errorText">{{
+                        formDataRules.date_of_birth.message }}</span>
                 </div>
 
                 <!-- Gender -->
@@ -98,18 +111,18 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
                     <select v-model="formData.gender"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option value="">select gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
                     </select>
                 </div>
 
                 <!-- Save Button -->
                 <div class="pt-4">
-                    <button type="submit"
-                        class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                    <Button type="submit" :disabled="formDataHasError">
                         Save
-                    </button>
+                    </Button>
                 </div>
             </form>
         </div>
@@ -127,6 +140,7 @@ definePageMeta({
 
 const { $getUser } = useNuxtApp()
 const user = $getUser()
+const validate = useValidate();
 
 const { states, fetchStates } = useStates()
 
@@ -134,7 +148,8 @@ onMounted(() => {
     fetchStates()
 })
 
-const formData = ref({
+const formDataHasError = ref(false)
+const formData = ref<Record<string, any>>({
     first_name: user?.first_name || '',
     last_name: user?.last_name || '',
     phone_number: user?.phone_number || '',
@@ -143,7 +158,29 @@ const formData = ref({
     lga_id: user?.lga_id || '',
     date_of_birth: user?.date_of_birth || '',
     town: user?.town || '',
-    gender: user?.gender || ''
+    gender: user?.gender?.toLowerCase() || ''
+})
+const formDataRules = ref<Record<string, any>>({
+    first_name: { minLength: 2, maxLength: 255 },
+    last_name: { minLength: 2, maxLength: 255 },
+    phone_number: { minLength: 10, maxLength: 15 },
+    email: { minLength: 5, maxLength: 255 },
+    lga_id: { min: 1, max: 774, customMessage: 'Please select an LGA' },
+    date_of_birth: { type: 'date', maxDate: '2008-01-01' },
+    town: { minLength: 2, maxLength: 100 },
+})
+const checkAdForm = () => {
+    formDataRules.value = validate(formData.value, formDataRules.value);
+    formDataHasError.value = false;
+    for (const field in formDataRules.value) {
+        if (formDataRules.value[field]?.hasError || !formData.value[field]) {
+            formDataHasError.value = true;
+            break;
+        }
+    }
+}
+watch(formData.value, () => {
+    checkAdForm()
 })
 
 const lgas = computed(() => {
