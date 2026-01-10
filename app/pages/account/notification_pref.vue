@@ -98,42 +98,22 @@ const form = ref<Record<string, string>>({
 })
 
 onMounted(() => {
-    if (user?.notification_pref) {
-        try {
-            // Parse existing preferences if they are stored as JSON string on user object
-            // Adjust this logic if the backend format is different
-            const prefs = typeof user.notification_pref === 'string'
-                ? JSON.parse(user.notification_pref)
-                : user.notification_pref
-
-            form.value = { ...form.value, ...configToForm(prefs) }
-        } catch (e) {
-            console.error('Error parsing notification preferences:', e)
+    if (user?.notification_preference) {
+        const prefs = user.notification_preference
+        form.value = {
+            ad_created: prefs.ad_created ? '1' : '0',
+            transaction_status_changed: prefs.transaction_status_changed ? '1' : '0',
+            password_changed: prefs.password_changed ? '1' : '0',
+            new_message_received: prefs.new_message_received ? '1' : '0',
+            new_feedback_received: prefs.new_feedback_received ? '1' : '0'
         }
     }
 })
 
-// Helper to ensure we stick to '1'/'0' string format
-const configToForm = (prefs: any) => {
-    const newForm: Record<string, string> = {}
-    Object.keys(form.value).forEach(key => {
-        if (prefs[key] !== undefined) {
-            // Handle boolean or string inputs from backend
-            const val = prefs[key]
-            if (val === true || val === '1' || val === 1) newForm[key] = '1'
-            else newForm[key] = '0'
-        }
-    })
-    return newForm
-}
-
 const savePreferences = async () => {
     isSaving.value = true
     try {
-        // Assuming endpoint is '/account/notification-preferences' or similar
-        // Since user provided a snapshot of keys, we send them as a flat object
         const response = await useApi().fetchPost('/account/notification-preferences', form.value)
-
         toast.success('Notification preferences updated successfully')
     } catch (error: any) {
         toast.error(error?.data?.message || 'Failed to update preferences')
