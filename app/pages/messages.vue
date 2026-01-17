@@ -1,9 +1,3 @@
-import { ref } from "vue"
-
-import { ref } from "vue"
-
-import { ref } from "vue"
-
 <template>
     <div class="min-h-screen bg-gray-50">
         <div class="container mx-auto px-4 py-6">
@@ -25,7 +19,7 @@ import { ref } from "vue"
                                 <div class="flex items-start justify-between mb-1">
                                     <h3 class="font-semibold text-gray-900 truncate">{{ conversation.name }}</h3>
                                     <span class="text-xs text-gray-500 flex-shrink-0 ml-2">{{ conversation.date
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <p class="text-sm text-gray-600 truncate">{{ conversation.adTitle }}</p>
                                 <p class="text-sm text-gray-500 truncate">{{ conversation.lastMessage }}</p>
