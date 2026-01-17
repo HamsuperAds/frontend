@@ -65,7 +65,7 @@
                 </div>
 
                 <!-- Right Side - Chat Area -->
-                <div
+                <div ref="messagesContainer"
                     class="max-h-[95vh] overflow-y-auto custom-scroll lg:col-span-2 bg-white rounded-lg shadow flex flex-col">
                     <!-- No Conversation Selected -->
                     <div v-if="!selectedConversation"
@@ -151,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { toast } from 'vue-sonner'
 import Skeleton from '~/components/ui/skeleton/Skeleton.vue'
 import type { Conversation, ConversationResponse, ChatMessage, ChatResponse } from '~/types/chat'
@@ -162,6 +162,7 @@ const isLoadingConversations = ref(true)
 const isLoadingMessages = ref(false)
 const messages = ref<ChatMessage[]>([])
 const newMessage = ref('')
+const messagesContainer = ref<HTMLElement | null>(null)
 
 // Fetch conversations
 const fetchConversations = async () => {
@@ -187,6 +188,7 @@ const fetchMessages = async (conversation: Conversation) => {
         const response = await useApi().fetchGet<ChatResponse>(`/messages/conversations/${conversation.ad.id}/${conversation.other_user.id}`)
         if (response.success) {
             messages.value = response.data
+            scrollToBottom()
         }
     } catch (error: any) {
         toast.error(error?.data?.message || 'Failed to fetch messages')
@@ -198,6 +200,13 @@ const fetchMessages = async (conversation: Conversation) => {
 const selectConversation = async (conversation: Conversation) => {
     selectedConversation.value = conversation
     await fetchMessages(conversation)
+}
+
+const scrollToBottom = async () => {
+    await nextTick()
+    if (messagesContainer.value) {
+        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
 }
 
 const sendMessage = () => {
@@ -220,6 +229,7 @@ const sendMessage = () => {
             updated_at: new Date().toISOString()
         } as unknown as ChatMessage)
         newMessage.value = ''
+        scrollToBottom()
     }
 }
 
