@@ -171,11 +171,13 @@
                 </div>
             </div>
         </div>
+        <PricingPlansDialog v-model="showPricingDialog" />
     </div>
 </template>
 
 <script setup lang="ts">
 import { toast } from 'vue-sonner';
+import type { PromotionPlan } from '~/types/promotionPlan';
 
 definePageMeta({
     layout: 'profile'
@@ -187,6 +189,7 @@ const searchQuery = ref('')
 const activeDropdown = ref<number | null>(null)
 const showDeleteConfirm = ref(false)
 const selectedAdvert = ref<any>(null)
+const showPricingDialog = ref(false)
 
 const adverts = ref<any[]>([])
 const currentPage = ref(1)
@@ -200,6 +203,8 @@ const statusClasses: Record<string, string> = {
     unavailable: 'bg-gray-100 text-gray-700',
     rejected: 'bg-red-100 text-red-700'
 }
+const appResourceStore = useAppResourceInfoStore();
+const plans = computed(() => appResourceStore.promotionPlans as PromotionPlan[]);
 
 const fetchAds = async (page = 1) => {
     isLoading.value = true
@@ -257,8 +262,12 @@ const editAdvert = (advert: any) => {
     navigateTo(`/account/edit-ad/${advert.id}`)
 }
 
-const promoteAdvert = (advert: any) => {
-    console.log('Promote advert:', advert)
+const promoteAdvert = async (advert: any) => {
+    console.log('Promote advert:', advert);
+    showPricingDialog.value = true;
+    if (plans.value.length === 0) {
+        await appResourceStore.fetchPromotionPlans();
+    }
     activeDropdown.value = null
 }
 

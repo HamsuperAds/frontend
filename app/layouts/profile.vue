@@ -135,7 +135,9 @@
 import { useRoute } from 'vue-router'
 import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
+import { toast } from 'vue-sonner'
 
+const appResourceInfoStore = useAppResourceInfoStore();
 const route = useRoute()
 const { $getUser } = useNuxtApp()
 const user = $getUser()
@@ -146,6 +148,12 @@ const isActive = (path: string) => {
     }
     return route.path.startsWith(path)
 }
+watch(() => appResourceInfoStore.toastMessage, (newMessage) => {
+    if (newMessage) {
+        toast(newMessage);
+        appResourceInfoStore.toastMessage = null;
+    }
+});
 </script>
 
 <style scoped>

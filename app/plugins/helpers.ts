@@ -41,6 +41,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         }
         return null;
       },
+      isLoading: (val: string) => appResourceStore.loading[val],
       formatDate: (inputDate: string) => {
         if (
           inputDate === null ||

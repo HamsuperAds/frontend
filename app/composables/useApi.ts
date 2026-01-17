@@ -80,7 +80,7 @@ export const useApi = () => {
       });
     } catch (error: any) {
       if (error.response?.status === 401) {
-        if (process.client) {
+        if (import.meta.client) {
           localStorage.removeItem("authToken");
           navigateTo("/auth/login");
         }

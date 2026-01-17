@@ -20,13 +20,21 @@ import { useRoute } from '#app'
 import { computed } from 'vue'
 import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
+import { toast } from 'vue-sonner';
 
 const route = useRoute()
-const excludedRoutes = ['create-ad', 'search', 'auth-login', 'auth-register', 'faqs', 'about', 'contact-us', 'terms-and-conditions', 'privacy-policy']
+const excludedRoutes = ['create-ad', 'search', 'auth-login', 'auth-register', 'faqs', 'about', 'contact-us', 'terms-and-conditions', 'privacy-policy'];
+const appResourceInfoStore = useAppResourceInfoStore();
 
 const showSearch = computed(() => {
     return !excludedRoutes.includes(route.name as string)
-})
+});
+watch(() => appResourceInfoStore.toastMessage, (newMessage) => {
+    if (newMessage) {
+        toast(newMessage);
+        appResourceInfoStore.toastMessage = null;
+    }
+});
 </script>
 
 <style scoped>

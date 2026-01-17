@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+    <div class="bg-gray-50 flex items-center justify-center py-12 px-4">
         <div class="w-full max-w-md">
             <!-- Sign In Form -->
             <div v-if="!showForgotPassword && !showOTPVerification && !showResetPassword"
@@ -265,7 +265,7 @@ const showConfirmPassword = ref(false)
 
 const loginData = ref({
     email: 'chiamaka.nnadi10@hamsuper.test',
-    password: '87654321',
+    password: '12345678',
 })
 
 const resetEmail = ref('')
