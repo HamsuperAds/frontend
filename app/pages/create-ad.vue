@@ -25,6 +25,10 @@
                         </div>
 
                         <!-- Success Message -->
+                        <div v-if="!isPaymentPending && adForm.promotion_plan_id && adForm.promotion_plan_id !== 'bronze' && !adForm.promotion_plan_id.includes('bronze')"
+                            class="mb-6">
+                            <p class="text-green-600 font-medium">Payment verified! Your ad has been promoted.</p>
+                        </div>
                         <h3 class="text-xl text-gray-900 mb-2">Your ad has been submitted for review.</h3>
                         <p class="text-gray-600 mb-8">It will be live in a moment.</p>
 
@@ -344,6 +348,7 @@ import { useCategories } from '~/composables/useCategories';
 import { useStates } from '~/composables/useStates';
 import type { PromotionPlan } from '~/types/promotionPlan';
 import type { SubcategoryAttribute } from '~/types/subcategoryAttribute';
+import { useStorage } from '@vueuse/core';
 
 const appResourceInfoStore = useAppResourceInfoStore();
 const currentStep = ref(1)
@@ -557,6 +562,17 @@ const skipAndSubmit = () => {
     submitAd(true);
 }
 
+const isPaymentPending = ref(false)
+const justVerifiedPayment = useStorage('justVerifiedPayment', 'false')
+
+watch(justVerifiedPayment, (newValue) => {
+    if (newValue === 'true' && isPaymentPending.value) {
+        isPaymentPending.value = false
+        justVerifiedPayment.value = 'false'
+        // Payment verified, state is already success/step 3
+    }
+})
+
 const submitAd = async (skipDetails = false) => {
     submitError.value = '';
     isSubmitting.value = true;
@@ -607,12 +623,23 @@ const submitAd = async (skipDetails = false) => {
         }
 
         // Make API call
-        await useApi().fetchPost<{
+        const response = await useApi().fetchPost<{
             success: boolean;
             message: string;
             data: any;
+            requires_payment?: boolean;
+            payment_url?: string;
         }>('/ads', formData);
-        console.log(formData);
+
+        console.log(response);
+
+        if (response.requires_payment && response.payment_url) {
+            isPaymentPending.value = true
+            justVerifiedPayment.value = 'false'
+            window.open(response.payment_url, '_blank')
+            // Don't reset form yet, user might come back? Actually step 3 is success.
+            // Move to step 3 anyway to show they are done/waiting
+        }
 
         // Success - move to step 3
         currentStep.value = 3;
