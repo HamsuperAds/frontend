@@ -3,7 +3,7 @@
         @click.self="$emit('update:modelValue', false)">
         <div class="bg-white rounded-lg w-full max-w-5xl max-h-[90vh] overflow-y-auto">
             <div class="p-8">
-                <div class="flex justify-between items-center mb-8">
+                <div class="flex justify-between items-center">
                     <h2 class="text-2xl font-bold text-gray-900">Pricing Plans</h2>
                     <button @click="$emit('update:modelValue', false)" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -13,10 +13,21 @@
                         </svg>
                     </button>
                 </div>
+                <div class="mb-8">
+                    <p class="text-gray-600">Check out our pricing plans and choose the best one for your needs. (Tip:
+                        Choose Silver to sell fast, Gold to sell faster)</p>
+                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div v-for="plan in plans" :key="plan.id" class="border-2 rounded-lg overflow-hidden"
-                        :style="{ borderColor: plan.color }">
+                    <div v-for="plan in plans" :key="plan.id"
+                        class="border-2 rounded-lg overflow-hidden relative cursor-pointer hover:shadow-lg transition-shadow"
+                        :style="{ borderColor: plan.color }" @click="selectPlan(plan)">
+                        <!-- Selection Indicator -->
+                        <div v-if="isActive(plan)"
+                            class="absolute top-0 left-0 w-8 h-8 bg-white rounded-br-2xl border-b-4 border-r-4 z-10 flex items-center justify-center"
+                            :style="{ borderColor: plan.color }">
+                            <div class="w-3 h-3 rounded-full border-2" :style="{ borderColor: plan.color }"></div>
+                        </div>
                         <div class="text-white px-6 py-4 flex items-center justify-between"
                             :style="{ backgroundColor: plan.color }">
                             <h3 class="text-xl font-bold">{{ plan.name }}</h3>
@@ -66,16 +77,32 @@
 import { useAppResourceInfoStore } from '#imports';
 import type { PromotionPlan } from '~/types/promotionPlan';
 
-defineProps<{
+const props = defineProps<{
     modelValue: boolean;
+    selectedPlanId?: string | number;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
     (e: 'update:modelValue', value: boolean): void;
+    (e: 'select', plan: PromotionPlan): void;
 }>();
 
 const appResourceStore = useAppResourceInfoStore();
 const plans = computed(() => appResourceStore.promotionPlans as PromotionPlan[]);
+
+const isActive = (plan: PromotionPlan) => {
+    if (props.selectedPlanId) {
+        return props.selectedPlanId == plan.id
+    }
+    // Default to first plan active if no id passed? Or based on user request: "active one is bronze"
+    // Assuming Bronze is usually free or first. Let's find bronze or default to first.
+    return plan.name.toLowerCase() === 'bronze'
+}
+
+const selectPlan = (plan: PromotionPlan) => {
+    emit('select', plan)
+    emit('update:modelValue', false)
+}
 
 const formatDuration = (hours: number) => {
     if (hours >= 24) {

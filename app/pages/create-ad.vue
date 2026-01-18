@@ -333,7 +333,8 @@
             </div>
         </div>
 
-        <PricingPlansDialog v-model="showPricingDialog" />
+        <PricingPlansDialog v-model="showPricingDialog" :selected-plan-id="adForm.promotion_plan_id"
+            @select="handlePlanSelection" />
     </div>
 </template>
 
@@ -623,6 +624,10 @@ const submitAd = async (skipDetails = false) => {
     } finally {
         isSubmitting.value = false;
     }
+}
+
+const handlePlanSelection = (plan: PromotionPlan) => {
+    adForm.value.promotion_plan_id = plan.id
 }
 
 const resetForm = () => {
