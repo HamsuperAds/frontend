@@ -8,7 +8,7 @@
                         <h2 class="text-lg font-semibold text-blue-600">My messages</h2>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto">
+                    <div class="flex-1 overflow-y-auto custom-scroll">
                         <!-- Skeleton Loader -->
                         <div v-if="isLoadingConversations" class="space-y-4 p-4">
                             <div v-for="i in 5" :key="i" class="flex gap-3">
@@ -94,7 +94,7 @@
                                     <img :src="selectedConversation.ad.primary_image?.image_path || '/images/placeholder.png'"
                                         :alt="selectedConversation.ad.title" class="w-6 h-6 rounded object-cover" />
                                     <span class="text-gray-600 truncate max-w-[200px]">{{ selectedConversation.ad.title
-                                        }}</span>
+                                    }}</span>
                                     <span class="text-blue-600 font-semibold">₦{{
                                         Number(selectedConversation.ad.price).toLocaleString() }}</span>
                                 </NuxtLink>
@@ -152,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { toast } from 'vue-sonner'
 import Skeleton from '~/components/ui/skeleton/Skeleton.vue'
 import type { Conversation, ConversationResponse, ChatMessage, ChatResponse, SendMessageResponse } from '~/types/chat'
@@ -165,27 +165,51 @@ const messages = ref<ChatMessage[]>([])
 const newMessage = ref('')
 const messagesContainer = ref<HTMLElement | null>(null)
 const { $getUser } = useNuxtApp();
+const pollingInterval = ref<any>(null)
 
 // Fetch conversations
-const fetchConversations = async () => {
-    isLoadingConversations.value = true
+const fetchConversations = async (isBackground = false) => {
+    if (!isBackground) isLoadingConversations.value = true
     try {
         const response = await useApi().fetchGet<ConversationResponse>('/messages/conversations')
         if (response.success) {
-            conversations.value = response.data
+            const newConversations = response.data
+
+            // If polling, check if we need to update the selected conversation's messages
+            if (isBackground && selectedConversation.value) {
+                const updatedConv = newConversations.find(c =>
+                    c.ad.id === selectedConversation.value?.ad.id &&
+                    c.other_user.id === selectedConversation.value?.other_user.id
+                )
+
+                if (updatedConv) {
+                    // Check if there's a new message
+                    const currentLatestId = selectedConversation.value.latest_message?.id
+                    const newLatestId = updatedConv.latest_message?.id
+
+                    if (currentLatestId !== newLatestId) {
+                        fetchMessages(selectedConversation.value, true)
+                    }
+                }
+            }
+
+            conversations.value = newConversations
         }
     } catch (error: any) {
-        toast.error(error?.data?.message || 'Failed to fetch conversations')
+        // Don't show toast on background polling errors to avoid spamming
+        if (!isBackground) {
+            toast.error(error?.data?.message || 'Failed to fetch conversations')
+        }
     } finally {
-        isLoadingConversations.value = false
+        if (!isBackground) isLoadingConversations.value = false
     }
 }
 
 // Fetch messages for a conversation
-const fetchMessages = async (conversation: Conversation) => {
+const fetchMessages = async (conversation: Conversation, isBackground = false) => {
     if (!conversation.other_user?.id || !conversation.ad?.id) return
 
-    isLoadingMessages.value = true
+    if (!isBackground) isLoadingMessages.value = true
     try {
         const response = await useApi().fetchGet<ChatResponse>(`/messages/conversations/${conversation.ad.id}/${conversation.other_user.id}`)
         if (response.success) {
@@ -195,9 +219,11 @@ const fetchMessages = async (conversation: Conversation) => {
             }, 49);
         }
     } catch (error: any) {
-        toast.error(error?.data?.message || 'Failed to fetch messages')
+        if (!isBackground) {
+            toast.error(error?.data?.message || 'Failed to fetch messages')
+        }
     } finally {
-        isLoadingMessages.value = false
+        if (!isBackground) isLoadingMessages.value = false
     }
 }
 
@@ -310,7 +336,20 @@ const formatDate = (dateString: string) => {
     }
 }
 
+const startPolling = () => {
+    pollingInterval.value = setInterval(() => {
+        fetchConversations(true)
+    }, 15000)
+}
+
 onMounted(() => {
     fetchConversations()
+    startPolling()
+})
+
+onUnmounted(() => {
+    if (pollingInterval.value) {
+        clearInterval(pollingInterval.value)
+    }
 })
 </script>
