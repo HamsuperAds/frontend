@@ -87,42 +87,54 @@
                         <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(advert.created_at) }}</td>
                         <td class="px-6 py-4">
                             <div class="relative">
-                                <button @click="toggleDropdown(index)" class="text-gray-400 hover:text-gray-600">
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path
-                                            d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <div v-if="activeDropdown === index"
-                                    class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border z-10">
-                                    <button @click="editAdvert(advert)"
-                                        class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                <template v-if="promotingAdId === advert.id">
+                                    <div class="p-2 flex justify-center text-blue-600">
+                                        <Icon name="svg-spinners:ring-resize" class="w-5 h-5" />
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <button @click="toggleDropdown(index)" class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path
+                                                d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z">
                                             </path>
                                         </svg>
-                                        Edit
                                     </button>
-                                    <button @click="promoteAdvert(advert)"
-                                        class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                        </svg>
-                                        Promote
-                                    </button>
-                                    <button @click="showDeleteDialog(advert)"
-                                        class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                            </path>
-                                        </svg>
-                                        Delete
-                                    </button>
-                                </div>
+                                    <div v-if="activeDropdown === index"
+                                        class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border z-10">
+                                        <button @click="editAdvert(advert)"
+                                            class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                </path>
+                                            </svg>
+                                            Edit
+                                        </button>
+                                        <button @click="promoteAdvert(advert)"
+                                            :disabled="advert.promotion_plan?.slug !== 'bronze'"
+                                            class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            :title="advert.promotion_plan?.slug !== 'bronze' ? 'Already promoted' : ''">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                            </svg>
+                                            Promote
+                                        </button>
+                                        <button @click="showDeleteDialog(advert)"
+                                            class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                </path>
+                                            </svg>
+                                            Delete
+                                        </button>
+                                    </div>
+                                </template>
                             </div>
                         </td>
                     </tr>
@@ -171,7 +183,8 @@
                 </div>
             </div>
         </div>
-        <PricingPlansDialog v-model="showPricingDialog" />
+        <PricingPlansDialog v-model="showPricingDialog" :selected-plan-id="selectedAdvert?.promotion_plan?.id"
+            @select="handlePlanSelection" />
     </div>
 </template>
 
@@ -262,13 +275,51 @@ const editAdvert = (advert: any) => {
     navigateTo(`/account/edit-ad/${advert.id}`)
 }
 
+const promotingAdId = ref<string | null>(null)
+
 const promoteAdvert = async (advert: any) => {
-    console.log('Promote advert:', advert);
-    showPricingDialog.value = true;
+    selectedAdvert.value = advert;
+    activeDropdown.value = null;
     if (plans.value.length === 0) {
         await appResourceStore.fetchPromotionPlans();
     }
-    activeDropdown.value = null
+    showPricingDialog.value = true;
+}
+
+const handlePlanSelection = async (plan: PromotionPlan) => {
+    if (plan.slug === 'bronze') {
+        showPricingDialog.value = false
+        return
+    }
+
+    if (!selectedAdvert.value) return
+
+    showPricingDialog.value = false
+    const adId = selectedAdvert.value.id
+    promotingAdId.value = adId
+
+    try {
+        const response = await useApi().fetchPost<{
+            success: boolean;
+            message: string;
+            data: {
+                payment_url: string;
+            };
+        }>('/ads/promote', {
+            ad_id: adId,
+            promotion_plan_id: plan.id
+        })
+
+        if (response.success && response.data.payment_url) {
+            window.open(response.data.payment_url, '_blank')
+            toast.success('Payment link opened in a new tab')
+        }
+    } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to initiate promotion')
+    } finally {
+        promotingAdId.value = null
+        selectedAdvert.value = null // Reset selected advert after attempt
+    }
 }
 
 const showDeleteDialog = (advert: any) => {
