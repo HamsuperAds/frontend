@@ -33,3 +33,9 @@ export interface ChatResponse {
     success: boolean;
     data: ChatMessage[];
 }
+
+export interface SendMessageResponse {
+    success: boolean;
+    message: string;
+    data: ChatMessage;
+}

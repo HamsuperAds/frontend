@@ -65,8 +65,7 @@
                 </div>
 
                 <!-- Right Side - Chat Area -->
-                <div ref="messagesContainer"
-                    class="max-h-[95vh] overflow-y-auto custom-scroll lg:col-span-2 bg-white rounded-lg shadow flex flex-col">
+                <div class=" lg:col-span-2 bg-white rounded-lg shadow flex flex-col">
                     <!-- No Conversation Selected -->
                     <div v-if="!selectedConversation"
                         class="flex-1 flex flex-col items-center justify-center text-gray-400">
@@ -103,7 +102,8 @@
                         </div>
 
                         <!-- Messages Area -->
-                        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                        <div ref="messagesContainer"
+                            class="max-h-[70vh] custom-scroll flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
                             <!-- Loading Spinner -->
                             <div v-if="isLoadingMessages" class="flex justify-center py-4">
                                 <Icon name="svg-spinners:ring-resize" class="w-8 h-8 text-blue-500" />
@@ -133,9 +133,10 @@
                                 <input v-model="newMessage" type="text" placeholder="write your message"
                                     class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     @keyup.enter="sendMessage" />
-                                <button @click="sendMessage"
-                                    class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <button @click="sendMessage" :disabled="isSendingMessage"
+                                    class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <Icon v-if="isSendingMessage" name="svg-spinners:ring-resize" class="w-6 h-6" />
+                                    <svg v-else class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                                         <path
                                             d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z">
                                         </path>
@@ -154,7 +155,7 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { toast } from 'vue-sonner'
 import Skeleton from '~/components/ui/skeleton/Skeleton.vue'
-import type { Conversation, ConversationResponse, ChatMessage, ChatResponse } from '~/types/chat'
+import type { Conversation, ConversationResponse, ChatMessage, ChatResponse, SendMessageResponse } from '~/types/chat'
 
 const selectedConversation = ref<Conversation | null>(null)
 const conversations = ref<Conversation[]>([])
@@ -163,6 +164,7 @@ const isLoadingMessages = ref(false)
 const messages = ref<ChatMessage[]>([])
 const newMessage = ref('')
 const messagesContainer = ref<HTMLElement | null>(null)
+const { $getUser } = useNuxtApp();
 
 // Fetch conversations
 const fetchConversations = async () => {
@@ -188,7 +190,9 @@ const fetchMessages = async (conversation: Conversation) => {
         const response = await useApi().fetchGet<ChatResponse>(`/messages/conversations/${conversation.ad.id}/${conversation.other_user.id}`)
         if (response.success) {
             messages.value = response.data
-            scrollToBottom()
+            setTimeout(() => {
+                scrollToBottom()
+            }, 49);
         }
     } catch (error: any) {
         toast.error(error?.data?.message || 'Failed to fetch messages')
@@ -202,34 +206,90 @@ const selectConversation = async (conversation: Conversation) => {
     await fetchMessages(conversation)
 }
 
+const markMessagesAsRead = async () => {
+    const conversation = selectedConversation.value
+    if (!conversation || conversation.unread_count === 0) return
+
+    const unreadMessageIds: (string | number)[] = []
+
+    // efficient loop to find unread messages to be marked as read
+    for (let i = messages.value.length - 1; i >= 0; i--) {
+        const msg: ChatMessage = messages.value[i]!
+        if (msg.receiver_id === $getUser()?.id && !msg.is_read) {
+            unreadMessageIds.push(msg.id)
+        }
+        if (unreadMessageIds.length >= conversation.unread_count) {
+            break
+        }
+    }
+
+    if (unreadMessageIds.length === 0) return
+
+    try {
+        await useApi().fetchPost('/messages/bulk/read', {
+            message_ids: unreadMessageIds
+        })
+
+        // Update local state
+        messages.value.forEach(msg => {
+            if (unreadMessageIds.includes(msg.id)) {
+                // @ts-ignore
+                msg.is_read = true
+            }
+        })
+
+        // Update unread count in conversations list
+        const convInList = conversations.value.find(c =>
+            c.ad.id === conversation.ad.id &&
+            c.other_user.id === conversation.other_user.id
+        )
+
+        if (convInList) {
+            convInList.unread_count = 0
+        }
+
+        if (selectedConversation.value && selectedConversation.value.ad.id === conversation.ad.id) {
+            selectedConversation.value.unread_count = 0
+        }
+
+    } catch (error) {
+        console.error('Failed to mark messages as read', error)
+    }
+}
+
 const scrollToBottom = async () => {
     await nextTick()
     if (messagesContainer.value) {
         messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
     }
+    markMessagesAsRead()
 }
 
-const sendMessage = () => {
-    // Placeholder for send logic
-    if (newMessage.value.trim() && selectedConversation.value) {
-        // Optimistic update - in real app this would be an API call
-        const tempId = Date.now().toString()
-        // We assume we are the sender (logic should use actual auth user id)
-        // For visual purpose, sending end is 'me' and receiving end is the other user
-        messages.value.push({
-            id: tempId,
-            sender_id: 'me', // This needs to be actual user ID or handled by backend response
-            receiver_id: selectedConversation.value.other_user.id,
+const isSendingMessage = ref(false)
+
+const sendMessage = async () => {
+    if (!newMessage.value.trim() || !selectedConversation.value) return
+
+    isSendingMessage.value = true
+
+    try {
+        const payload = {
             ad_id: selectedConversation.value.ad.id,
-            message: newMessage.value,
-            is_delivered: false,
-            is_read: false,
-            is_archived: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        } as unknown as ChatMessage)
-        newMessage.value = ''
-        scrollToBottom()
+            receiver_id: selectedConversation.value.other_user.id,
+            message: newMessage.value.trim()
+        }
+
+        const response = await useApi().fetchPost<SendMessageResponse>('/messages', payload)
+
+        if (response.success) {
+            messages.value.push(response.data)
+            newMessage.value = ''
+            scrollToBottom()
+        }
+    } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to send message')
+    } finally {
+        isSendingMessage.value = false
     }
 }
 
@@ -239,12 +299,14 @@ const formatDate = (dateString: string) => {
     const diff = now.getTime() - date.getTime()
     const days = Math.floor(diff / (1000 * 60 * 60 * 24))
 
+    const time = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase().replace(/\s/g, '')
+
     if (days === 0) {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        return time
     } else if (days === 1) {
-        return 'Yesterday'
+        return `${time} Yesterday`
     } else {
-        return date.toLocaleDateString([], { day: 'numeric', month: 'short' })
+        return `${time} ${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}`
     }
 }
 
