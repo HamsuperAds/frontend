@@ -10,7 +10,7 @@
 
 
         <!-- Footer -->
-        <PageFooter />
+        <PageFooter v-if="route.name !== 'verify-payment'" />
         <Toaster />
     </div>
 </template>
@@ -23,7 +23,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'vue-sonner';
 
 const route = useRoute()
-const excludedRoutes = ['create-ad', 'search', 'auth-login', 'auth-register', 'faqs', 'about', 'contact-us', 'terms-and-conditions', 'privacy-policy', 'messages'];
+const excludedRoutes = ['create-ad', 'search', 'auth-login', 'auth-register', 'faqs', 'about', 'contact-us', 'terms-and-conditions', 'privacy-policy', 'messages', 'verify-payment'];
 const appResourceInfoStore = useAppResourceInfoStore();
 
 const showSearch = computed(() => {

@@ -2,14 +2,15 @@
     <nav class="bg-blue-600 text-white" :class="showSearch ? 'rounded-b-xl' : ''">
         <!-- Upper Section -->
         <div class="px-6 py-4 shadow">
-            <div class="container mx-auto flex items-center justify-between">
+            <div class="container mx-auto flex items-center"
+                :class="isVerifyPaymentPage ? 'justify-center' : 'justify-between'">
                 <!-- Logo -->
                 <NuxtLink to="/" class="text-xl font-bold hover:opacity-90 transition-opacity">
                     HamSuper
                 </NuxtLink>
 
                 <!-- Right Side Icons and Button -->
-                <div class="flex items-center space-x-6">
+                <div v-if="!isVerifyPaymentPage" class="flex items-center space-x-6">
                     <!-- Heart Icon -->
                     <template v-if="$isLoggedIn()">
                         <button @click="navigateTo('/account/favorites')" class="hover:opacity-80 transition-opacity">
@@ -112,6 +113,10 @@
 defineProps<{
     showSearch?: boolean
 }>()
+
+import { useRoute } from '#app';
+const route = useRoute();
+const isVerifyPaymentPage = computed(() => route.path === '/verify-payment' || route.name === 'verify-payment');
 
 const searchQuery = ref('')
 const showLocationModal = ref(false)
