@@ -1,5 +1,6 @@
 import type { Category, Subcategory } from './category';
 import type { State, LGA } from './location';
+import type { PromotionPlan } from './promotionPlan';
 import type { User } from './user';
 
 export interface AdImage {
@@ -41,7 +42,7 @@ export interface Ad {
   lga: LGA;
   images: AdImage[];
   primary_image: AdImage;
-  promotion_type?: string;
+  promotion_plan?: PromotionPlan;
   additional_info: Record<string, any> | null;
   is_liked: boolean;
 }

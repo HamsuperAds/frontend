@@ -65,11 +65,11 @@
                                         :alt="advert.title" class="w-12 h-12 object-cover rounded" />
                                     <div class="">
                                         <span class="text-sm font-medium text-gray-900 line-clamp-1">{{ advert.title
-                                        }}</span>
+                                            }}</span>
                                         <!-- show ad price -->
                                         <span class="text-sm text-gray-600 block">₦{{
                                             Number(advert.price).toLocaleString()
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                 </div>
                             </NuxtLink>
@@ -219,16 +219,6 @@ const statusClasses: Record<string, string> = {
 const appResourceStore = useAppResourceInfoStore();
 const plans = computed(() => appResourceStore.promotionPlans as PromotionPlan[]);
 
-import { useStorage } from '@vueuse/core'
-const justVerifiedPayment = useStorage('justVerifiedPayment', 'false')
-
-watch(() => justVerifiedPayment.value, (newValue) => {
-    if (newValue === 'true') {
-        fetchAds(currentPage.value)
-        justVerifiedPayment.value = 'false'
-    }
-})
-
 const fetchAds = async (page = 1) => {
     isLoading.value = true
     try {
@@ -321,9 +311,8 @@ const handlePlanSelection = async (plan: PromotionPlan) => {
         })
 
         if (response.success && response.data.payment_url) {
-            justVerifiedPayment.value = 'false'
-            window.open(response.data.payment_url, '_blank')
-            toast.success('Payment link opened in a new tab')
+            toast.success('Redirecting to payment...')
+            window.location.href = response.data.payment_url!
         }
     } catch (error: any) {
         toast.error(error?.data?.message || 'Failed to initiate promotion')
