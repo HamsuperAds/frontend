@@ -23,7 +23,19 @@ import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'vue-sonner';
 
 const route = useRoute()
-const excludedRoutes = ['create-ad', 'search', 'auth-login', 'auth-register', 'faqs', 'about', 'contact-us', 'terms-and-conditions', 'privacy-policy', 'messages', 'verify-payment'];
+const excludedRoutes = [
+    'create-ad',
+    'search',
+    'auth-login',
+    'auth-register',
+    'faqs', 'about',
+    'contact-us',
+    'terms-and-conditions',
+    'privacy-policy',
+    'messages',
+    'verify-payment',
+    'seller-id'
+];
 const appResourceInfoStore = useAppResourceInfoStore();
 
 const showSearch = computed(() => {

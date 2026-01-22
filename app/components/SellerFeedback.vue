@@ -9,51 +9,81 @@
                 <!-- Feedback Stats -->
                 <div class="flex gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
                     <div class="flex items-center gap-2">
-                        <Icon name="heroicons:chat-bubble-left-ellipsis" class="w-5 h-5 text-gray-600" />
-                        <span class="font-medium">All ({{ feedbackStats.total }})</span>
+                        <Icon name="heroicons:chat-bubble-left-ellipsis" class="w-4 h-4 text-gray-600" />
+                        <span class="text-sm font-medium">All ({{ feedbackStats.total }})</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <Icon name="heroicons:face-smile" class="w-5 h-5 text-green-600" />
-                        <span class="font-medium text-green-600">Positive ({{ feedbackStats.positive }})</span>
+                        <Icon name="heroicons:star" class="w-4 h-4 text-yellow-500" />
+                        <span class="text-sm font-medium text-gray-700">5 Stars ({{ feedbackStats.fiveStars }})</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <Icon name="heroicons:face-frown" class="w-5 h-5 text-red-600" />
-                        <span class="font-medium text-red-600">Negative ({{ feedbackStats.negative }})</span>
+                        <Icon name="heroicons:star" class="w-4 h-4 text-yellow-400" />
+                        <span class="text-sm font-medium text-gray-700">4 Stars ({{ feedbackStats.fourStars }})</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <Icon name="heroicons:minus" class="w-5 h-5 text-yellow-600" />
-                        <span class="font-medium text-yellow-600">Neutral ({{ feedbackStats.neutral }})</span>
+                        <Icon name="heroicons:star" class="w-4 h-4 text-yellow-300" />
+                        <span class="text-sm font-medium text-gray-700">3 Stars ({{ feedbackStats.threeStars }})</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Icon name="heroicons:star" class="w-4 h-4 text-orange-400" />
+                        <span class="text-sm font-medium text-gray-700">1-2 Stars ({{ feedbackStats.lowStars }})</span>
                     </div>
                 </div>
 
                 <!-- Add Feedback Button -->
                 <div class="mb-6">
                     <button @click="toggleAddFeedback" :disabled="isSellerSelf"
-                        class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                        :class="showAddForm
+                            ? 'border-red-600 text-red-600 hover:bg-red-50'
+                            : 'border-blue-600 text-blue-600 hover:bg-blue-50'">
                         {{ showAddForm ? 'Cancel' : 'Add Feedback' }}
                     </button>
                 </div>
 
                 <!-- Add Feedback Form -->
                 <div v-if="showAddForm" class="mb-6 p-4 border border-gray-200 rounded-lg">
+                    <!-- Success Message -->
+                    <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p class="text-green-700 text-sm">{{ successMessage }}</p>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-red-700 text-sm">{{ errorMessage }}</p>
+                    </div>
+
                     <form @submit.prevent="submitFeedback">
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Feedback Type</label>
-                            <select v-model="newFeedback.type" class="w-full p-2 border border-gray-300 rounded-md">
-                                <option value="positive">Positive</option>
-                                <option value="neutral">Neutral</option>
-                                <option value="negative">Negative</option>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Rating *</label>
+                            <div class="flex items-center gap-1">
+                                <button v-for="star in 5" :key="star" type="button" @click="newFeedback.rating = star"
+                                    class="text-2xl transition-colors hover:scale-110"
+                                    :class="star <= newFeedback.rating ? 'text-yellow-400' : 'text-gray-300'">
+                                    ★
+                                </button>
+                                <span class="ml-2 text-sm text-gray-600">({{ newFeedback.rating }} star{{
+                                    newFeedback.rating !== 1 ? 's' : '' }})</span>
+                            </div>
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Your Feedback</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Your Feedback *</label>
                             <textarea v-model="newFeedback.comment" rows="4"
-                                class="w-full p-2 border border-gray-300 rounded-md"
-                                placeholder="Share your experience with this seller..." required></textarea>
+                                class="w-full p-2 border rounded-md transition-colors"
+                                :class="commentError ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'"
+                                placeholder="Share your experience with this seller... (10-1000 characters)"
+                                :disabled="isSubmitting"></textarea>
+                            <div class="flex justify-between items-center mt-1">
+                                <p v-if="commentError" class="text-red-500 text-xs">{{ commentError }}</p>
+                                <p class="text-gray-500 text-xs ml-auto">{{ newFeedback.comment.trim().length }}/1000
+                                </p>
+                            </div>
                         </div>
-                        <button type="submit"
-                            class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors">
-                            Submit Feedback
+                        <button type="submit" :disabled="!isFormValid || isSubmitting"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2">
+                            <span v-if="isSubmitting"
+                                class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                            {{ isSubmitting ? 'Submitting...' : 'Submit Feedback' }}
                         </button>
                     </form>
                 </div>
@@ -63,32 +93,36 @@
                     <div v-for="feedback in feedbacks" :key="feedback.id" class="p-4 border border-gray-200 rounded-lg">
                         <!-- User Info -->
                         <div class="flex items-center gap-3 mb-3">
-                            <img :src="feedback.user.avatar" :alt="feedback.user.name"
+                            <img :src="feedback.from_user.avatar"
+                                :alt="`${feedback.from_user.first_name} ${feedback.from_user.last_name}`"
                                 class="w-10 h-10 rounded-full object-cover" />
                             <div>
-                                <h4 class="font-medium text-gray-900">{{ feedback.user.name }}</h4>
+                                <h4 class="font-medium text-gray-900">{{ feedback.from_user.first_name }} {{
+                                    feedback.from_user.last_name }}</h4>
                             </div>
                         </div>
 
                         <!-- Comment -->
-                        <p class="text-gray-700 mb-3">{{ feedback.comment }}</p>
+                        <p class="text-gray-700 mb-3">{{ feedback.message }}</p>
 
                         <!-- Footer -->
                         <div class="flex items-center justify-between text-sm text-gray-500">
                             <div class="flex items-center gap-4">
                                 <span>{{ formatDate(feedback.created_at) }}</span>
-                                <div class="flex items-center gap-1" :class="{
-                                    'text-green-600': feedback.type === 'positive',
-                                    'text-red-600': feedback.type === 'negative',
-                                    'text-yellow-600': feedback.type === 'neutral'
-                                }">
-                                    <Icon :name="getFeedbackIcon(feedback.type)" class="w-4 h-4" />
-                                    <span class="capitalize">{{ feedback.type }}</span>
+                                <div class="flex items-center gap-1">
+                                    <div class="flex items-center">
+                                        <span v-for="star in 5" :key="star" class="text-sm"
+                                            :class="star <= feedback.rating ? 'text-yellow-400' : 'text-gray-300'">
+                                            ★
+                                        </span>
+                                    </div>
+                                    <span class="ml-1">{{ feedback.rating }} star{{ feedback.rating !== 1 ? 's' : ''
+                                        }}</span>
                                 </div>
                             </div>
                             <button class="flex items-center gap-1 hover:text-blue-600 transition-colors">
                                 <Icon name="heroicons:heart" class="w-4 h-4" />
-                                <span>{{ feedback.likes }}</span>
+                                <span>{{ feedback.helpful_count || 0 }}</span>
                             </button>
                         </div>
                     </div>
@@ -142,81 +176,84 @@ const isSellerSelf = computed(() => user?.id === props.sellerId)
 // Feedback state
 const showAddForm = ref(false)
 const currentPage = ref(1)
-const totalPages = ref(3)
+const isSubmitting = ref(false)
+const errorMessage = ref('')
+const successMessage = ref('')
 
 // New feedback form
 const newFeedback = ref({
-    type: 'positive',
+    rating: 5,
     comment: ''
 })
 
-// Mock feedback data
-const feedbacks = ref([
-    {
-        id: 1,
-        user: {
-            name: 'John Doe',
-            avatar: 'https://i.pravatar.cc/150?u=john'
-        },
-        comment: 'Excellent seller! Very responsive and the item was exactly as described. Fast delivery and great communication throughout.',
-        type: 'positive',
-        likes: 5,
-        created_at: '2024-01-15T10:30:00Z'
-    },
-    {
-        id: 2,
-        user: {
-            name: 'Sarah Wilson',
-            avatar: 'https://i.pravatar.cc/150?u=sarah'
-        },
-        comment: 'Item was okay, nothing special. Delivery took longer than expected but seller was polite.',
-        type: 'neutral',
-        likes: 2,
-        created_at: '2024-01-10T14:20:00Z'
-    },
-    {
-        id: 3,
-        user: {
-            name: 'Mike Johnson',
-            avatar: 'https://i.pravatar.cc/150?u=mike'
-        },
-        comment: 'Not satisfied with the purchase. Item had some defects that were not mentioned in the description.',
-        type: 'negative',
-        likes: 1,
-        created_at: '2024-01-08T09:15:00Z'
-    },
-    {
-        id: 4,
-        user: {
-            name: 'Emma Brown',
-            avatar: 'https://i.pravatar.cc/150?u=emma'
-        },
-        comment: 'Amazing experience! The seller went above and beyond to ensure I was satisfied. Highly recommended!',
-        type: 'positive',
-        likes: 8,
-        created_at: '2024-01-05T16:45:00Z'
-    },
-    {
-        id: 5,
-        user: {
-            name: 'David Lee',
-            avatar: 'https://i.pravatar.cc/150?u=david'
-        },
-        comment: 'Good seller, fair prices. Transaction went smoothly without any issues.',
-        type: 'positive',
-        likes: 3,
-        created_at: '2024-01-03T11:30:00Z'
+// Form validation
+const isFormValid = computed(() => {
+    return newFeedback.value.comment.trim().length >= 10 &&
+        newFeedback.value.comment.trim().length <= 1000 &&
+        newFeedback.value.rating >= 1 &&
+        newFeedback.value.rating <= 5
+})
+
+const commentError = computed(() => {
+    const length = newFeedback.value.comment.trim().length
+    if (length === 0) return ''
+    if (length < 10) return 'Feedback message must be at least 10 characters.'
+    if (length > 1000) return 'Feedback message must not exceed 1000 characters.'
+    return ''
+})
+
+// Fetch feedback from API
+const { data: feedbackData, pending, refresh } = await useApi().get<{
+    success: boolean
+    data: {
+        current_page: number
+        data: Array<{
+            id: string
+            from_user: {
+                id: string
+                first_name: string
+                last_name: string
+                avatar: string
+            }
+            message: string
+            rating: number
+            replies: Array<any>
+            helpful_count: number
+            unclear_count: number
+            offensive_count: number
+            created_at: string
+        }>
+        first_page_url: string
+        from: number
+        last_page: number
+        last_page_url: string
+        next_page_url: string | null
+        path: string
+        per_page: number
+        prev_page_url: string | null
+        to: number
+        total: number
     }
-])
+}>(`/users/${props.sellerId}/feedbacks`, {
+    requiresAuth: false,
+    query: computed(() => ({
+        page: currentPage.value
+    }))
+})
 
-// Feedback stats
+const feedbacks = computed(() => feedbackData.value?.data?.data || [])
+const totalPages = computed(() => feedbackData.value?.data?.last_page || 1)
+
+// Feedback stats based on ratings
 const feedbackStats = computed(() => {
-    const total = feedbacks.value.length
-    const positive = feedbacks.value.filter(f => f.type === 'positive').length
-    const negative = feedbacks.value.filter(f => f.type === 'negative').length
-    const neutral = feedbacks.value.filter(f => f.type === 'neutral').length
+    const allFeedbacks = feedbacks.value
+    const total = allFeedbacks.length
+    const fiveStars = allFeedbacks.filter(f => f.rating === 5).length
+    const fourStars = allFeedbacks.filter(f => f.rating === 4).length
+    const threeStars = allFeedbacks.filter(f => f.rating === 3).length
+    const lowStars = allFeedbacks.filter(f => f.rating <= 2).length
 
-    return { total, positive, negative, neutral }
+    return { total, fiveStars, fourStars, threeStars, lowStars }
 })
 
 // Methods
@@ -226,31 +263,65 @@ const toggleAddFeedback = () => {
         return
     }
     showAddForm.value = !showAddForm.value
+    // Clear messages when toggling
+    errorMessage.value = ''
+    successMessage.value = ''
 }
 
-const submitFeedback = () => {
-    if (!user) return
+const submitFeedback = async () => {
+    if (!user || !isFormValid.value || isSubmitting.value) return
 
-    const feedback = {
-        id: Date.now(),
-        user: {
-            name: `${user.first_name} ${user.last_name}`,
-            avatar: user.avatar || 'https://i.pravatar.cc/150?u=default'
-        },
-        comment: newFeedback.value.comment,
-        type: newFeedback.value.type,
-        likes: 0,
-        created_at: new Date().toISOString()
+    // Clear previous messages
+    errorMessage.value = ''
+    successMessage.value = ''
+    isSubmitting.value = true
+
+    try {
+        await useApi().post('/user-feedbacks', {
+            to_user_id: props.sellerId,
+            message: newFeedback.value.comment.trim(),
+            rating: newFeedback.value.rating
+        })
+
+        successMessage.value = 'Feedback submitted successfully!'
+
+        // Reset form after a delay
+        setTimeout(() => {
+            newFeedback.value = {
+                rating: 5,
+                comment: ''
+            }
+            showAddForm.value = false
+            successMessage.value = ''
+        }, 2000)
+
+        // Refresh feedback data
+        await refresh()
+    } catch (error: any) {
+        console.error('Error submitting feedback:', error)
+
+        // Handle different error types
+        if (error.response?.status === 422) {
+            const errorData = error.response.data
+            if (errorData.message) {
+                errorMessage.value = errorData.message
+            } else if (errorData.errors) {
+                // Handle validation errors
+                const errors = []
+                if (errorData.errors.message) errors.push(...errorData.errors.message)
+                if (errorData.errors.rating) errors.push(...errorData.errors.rating)
+                if (errorData.errors.to_user_id) errors.push(...errorData.errors.to_user_id)
+                errorMessage.value = errors.join(' ')
+            }
+        } else if (error.response?.status === 401) {
+            errorMessage.value = 'Please log in to submit feedback.'
+            navigateTo('/auth/login')
+        } else {
+            errorMessage.value = 'Failed to submit feedback. Please try again.'
+        }
+    } finally {
+        isSubmitting.value = false
     }
-
-    feedbacks.value.unshift(feedback)
-
-    // Reset form
-    newFeedback.value = {
-        type: 'positive',
-        comment: ''
-    }
-    showAddForm.value = false
 }
 
 const formatDate = (dateString: string) => {
@@ -261,24 +332,17 @@ const formatDate = (dateString: string) => {
     })
 }
 
-const getFeedbackIcon = (type: string) => {
-    switch (type) {
-        case 'positive': return 'heroicons:face-smile'
-        case 'negative': return 'heroicons:face-frown'
-        case 'neutral': return 'heroicons:minus'
-        default: return 'heroicons:minus'
-    }
-}
-
-const prevPage = () => {
+const prevPage = async () => {
     if (currentPage.value > 1) {
         currentPage.value--
+        await refresh()
     }
 }
 
-const nextPage = () => {
+const nextPage = async () => {
     if (currentPage.value < totalPages.value) {
         currentPage.value++
+        await refresh()
     }
 }
 </script>
