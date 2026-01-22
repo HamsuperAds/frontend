@@ -183,7 +183,7 @@ const successMessage = ref('')
 // New feedback form
 const newFeedback = ref({
     rating: 5,
-    comment: ''
+    comment: 'Trying to send second message to the same seller.'
 })
 
 // Form validation
@@ -277,11 +277,19 @@ const submitFeedback = async () => {
     isSubmitting.value = true
 
     try {
-        await useApi().post('/user-feedbacks', {
+        const response = await useApi().post('/user-feedbacks', {
             to_user_id: props.sellerId,
             message: newFeedback.value.comment.trim(),
             rating: newFeedback.value.rating
         })
+
+        // Check if the response indicates success
+        console.log(response);
+        if (response.status.value === 'error') {
+            // Handle backend error response
+            errorMessage.value = response.error.value?.data.message || 'Failed to submit feedback.'
+            return
+        }
 
         successMessage.value = 'Feedback submitted successfully!'
 
@@ -304,6 +312,7 @@ const submitFeedback = async () => {
         if (error.response?.status === 422) {
             const errorData = error.response.data
             if (errorData.message) {
+                // Show the exact error message from backend
                 errorMessage.value = errorData.message
             } else if (errorData.errors) {
                 // Handle validation errors
@@ -312,10 +321,19 @@ const submitFeedback = async () => {
                 if (errorData.errors.rating) errors.push(...errorData.errors.rating)
                 if (errorData.errors.to_user_id) errors.push(...errorData.errors.to_user_id)
                 errorMessage.value = errors.join(' ')
+            } else {
+                // Fallback for 422 without specific message
+                errorMessage.value = 'Invalid data provided. Please check your input.'
             }
         } else if (error.response?.status === 401) {
             errorMessage.value = 'Please log in to submit feedback.'
             navigateTo('/auth/login')
+        } else if (error.response?.data?.message) {
+            // Handle any other error with a message from backend
+            errorMessage.value = error.response.data.message
+        } else if (error.message) {
+            // Handle error message directly
+            errorMessage.value = error.message
         } else {
             errorMessage.value = 'Failed to submit feedback. Please try again.'
         }
