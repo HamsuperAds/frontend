@@ -32,7 +32,7 @@
 
                 <!-- Add Feedback Button -->
                 <div class="mb-6">
-                    <button @click="toggleAddFeedback" :disabled="isSellerSelf"
+                    <button v-if="!isEditMode" @click="toggleAddFeedback" :disabled="isSellerSelf"
                         class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                         :class="showAddForm
                             ? 'border-red-600 text-red-600 hover:bg-red-50'
@@ -43,6 +43,8 @@
 
                 <!-- Add Feedback Form -->
                 <div v-if="showAddForm" class="mb-6 p-4 border border-gray-200 rounded-lg">
+                    <h3 class="text-lg font-medium mb-4">{{ isEditMode ? 'Edit Feedback' : 'Add Feedback' }}</h3>
+
                     <!-- Success Message -->
                     <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                         <p class="text-green-700 text-sm">{{ successMessage }}</p>
@@ -79,12 +81,19 @@
                                 </p>
                             </div>
                         </div>
-                        <button type="submit" :disabled="!isFormValid || isSubmitting"
-                            class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2">
-                            <span v-if="isSubmitting"
-                                class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                            {{ isSubmitting ? 'Submitting...' : 'Submit Feedback' }}
-                        </button>
+                        <div class="flex gap-2">
+                            <button type="submit" :disabled="!isFormValid || isSubmitting"
+                                class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2">
+                                <span v-if="isSubmitting"
+                                    class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                <span v-if="isSubmitting">{{ isEditMode ? 'Updating...' : 'Submitting...' }}</span>
+                                <span v-else>{{ isEditMode ? 'Update Feedback' : 'Submit Feedback' }}</span>
+                            </button>
+                            <button v-if="isEditMode" type="button" @click="cancelEdit"
+                                class="bg-gray-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-600 transition-colors">
+                                Cancel
+                            </button>
+                        </div>
                     </form>
                 </div>
 
@@ -117,13 +126,21 @@
                                         </span>
                                     </div>
                                     <span class="ml-1">{{ feedback.rating }} star{{ feedback.rating !== 1 ? 's' : ''
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
-                            <button class="flex items-center gap-1 hover:text-blue-600 transition-colors">
-                                <Icon name="heroicons:heart" class="w-4 h-4" />
-                                <span>{{ feedback.helpful_count || 0 }}</span>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <!-- Edit button - only show for user's own feedback -->
+                                <button v-if="user && feedback.from_user.id === user.id" @click="editFeedback(feedback)"
+                                    class="flex items-center gap-1 hover:text-blue-600 transition-colors p-1 rounded"
+                                    title="Edit feedback">
+                                    <Icon name="heroicons:pencil" class="w-4 h-4" />
+                                </button>
+                                <button class="flex items-center gap-1 hover:text-blue-600 transition-colors">
+                                    <Icon name="heroicons:heart" class="w-4 h-4" />
+                                    <span>{{ feedback.helpful_count || 0 }}</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -156,8 +173,6 @@
 </template>
 
 <script setup lang="ts">
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-
 const props = defineProps<{
     isOpen: boolean
     sellerId: string
@@ -179,19 +194,37 @@ const currentPage = ref(1)
 const isSubmitting = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const editingFeedback = ref<string | null>(null)
 
 // New feedback form
 const newFeedback = ref({
     rating: 5,
-    comment: 'Trying to send second message to the same seller.'
+    comment: ''
 })
 
-// Form validation
+// Original feedback values for comparison
+const originalFeedback = ref({
+    rating: 5,
+    comment: ''
+})
+
+// Check if we're in edit mode
+const isEditMode = computed(() => editingFeedback.value !== null)
+
+// Form validation - for edit mode, at least one field must change
 const isFormValid = computed(() => {
-    return newFeedback.value.comment.trim().length >= 10 &&
-        newFeedback.value.comment.trim().length <= 1000 &&
-        newFeedback.value.rating >= 1 &&
-        newFeedback.value.rating <= 5
+    const commentValid = newFeedback.value.comment.trim().length >= 10 &&
+        newFeedback.value.comment.trim().length <= 1000
+    const ratingValid = newFeedback.value.rating >= 1 && newFeedback.value.rating <= 5
+
+    if (isEditMode.value) {
+        // In edit mode, at least one field must change
+        const commentChanged = newFeedback.value.comment.trim() !== originalFeedback.value.comment
+        const ratingChanged = newFeedback.value.rating !== originalFeedback.value.rating
+        return (commentValid && ratingValid) && (commentChanged || ratingChanged)
+    }
+
+    return commentValid && ratingValid
 })
 
 const commentError = computed(() => {
@@ -203,7 +236,7 @@ const commentError = computed(() => {
 })
 
 // Fetch feedback from API
-const { data: feedbackData, pending, refresh } = await useApi().get<{
+const { data: feedbackData, refresh } = await useApi().get<{
     success: boolean
     data: {
         current_page: number
@@ -248,10 +281,10 @@ const totalPages = computed(() => feedbackData.value?.data?.last_page || 1)
 const feedbackStats = computed(() => {
     const allFeedbacks = feedbacks.value
     const total = allFeedbacks.length
-    const fiveStars = allFeedbacks.filter(f => f.rating === 5).length
-    const fourStars = allFeedbacks.filter(f => f.rating === 4).length
-    const threeStars = allFeedbacks.filter(f => f.rating === 3).length
-    const lowStars = allFeedbacks.filter(f => f.rating <= 2).length
+    const fiveStars = allFeedbacks.filter((f: any) => f.rating === 5).length
+    const fourStars = allFeedbacks.filter((f: any) => f.rating === 4).length
+    const threeStars = allFeedbacks.filter((f: any) => f.rating === 3).length
+    const lowStars = allFeedbacks.filter((f: any) => f.rating <= 2).length
 
     return { total, fiveStars, fourStars, threeStars, lowStars }
 })
@@ -263,7 +296,46 @@ const toggleAddFeedback = () => {
         return
     }
     showAddForm.value = !showAddForm.value
+    editingFeedback.value = null
     // Clear messages when toggling
+    errorMessage.value = ''
+    successMessage.value = ''
+    // Reset form
+    newFeedback.value = {
+        rating: 5,
+        comment: ''
+    }
+}
+
+const editFeedback = (feedback: any) => {
+    editingFeedback.value = feedback.id
+    showAddForm.value = true
+    // Populate form with existing values
+    newFeedback.value = {
+        rating: feedback.rating,
+        comment: feedback.message
+    }
+    // Store original values for comparison
+    originalFeedback.value = {
+        rating: feedback.rating,
+        comment: feedback.message
+    }
+    // Clear messages
+    errorMessage.value = ''
+    successMessage.value = ''
+}
+
+const cancelEdit = () => {
+    editingFeedback.value = null
+    showAddForm.value = false
+    newFeedback.value = {
+        rating: 5,
+        comment: ''
+    }
+    originalFeedback.value = {
+        rating: 5,
+        comment: ''
+    }
     errorMessage.value = ''
     successMessage.value = ''
 }
@@ -277,21 +349,40 @@ const submitFeedback = async () => {
     isSubmitting.value = true
 
     try {
-        const response = await useApi().post('/user-feedbacks', {
-            to_user_id: props.sellerId,
-            message: newFeedback.value.comment.trim(),
-            rating: newFeedback.value.rating
-        })
+        let response
+
+        if (isEditMode.value) {
+            console.log('this is an edit to feedback');
+            // Update existing feedback - only send changed fields
+            const updateData: any = {}
+
+            if (newFeedback.value.comment.trim() !== originalFeedback.value.comment) {
+                updateData.message = newFeedback.value.comment.trim()
+            }
+
+            if (newFeedback.value.rating !== originalFeedback.value.rating) {
+                updateData.rating = newFeedback.value.rating
+            }
+
+            response = await useApi().put(`/user-feedbacks/${editingFeedback.value}`, updateData)
+        } else {
+            // Create new feedback
+            response = await useApi().post('/user-feedbacks', {
+                to_user_id: props.sellerId,
+                message: newFeedback.value.comment.trim(),
+                rating: newFeedback.value.rating
+            })
+        }
 
         // Check if the response indicates success
         console.log(response);
         if (response.status.value === 'error') {
             // Handle backend error response
-            errorMessage.value = response.error.value?.data.message || 'Failed to submit feedback.'
+            errorMessage.value = response.error.value?.data.message || `Failed to ${isEditMode.value ? 'update' : 'submit'} feedback.`
             return
         }
 
-        successMessage.value = 'Feedback submitted successfully!'
+        successMessage.value = `Feedback ${isEditMode.value ? 'updated' : 'submitted'} successfully!`
 
         // Reset form after a delay
         setTimeout(() => {
@@ -299,6 +390,11 @@ const submitFeedback = async () => {
                 rating: 5,
                 comment: ''
             }
+            originalFeedback.value = {
+                rating: 5,
+                comment: ''
+            }
+            editingFeedback.value = null
             showAddForm.value = false
             successMessage.value = ''
         }, 2000)
@@ -306,7 +402,7 @@ const submitFeedback = async () => {
         // Refresh feedback data
         await refresh()
     } catch (error: any) {
-        console.error('Error submitting feedback:', error)
+        console.error(`Error ${isEditMode.value ? 'updating' : 'submitting'} feedback:`, error)
 
         // Handle different error types
         if (error.response?.status === 422) {
@@ -328,6 +424,8 @@ const submitFeedback = async () => {
         } else if (error.response?.status === 401) {
             errorMessage.value = 'Please log in to submit feedback.'
             navigateTo('/auth/login')
+        } else if (error.response?.status === 403) {
+            errorMessage.value = 'You are not authorized to perform this action.'
         } else if (error.response?.data?.message) {
             // Handle any other error with a message from backend
             errorMessage.value = error.response.data.message
@@ -335,7 +433,7 @@ const submitFeedback = async () => {
             // Handle error message directly
             errorMessage.value = error.message
         } else {
-            errorMessage.value = 'Failed to submit feedback. Please try again.'
+            errorMessage.value = `Failed to ${isEditMode.value ? 'update' : 'submit'} feedback. Please try again.`
         }
     } finally {
         isSubmitting.value = false
