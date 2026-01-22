@@ -126,7 +126,7 @@
                                         </span>
                                     </div>
                                     <span class="ml-1">{{ feedback.rating }} star{{ feedback.rating !== 1 ? 's' : ''
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
@@ -161,17 +161,40 @@
                                     <!-- Dropdown Menu -->
                                     <div v-if="openDropdowns.has(feedback.id) && user && feedback.from_user.id !== user.id"
                                         class="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                                        <button @click="flagFeedback(feedback.id, 'helpful')"
+                                        <!-- Helpful option - show unmark if already flagged as helpful -->
+                                        <button v-if="feedback.user_flag === 'helpful'"
+                                            @click="unflagFeedback(feedback.id)"
+                                            class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100">
+                                            <Icon name="heroicons:hand-thumb-down" class="w-3 h-3 text-red-600" />
+                                            Unmark as useful
+                                        </button>
+                                        <button v-else @click="flagFeedback(feedback.id, 'helpful')"
                                             class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100">
                                             <Icon name="heroicons:hand-thumb-up" class="w-3 h-3 text-green-600" />
                                             Mark as useful
                                         </button>
-                                        <button @click="flagFeedback(feedback.id, 'offensive')"
+
+                                        <!-- Offensive option - show unmark if already flagged as offensive -->
+                                        <button v-if="feedback.user_flag === 'offensive'"
+                                            @click="unflagFeedback(feedback.id)"
+                                            class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100">
+                                            <Icon name="heroicons:shield-check" class="w-3 h-3 text-green-600" />
+                                            Unmark as offensive
+                                        </button>
+                                        <button v-else @click="flagFeedback(feedback.id, 'offensive')"
                                             class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100">
                                             <Icon name="heroicons:exclamation-triangle" class="w-3 h-3 text-red-600" />
                                             Mark as offensive
                                         </button>
-                                        <button @click="flagFeedback(feedback.id, 'unclear')"
+
+                                        <!-- Unclear option - show unmark if already flagged as unclear -->
+                                        <button v-if="feedback.user_flag === 'unclear'"
+                                            @click="unflagFeedback(feedback.id)"
+                                            class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2">
+                                            <Icon name="heroicons:check-circle" class="w-3 h-3 text-green-600" />
+                                            Unmark as unclear
+                                        </button>
+                                        <button v-else @click="flagFeedback(feedback.id, 'unclear')"
                                             class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2">
                                             <Icon name="heroicons:question-mark-circle"
                                                 class="w-3 h-3 text-yellow-600" />
@@ -218,6 +241,8 @@
 </template>
 
 <script setup lang="ts">
+import type { FeedbackResponse } from '~/types';
+
 const props = defineProps<{
     isOpen: boolean
     sellerId: string
@@ -285,35 +310,7 @@ const commentError = computed(() => {
 // Fetch feedback from API
 const { data: feedbackData, refresh } = await useApi().get<{
     success: boolean
-    data: {
-        current_page: number
-        data: Array<{
-            id: string
-            from_user: {
-                id: string
-                first_name: string
-                last_name: string
-                avatar: string
-            }
-            message: string
-            rating: number
-            replies: Array<any>
-            helpful_count: number
-            unclear_count: number
-            offensive_count: number
-            created_at: string
-        }>
-        first_page_url: string
-        from: number
-        last_page: number
-        last_page_url: string
-        next_page_url: string | null
-        path: string
-        per_page: number
-        prev_page_url: string | null
-        to: number
-        total: number
-    }
+    data: FeedbackResponse
 }>(`/users/${props.sellerId}/feedbacks`, {
     query: computed(() => ({
         page: currentPage.value
@@ -574,6 +571,61 @@ const flagFeedback = async (feedbackId: string, flagType: 'helpful' | 'unclear' 
         } else {
             const { toast } = await import('vue-sonner')
             toast.error('Failed to flag feedback. Please try again.')
+        }
+    } finally {
+        flaggingFeedback.value = null
+    }
+}
+
+const unflagFeedback = async (feedbackId: string) => {
+    if (!user) {
+        navigateTo('/auth/login')
+        return
+    }
+
+    // Close dropdown
+    openDropdowns.value.delete(feedbackId)
+
+    // Set flagging state
+    flaggingFeedback.value = feedbackId
+
+    try {
+        const response = await useApi().del(`/user-feedbacks/${feedbackId}/unflag`)
+
+        console.log('Unflag response:', response)
+
+        // Check if the response indicates success
+        if (response.status.value === 'error') {
+            // Handle backend error response
+            const errorMsg = response.error.value?.data.message || 'Failed to unflag feedback.'
+            const { toast } = await import('vue-sonner')
+            toast.error(errorMsg)
+            return
+        }
+
+        // Refresh feedback data to get updated counts
+        await refresh()
+
+        // Show success toast
+        const { toast } = await import('vue-sonner')
+        toast.success('Flag removed successfully')
+
+    } catch (error: any) {
+        console.error('Error unflagging feedback:', error)
+
+        // Handle different error types
+        if (error.response?.status === 422) {
+            const errorData = error.response.data
+            if (errorData.message) {
+                // Show the exact error message from backend
+                const { toast } = await import('vue-sonner')
+                toast.error(errorData.message)
+            }
+        } else if (error.response?.status === 401) {
+            navigateTo('/auth/login')
+        } else {
+            const { toast } = await import('vue-sonner')
+            toast.error('Failed to remove flag. Please try again.')
         }
     } finally {
         flaggingFeedback.value = null
