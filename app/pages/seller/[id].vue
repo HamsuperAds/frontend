@@ -299,6 +299,14 @@ const changeTab = async (tabId: string) => {
     activeTab.value = tabId
     currentPage.value = 1 // Reset to first page when changing category
     await refreshAds()
+
+    // If switching to 'all', scroll tabs container to beginning
+    if (tabId === 'all' && tabsContainer.value) {
+        tabsContainer.value.scrollTo({
+            left: 0,
+            behavior: 'smooth'
+        })
+    }
 }
 
 // Pagination methods
