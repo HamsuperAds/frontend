@@ -126,7 +126,7 @@
                                         </span>
                                     </div>
                                     <span class="ml-1">{{ feedback.rating }} star{{ feedback.rating !== 1 ? 's' : ''
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
@@ -146,14 +146,20 @@
                                             class="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></span>
                                         Flagging...
                                     </button>
-                                    <button v-else @click="toggleDropdown(feedback.id)"
-                                        class="flex items-center gap-1 hover:text-blue-600 transition-colors px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50">
+                                    <button v-else
+                                        @click="user && feedback.from_user.id !== user.id ? toggleDropdown(feedback.id) : null"
+                                        class="flex items-center gap-1 transition-colors px-2 py-1 text-xs border border-gray-300 rounded"
+                                        :class="user && feedback.from_user.id === user.id
+                                            ? 'opacity-50 cursor-not-allowed text-gray-400 border-gray-200'
+                                            : 'hover:text-blue-600 hover:bg-gray-50'"
+                                        :disabled="user && feedback.from_user.id === user.id"
+                                        :title="user && feedback.from_user.id === user.id ? 'You cannot flag your own feedback' : 'Flag feedback'">
                                         <Icon name="heroicons:flag" class="w-3 h-3" />
                                         Flag feedback
                                     </button>
 
                                     <!-- Dropdown Menu -->
-                                    <div v-if="openDropdowns.has(feedback.id)"
+                                    <div v-if="openDropdowns.has(feedback.id) && user && feedback.from_user.id !== user.id"
                                         class="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                                         <button @click="flagFeedback(feedback.id, 'helpful')"
                                             class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100">
