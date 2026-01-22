@@ -69,9 +69,10 @@
                         <Icon name="heroicons:phone" class="w-5 h-5" />
                         {{ showPhoneNumber ? seller.phone_number : 'Call Seller' }}
                     </button>
-                    <button
-                        class="w-12 h-12 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-gray-50 transition text-blue-600">
-                        <Icon name="heroicons:chat-bubble-oval-left" class="w-6 h-6" />
+                    <button @click="openFeedbackDialog"
+                        class="flex items-center justify-center gap-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition text-blue-600 px-4 py-3">
+                        <Icon name="heroicons:star" class="w-5 h-5" />
+                        <span class="text-sm font-medium">Feedbacks</span>
                     </button>
                 </div>
             </div>
@@ -154,6 +155,10 @@
                 </button>
             </div>
         </div>
+
+        <!-- Seller Feedback Dialog -->
+        <SellerFeedback :is-open="showFeedbackDialog" :seller-id="sellerId"
+            @update:open="showFeedbackDialog = $event" />
     </div>
 </template>
 
@@ -191,6 +196,7 @@ const sellerLocation = computed(() => {
 
 // Phone number functionality
 const showPhoneNumber = ref(false)
+const showFeedbackDialog = ref(false)
 
 const handleCallSeller = () => {
     if (!seller.value) return
@@ -203,6 +209,10 @@ const handleCallSeller = () => {
     if (isMobile) {
         window.location.href = `tel:${seller.value.phone_number}`
     }
+}
+
+const openFeedbackDialog = () => {
+    showFeedbackDialog.value = true
 }
 
 // Pagination and filtering
