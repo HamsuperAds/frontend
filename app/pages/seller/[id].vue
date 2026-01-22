@@ -64,10 +64,10 @@
 
                 <!-- Action Buttons -->
                 <div class="flex gap-3">
-                    <button
+                    <button @click="handleCallSeller"
                         class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2">
                         <Icon name="heroicons:phone" class="w-5 h-5" />
-                        Call Seller
+                        {{ showPhoneNumber ? seller.phone_number : 'Call Seller' }}
                     </button>
                     <button
                         class="w-12 h-12 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-gray-50 transition text-blue-600">
@@ -79,20 +79,40 @@
 
         <!-- Listings Section -->
         <div class="container mx-auto px-4 mt-8">
-            <!-- Tabs -->
-            <div class="flex gap-3 overflow-x-auto pb-4 no-scrollbar mb-4 scrollbar-hide"
-                style="scrollbar-width: none; -ms-overflow-style: none;">
-                <button v-for="tab in tabs" :key="tab.id" @click="changeTab(tab.id)"
-                    class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0"
-                    :class="activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'">
-                    {{ tab.label }}
+            <!-- Tabs with Scroll Arrows -->
+            <div class="relative mb-4">
+                <!-- Left Arrow -->
+                <button v-show="showLeftArrow" @click="scrollTabs('left')"
+                    class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <Icon name="lucide:chevron-left" class="w-4 h-4 text-gray-600" />
+                </button>
+
+                <!-- Tabs Container -->
+                <div ref="tabsContainer" class="flex gap-3 overflow-x-auto pb-4 no-scrollbar scrollbar-hide px-8"
+                    style="scrollbar-width: none; -ms-overflow-style: none;" @scroll="checkScrollButtons">
+                    <button v-for="tab in tabs" :key="tab.id" @click="changeTab(tab.id)"
+                        class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0"
+                        :class="activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'">
+                        {{ tab.label }}
+                    </button>
+                </div>
+
+                <!-- Right Arrow -->
+                <button v-show="showRightArrow" @click="scrollTabs('right')"
+                    class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <Icon name="lucide:chevron-right" class="w-4 h-4 text-gray-600" />
                 </button>
             </div>
 
             <!-- Header -->
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-gray-900">Active Listings</h3>
-                <button class="text-blue-600 text-sm font-semibold hover:underline">View All</button>
+                <button @click="changeTab('all')" :disabled="activeTab === 'all'"
+                    class="text-sm font-semibold transition-colors" :class="activeTab === 'all'
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'text-blue-600 hover:underline'">
+                    View All
+                </button>
             </div>
 
             <!-- Grid -->
@@ -169,9 +189,60 @@ const sellerLocation = computed(() => {
     return `${seller.value.lga?.name}, ${seller.value.state?.name}`
 })
 
+// Phone number functionality
+const showPhoneNumber = ref(false)
+
+const handleCallSeller = () => {
+    if (!seller.value) return
+
+    showPhoneNumber.value = true
+
+    // Check if it's a mobile device and trigger dialer
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
+    if (isMobile) {
+        window.location.href = `tel:${seller.value.phone_number}`
+    }
+}
+
 // Pagination and filtering
 const currentPage = ref(1)
 const activeTab = ref('all')
+
+// Scroll functionality for tabs
+const tabsContainer = ref<HTMLElement>()
+const showLeftArrow = ref(false)
+const showRightArrow = ref(false)
+
+const checkScrollButtons = () => {
+    if (!tabsContainer.value) return
+
+    const { scrollLeft, scrollWidth, clientWidth } = tabsContainer.value
+    showLeftArrow.value = scrollLeft > 0
+    showRightArrow.value = scrollLeft < scrollWidth - clientWidth - 1
+}
+
+const scrollTabs = (direction: 'left' | 'right') => {
+    if (!tabsContainer.value) return
+
+    const scrollAmount = 200
+    const newScrollLeft = direction === 'left'
+        ? tabsContainer.value.scrollLeft - scrollAmount
+        : tabsContainer.value.scrollLeft + scrollAmount
+
+    tabsContainer.value.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+    })
+}
+
+onMounted(() => {
+    if (tabsContainer.value) {
+        checkScrollButtons()
+        tabsContainer.value.addEventListener('scroll', checkScrollButtons)
+        window.addEventListener('resize', checkScrollButtons)
+    }
+})
 
 // Fetch seller's ad categories
 const { data: categoriesData } = await useApi().get<{
