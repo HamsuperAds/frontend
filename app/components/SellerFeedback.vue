@@ -133,14 +133,53 @@
                                 <!-- Edit button - only show for user's own feedback -->
                                 <button v-if="user && feedback.from_user.id === user.id" @click="editFeedback(feedback)"
                                     class="flex items-center gap-1 hover:text-blue-600 transition-colors p-1 rounded"
-                                    title="Edit feedback">
+                                    :class="{ 'opacity-50 cursor-not-allowed': flaggingFeedback === feedback.id }"
+                                    :disabled="flaggingFeedback === feedback.id" title="Edit feedback">
                                     <Icon name="heroicons:pencil" class="w-4 h-4" />
                                 </button>
-                                <button class="flex items-center gap-1 hover:text-blue-600 transition-colors">
-                                    <Icon name="heroicons:heart" class="w-4 h-4" />
-                                    <span>{{ feedback.helpful_count || 0 }}</span>
-                                </button>
+
+                                <!-- Flag Feedback Dropdown -->
+                                <div class="relative">
+                                    <button v-if="flaggingFeedback === feedback.id"
+                                        class="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 rounded cursor-not-allowed">
+                                        <span
+                                            class="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+                                        Flagging...
+                                    </button>
+                                    <button v-else @click="toggleDropdown(feedback.id)"
+                                        class="flex items-center gap-1 hover:text-blue-600 transition-colors px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50">
+                                        <Icon name="heroicons:flag" class="w-3 h-3" />
+                                        Flag feedback
+                                    </button>
+
+                                    <!-- Dropdown Menu -->
+                                    <div v-if="openDropdowns.has(feedback.id)"
+                                        class="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                        <button @click="flagFeedback(feedback.id, 'helpful')"
+                                            class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100">
+                                            <Icon name="heroicons:hand-thumb-up" class="w-3 h-3 text-green-600" />
+                                            Mark as useful
+                                        </button>
+                                        <button @click="flagFeedback(feedback.id, 'offensive')"
+                                            class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100">
+                                            <Icon name="heroicons:exclamation-triangle" class="w-3 h-3 text-red-600" />
+                                            Mark as offensive
+                                        </button>
+                                        <button @click="flagFeedback(feedback.id, 'unclear')"
+                                            class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 flex items-center gap-2">
+                                            <Icon name="heroicons:question-mark-circle"
+                                                class="w-3 h-3 text-yellow-600" />
+                                            Mark as unclear
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
+                        </div>
+
+                        <!-- Helpful Count -->
+                        <div v-if="feedback.helpful_count > 0" class="mt-2 text-xs text-gray-500">
+                            {{ feedback.helpful_count }} user{{ feedback.helpful_count !== 1 ? 's' : '' }} found this
+                            useful
                         </div>
                     </div>
                 </div>
@@ -195,6 +234,8 @@ const isSubmitting = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 const editingFeedback = ref<string | null>(null)
+const flaggingFeedback = ref<string | null>(null)
+const openDropdowns = ref<Set<string>>(new Set())
 
 // New feedback form
 const newFeedback = ref({
@@ -268,7 +309,6 @@ const { data: feedbackData, refresh } = await useApi().get<{
         total: number
     }
 }>(`/users/${props.sellerId}/feedbacks`, {
-    requiresAuth: false,
     query: computed(() => ({
         page: currentPage.value
     }))
@@ -461,4 +501,92 @@ const nextPage = async () => {
         await refresh()
     }
 }
+
+const toggleDropdown = (feedbackId: string) => {
+    if (openDropdowns.value.has(feedbackId)) {
+        openDropdowns.value.delete(feedbackId)
+    } else {
+        // Close all other dropdowns first
+        openDropdowns.value.clear()
+        openDropdowns.value.add(feedbackId)
+    }
+}
+
+const flagFeedback = async (feedbackId: string, flagType: 'helpful' | 'unclear' | 'offensive') => {
+    if (!user) {
+        navigateTo('/auth/login')
+        return
+    }
+
+    // Close dropdown
+    openDropdowns.value.delete(feedbackId)
+
+    // Set flagging state
+    flaggingFeedback.value = feedbackId
+
+    try {
+        const response = await useApi().post(`/user-feedbacks/${feedbackId}/flag`, {
+            flag_type: flagType
+        })
+
+        console.log('Flag response:', response)
+
+        // Check if the response indicates success
+        if (response.status.value === 'error') {
+            // Handle backend error response
+            const errorMsg = response.error.value?.data.message || 'Failed to flag feedback.'
+            const { toast } = await import('vue-sonner')
+            toast.error(errorMsg)
+            return
+        }
+
+        // Refresh feedback data to get updated counts
+        await refresh()
+
+        // Show success toast
+        const { toast } = await import('vue-sonner')
+        const flagTypeMessages = {
+            helpful: 'Feedback marked as useful',
+            offensive: 'Feedback marked as offensive',
+            unclear: 'Feedback marked as unclear'
+        }
+        toast.success(flagTypeMessages[flagType])
+
+    } catch (error: any) {
+        console.error('Error flagging feedback:', error)
+
+        // Handle different error types
+        if (error.response?.status === 422) {
+            const errorData = error.response.data
+            if (errorData.message) {
+                // Show the exact error message from backend (e.g., "You have already flagged this feedback")
+                const { toast } = await import('vue-sonner')
+                toast.error(errorData.message)
+            }
+        } else if (error.response?.status === 401) {
+            navigateTo('/auth/login')
+        } else {
+            const { toast } = await import('vue-sonner')
+            toast.error('Failed to flag feedback. Please try again.')
+        }
+    } finally {
+        flaggingFeedback.value = null
+    }
+}
+
+// Close dropdowns when clicking outside
+onMounted(() => {
+    const handleClickOutside = (event: Event) => {
+        const target = event.target as Element
+        if (!target.closest('.relative')) {
+            openDropdowns.value.clear()
+        }
+    }
+
+    document.addEventListener('click', handleClickOutside)
+
+    onUnmounted(() => {
+        document.removeEventListener('click', handleClickOutside)
+    })
+})
 </script>
