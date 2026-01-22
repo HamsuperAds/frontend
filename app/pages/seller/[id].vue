@@ -80,9 +80,10 @@
         <!-- Listings Section -->
         <div class="container mx-auto px-4 mt-8">
             <!-- Tabs -->
-            <div class="flex gap-3 overflow-x-auto pb-4 no-scrollbar mb-4">
-                <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
-                    class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
+            <div class="flex gap-3 overflow-x-auto pb-4 no-scrollbar mb-4 scrollbar-hide"
+                style="scrollbar-width: none; -ms-overflow-style: none;">
+                <button v-for="tab in tabs" :key="tab.id" @click="changeTab(tab.id)"
+                    class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0"
                     :class="activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'">
                     {{ tab.label }}
                 </button>
@@ -106,7 +107,7 @@
             </div>
 
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <AdCard v-for="ad in filteredAds" :key="ad.id" :ad="ad" />
+                <AdCard v-for="ad in ads" :key="ad.id" :ad="ad" />
             </div>
 
             <!-- Pagination -->
@@ -168,10 +169,39 @@ const sellerLocation = computed(() => {
     return `${seller.value.lga?.name}, ${seller.value.state?.name}`
 })
 
-// Pagination
+// Pagination and filtering
 const currentPage = ref(1)
+const activeTab = ref('all')
 
-// Fetch seller ads from API
+// Fetch seller's ad categories
+const { data: categoriesData } = await useApi().get<{
+    success: boolean
+    data: Array<{
+        id: number
+        name: string
+        slug: string
+        ads_count: number
+    }>
+}>(`/seller-ads-categories/${sellerId}`, {
+    requiresAuth: false
+})
+
+const sellerCategories = computed(() => categoriesData.value?.data || [])
+
+// Build tabs from real categories
+const tabs = computed(() => {
+    const totalAds = sellerCategories.value.reduce((sum, cat) => sum + cat.ads_count, 0)
+
+    const allTab = { id: 'all', label: `All Ads (${totalAds})` }
+    const categoryTabs = sellerCategories.value.map(category => ({
+        id: category.slug,
+        label: `${category.name} (${category.ads_count})`
+    }))
+
+    return [allTab, ...categoryTabs]
+})
+
+// Fetch seller ads from API with category filter
 const { data: sellerAdsData, pending: adsPending, refresh: refreshAds } = await useApi().get<{
     success: boolean
     data: {
@@ -184,13 +214,21 @@ const { data: sellerAdsData, pending: adsPending, refresh: refreshAds } = await 
     }
 }>(`/seller-ads/${sellerId}`, {
     requiresAuth: false,
-    query: {
-        page: currentPage
-    }
+    query: computed(() => ({
+        page: currentPage.value,
+        ...(activeTab.value !== 'all' && { category: activeTab.value })
+    }))
 })
 
 const ads = computed(() => sellerAdsData.value?.data?.data || [])
 const paginationData = computed(() => sellerAdsData.value?.data)
+
+// Tab change handler
+const changeTab = async (tabId: string) => {
+    activeTab.value = tabId
+    currentPage.value = 1 // Reset to first page when changing category
+    await refreshAds()
+}
 
 // Pagination methods
 const goToPage = async (page: number) => {
@@ -209,29 +247,6 @@ const goToNextPage = () => {
         goToPage(currentPage.value + 1)
     }
 }
-
-// Update tabs with real category counts
-const tabs = computed(() => {
-    const allAds = ads.value
-    const categoryCount = (categorySlug: string) =>
-        allAds.filter(ad => ad.category?.slug === categorySlug).length
-
-    return [
-        { id: 'all', label: `All Ads (${allAds.length})` },
-        { id: 'vehicles', label: `Vehicles (${categoryCount('vehicles')})` },
-        { id: 'electronics', label: `Electronics (${categoryCount('electronics')})` },
-        { id: 'fashion', label: `Fashion (${categoryCount('fashion')})` },
-        { id: 'real-estate', label: `Real Estate (${categoryCount('real-estate')})` }
-    ]
-})
-
-// Tabs
-const activeTab = ref('all')
-
-const filteredAds = computed(() => {
-    if (activeTab.value === 'all') return ads.value
-    return ads.value.filter(ad => ad.category?.slug === activeTab.value)
-})
 </script>
 
 <style scoped>
@@ -242,5 +257,13 @@ const filteredAds = computed(() => {
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+.scrollbar-hide {
+    -webkit-overflow-scrolling: touch;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
 }
 </style>
