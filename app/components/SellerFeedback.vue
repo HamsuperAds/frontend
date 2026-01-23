@@ -7,26 +7,50 @@
 
             <div class="flex-1 overflow-y-auto custom-scroll">
                 <!-- Feedback Stats -->
-                <div class="flex gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div class="flex items-center gap-2">
-                        <Icon name="heroicons:chat-bubble-left-ellipsis" class="w-4 h-4 text-gray-600" />
-                        <span class="text-sm font-medium">All ({{ feedbackStats.total }})</span>
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <!-- First Row -->
+                    <div class="flex gap-4 mb-3">
+                        <div class="flex items-center gap-2">
+                            <Icon name="heroicons:chat-bubble-left-ellipsis" class="w-4 h-4 text-gray-600" />
+                            <span class="text-sm font-medium">All ({{ feedbackStats.total }})</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center">
+                                <span v-for="star in 5" :key="star" class="text-sm text-yellow-400">★</span>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">({{ feedbackStats.five_stars_5 }})</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center">
+                                <span v-for="star in 4" :key="star" class="text-sm text-yellow-400">★</span>
+                                <span class="text-sm text-gray-300">★</span>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">({{ feedbackStats.four_stars_4 }})</span>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <Icon name="heroicons:star" class="w-4 h-4 text-yellow-500" />
-                        <span class="text-sm font-medium text-gray-700">5 Stars ({{ feedbackStats.fiveStars }})</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Icon name="heroicons:star" class="w-4 h-4 text-yellow-400" />
-                        <span class="text-sm font-medium text-gray-700">4 Stars ({{ feedbackStats.fourStars }})</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Icon name="heroicons:star" class="w-4 h-4 text-yellow-300" />
-                        <span class="text-sm font-medium text-gray-700">3 Stars ({{ feedbackStats.threeStars }})</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Icon name="heroicons:star" class="w-4 h-4 text-orange-400" />
-                        <span class="text-sm font-medium text-gray-700">1-2 Stars ({{ feedbackStats.lowStars }})</span>
+                    <!-- Second Row -->
+                    <div class="flex gap-4">
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center">
+                                <span v-for="star in 3" :key="star" class="text-sm text-yellow-400">★</span>
+                                <span v-for="star in 2" :key="star" class="text-sm text-gray-300">★</span>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">({{ feedbackStats.three_stars_3 }})</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center">
+                                <span v-for="star in 2" :key="star" class="text-sm text-yellow-400">★</span>
+                                <span v-for="star in 3" :key="star" class="text-sm text-gray-300">★</span>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">({{ feedbackStats.two_stars_2 }})</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center">
+                                <span class="text-sm text-yellow-400">★</span>
+                                <span v-for="star in 4" :key="star" class="text-sm text-gray-300">★</span>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">({{ feedbackStats.one_star_1 }})</span>
+                        </div>
                     </div>
                 </div>
 
@@ -317,19 +341,47 @@ const { data: feedbackData, refresh } = await useApi().get<{
     }))
 })
 
+// Fetch feedback stats from API
+const { data: feedbackStatsData, refresh: refreshStats } = await useApi().get<{
+    success: boolean
+    data: {
+        five_stars_5: number
+        four_stars_4: number
+        three_stars_3: number
+        two_stars_2: number
+        one_star_1: number
+    }
+}>(`/users/${props.sellerId}/feedbacks/stats`, {
+    requiresAuth: false
+})
+
 const feedbacks = computed(() => feedbackData.value?.data?.data || [])
 const totalPages = computed(() => feedbackData.value?.data?.last_page || 1)
 
-// Feedback stats based on ratings
+// Feedback stats from API
 const feedbackStats = computed(() => {
-    const allFeedbacks = feedbacks.value
-    const total = allFeedbacks.length
-    const fiveStars = allFeedbacks.filter((f: any) => f.rating === 5).length
-    const fourStars = allFeedbacks.filter((f: any) => f.rating === 4).length
-    const threeStars = allFeedbacks.filter((f: any) => f.rating === 3).length
-    const lowStars = allFeedbacks.filter((f: any) => f.rating <= 2).length
+    const stats = feedbackStatsData.value?.data
+    if (!stats) {
+        return {
+            total: 0,
+            five_stars_5: 0,
+            four_stars_4: 0,
+            three_stars_3: 0,
+            two_stars_2: 0,
+            one_star_1: 0
+        }
+    }
 
-    return { total, fiveStars, fourStars, threeStars, lowStars }
+    const total = stats.five_stars_5 + stats.four_stars_4 + stats.three_stars_3 + stats.two_stars_2 + stats.one_star_1
+
+    return {
+        total,
+        five_stars_5: stats.five_stars_5,
+        four_stars_4: stats.four_stars_4,
+        three_stars_3: stats.three_stars_3,
+        two_stars_2: stats.two_stars_2,
+        one_star_1: stats.one_star_1
+    }
 })
 
 // Methods
@@ -444,6 +496,7 @@ const submitFeedback = async () => {
 
         // Refresh feedback data
         await refresh()
+        await refreshStats()
     } catch (error: any) {
         console.error(`Error ${isEditMode.value ? 'updating' : 'submitting'} feedback:`, error)
 
@@ -545,6 +598,7 @@ const flagFeedback = async (feedbackId: string, flagType: 'helpful' | 'unclear' 
 
         // Refresh feedback data to get updated counts
         await refresh()
+        await refreshStats()
 
         // Show success toast
         const { toast } = await import('vue-sonner')
@@ -605,6 +659,7 @@ const unflagFeedback = async (feedbackId: string) => {
 
         // Refresh feedback data to get updated counts
         await refresh()
+        await refreshStats()
 
         // Show success toast
         const { toast } = await import('vue-sonner')
