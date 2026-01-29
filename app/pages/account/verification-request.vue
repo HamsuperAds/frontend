@@ -341,6 +341,23 @@ const handleFileSelect = (field: string, file: File | null) => {
     }
 }
 
+const formatPhoneNumber = (phone: string): string => {
+    // Remove all non-digit characters
+    const cleanPhone = phone.replace(/\D/g, '')
+
+    // Format: 0XXXXXXXXXX (11 digits) -> +234XXXXXXXXXX
+    if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+        return '+234' + cleanPhone.substring(1)
+    }
+
+    // Format: 234XXXXXXXXXX (13 digits) -> +234XXXXXXXXXX
+    if (cleanPhone.startsWith('234') && cleanPhone.length === 13) {
+        return '+' + cleanPhone
+    }
+
+    return phone
+}
+
 const handleSubmit = async () => {
     if (!canSubmit.value || isSubmitting.value) return
 
@@ -351,7 +368,11 @@ const handleSubmit = async () => {
         const formDataToSend = new FormData()
         formDataToSend.append('business_name', formData.value.business_name)
         formDataToSend.append('business_address', formData.value.business_address)
-        formDataToSend.append('business_phone_number', formData.value.business_phone_number)
+
+        // Format phone number before sending
+        const formattedPhone = formatPhoneNumber(formData.value.business_phone_number)
+        formDataToSend.append('business_phone_number', formattedPhone)
+
         formDataToSend.append('id_type', formData.value.id_type)
 
         if (formData.value.government_id) {
@@ -381,13 +402,20 @@ const handleSubmit = async () => {
         const { toast } = await import('vue-sonner')
 
         if (error.response?.status === 422) {
-            const errorData = error.response.data
+            console.log('error response:', error.response);
+            const errorData = error.response._data
             if (errorData.error === 'ACTIVE_REQUEST_EXISTS') {
                 toast.error('You already have an active verification request')
                 navigateTo('/account/verification-status')
             } else if (errorData.errors) {
                 errors.value = errorData.errors
                 toast.error('Please fix the validation errors')
+                setTimeout(() => {
+                    currentStep.value = 1;
+                    setTimeout(() => {
+                        currentStep.value = 0;
+                    }, 500);
+                }, 500);
             } else {
                 toast.error(errorData.message || 'Validation failed')
             }

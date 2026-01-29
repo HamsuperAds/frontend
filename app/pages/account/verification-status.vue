@@ -148,7 +148,7 @@
                                 <div>
                                     <span class="text-gray-600">Phone Number:</span>
                                     <span class="ml-2 text-gray-900">{{ verificationRequest.data.business_phone_number
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div>
                                     <span class="text-gray-600">ID Type:</span>
@@ -168,7 +168,7 @@
                                 <div v-if="verificationRequest.data.reviewed_at">
                                     <span class="text-gray-600">Reviewed:</span>
                                     <span class="ml-2 text-gray-900">{{ formatDate(verificationRequest.data.reviewed_at)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -330,7 +330,7 @@ onMounted(() => {
     if (shouldAutoRefresh.value) {
         refreshInterval = setInterval(() => {
             refresh()
-        }, 30000) // 30 seconds
+        }, 1000 * 60 * 5) // 5 minutes
     }
 })
 
@@ -349,7 +349,7 @@ watch(shouldAutoRefresh, (newValue: boolean) => {
     if (newValue) {
         refreshInterval = setInterval(() => {
             refresh()
-        }, 30000)
+        }, 1000 * 60 * 5)
     }
 })
 </script>
