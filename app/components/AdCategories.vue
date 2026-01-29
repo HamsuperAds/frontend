@@ -40,8 +40,9 @@
           <h3 class="font-semibold text-sm mb-3 text-gray-800">{{ targetCategory.name }} Subcategories</h3>
           <div class="space-y-1">
             <div v-for="subcategory in targetCategory.subcategories" :key="subcategory.id"
-              class="flex items-center justify-between hover:bg-gray-50 rounded-md cursor-pointer p-2"
-              @click="navigateTo(`/search?subcategory=${subcategory.slug}`)">
+              class="flex items-center justify-between rounded-md p-2 transition-colors"
+              :class="subcategory.adsCount > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed'"
+              @click="subcategory.adsCount > 0 && navigateTo(`/search?subcategory=${subcategory.slug}`)">
               <div class="flex items-center gap-2 flex-1 min-w-0">
                 <img :src="subcategory.image" :alt="subcategory.name" class="w-8 h-8 object-contain flex-shrink-0" />
                 <span class="text-sm truncate">{{ subcategory.name }}</span>
