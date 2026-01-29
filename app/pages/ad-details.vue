@@ -4,7 +4,7 @@
         <div class="bg-white border-b">
             <div class="container mx-auto px-6 py-4">
                 <div v-if="pending" class="h-5 bg-gray-200 rounded w-96 animate-pulse"></div>
-                <div v-else-if="ad" class="flex items-center text-sm text-gray-600 space-x-2">
+                <div v-else-if="ad" class="text-sm text-gray-600 space-x-2">
                     <a href="/" class="hover:text-blue-600">All ads</a>
                     <span>›</span>
                     <span class="hover:text-blue-600">{{ ad.category?.name }}</span>
@@ -50,7 +50,7 @@
                     <!-- Title and Location -->
                     <div v-if="ad" class="bg-white rounded-lg p-6 shadow">
                         <div class="flex items-start justify-between mb-4">
-                            <h1 class="text-2xl font-bold text-gray-900">{{ ad.title }}</h1>
+                            <h1 class="text-lg md:text-2xl font-bold text-gray-900">{{ ad.title }}</h1>
                             <button @click="toggleLike" :disabled="isLiking"
                                 class="flex items-center gap-1 transition-colors" :class="[
                                     ad.is_liked ? 'text-blue-500 hover:text-blue-600' : 'text-gray-400 hover:text-gray-600'
@@ -62,7 +62,7 @@
                             </button>
                         </div>
                         <div class="flex justify-between items-center text-gray-600 text-sm space-x-4">
-                            <div class="flex items-center">
+                            <div class="flex items-center flex-col md:flex-row text-center md:text-left">
                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"
                                         d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
@@ -70,7 +70,7 @@
                                 </svg>
                                 {{ ad.place }}, {{ ad.state?.name }}
                             </div>
-                            <div class="flex items-center">
+                            <div class="flex items-center flex-col md:flex-row text-center md:text-left">
                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
                                     <path fill-rule="evenodd"
@@ -106,7 +106,7 @@
 
                     <!-- Contact Button (Mobile) -->
                     <div class="lg:hidden space-y-3">
-                        <button @click="showPhoneNumber = true"
+                        <!-- <button @click="showPhoneNumber = true"
                             class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path
@@ -116,7 +116,7 @@
                             Contact
                         </button>
 
-                        <!-- Phone Number Display (Mobile) -->
+                        Phone Number Display (Mobile)
                         <div v-if="showPhoneNumber && ad"
                             class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
                             <div class="text-sm text-gray-600 mb-1">Seller's Phone Number</div>
@@ -124,7 +124,7 @@
                                 class="text-xl font-bold text-blue-600 hover:text-blue-700">
                                 {{ ad.user.phone_number }}
                             </a>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
