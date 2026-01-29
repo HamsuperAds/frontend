@@ -93,6 +93,27 @@
                                 Feedback
                             </NuxtLink>
 
+                            <!-- Verification Section -->
+                            <div class="border-t border-gray-200 my-2 pt-2">
+                                <p class="px-4 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Verification</p>
+
+                                <NuxtLink to="/account/verification-status"
+                                    class="flex items-center px-4 py-2 text-sm rounded-lg transition-colors"
+                                    :class="isActive('/account/verification-status') ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'">
+                                    <Icon name="heroicons:check-badge" class="w-5 h-5 mr-3" />
+                                    Verification Status
+                                </NuxtLink>
+
+                                <NuxtLink v-if="!hasVerificationRequest || canResubmit"
+                                    to="/account/verification-request"
+                                    class="flex items-center px-4 py-2 text-sm rounded-lg transition-colors"
+                                    :class="isActive('/account/verification-request') ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'">
+                                    <Icon name="heroicons:document-plus" class="w-5 h-5 mr-3" />
+                                    {{ hasVerificationRequest ? 'Update Request' : 'Submit Request' }}
+                                </NuxtLink>
+                            </div>
+
                             <NuxtLink to="/account/change-password"
                                 class="flex items-center px-4 py-2 text-sm rounded-lg transition-colors"
                                 :class="isActive('/account/change-password') ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'">
@@ -142,7 +163,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { useRoute } from 'vue-router'
 import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
@@ -152,6 +172,19 @@ const appResourceInfoStore = useAppResourceInfoStore();
 const route = useRoute()
 const { $getUser } = useNuxtApp()
 const user = $getUser()
+
+// Check verification status for navigation
+const { data: verificationStatus } = await useApi().get('/verification-requests/my-request', {
+    server: false,
+    default: () => ({ data: null }),
+    onResponseError() {
+        // Ignore 404 errors (no verification request)
+        return { data: null }
+    }
+})
+
+const hasVerificationRequest = computed(() => !!verificationStatus.value?.data)
+const canResubmit = computed(() => verificationStatus.value?.data?.can_resubmit || false)
 
 const isActive = (path: string) => {
     if (path === '/account') {
