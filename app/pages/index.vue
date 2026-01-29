@@ -1,7 +1,7 @@
 <template>
     <div class="min-h-screen bg-gray-50">
 
-        <div class="container mx-auto px-4 py-6">
+        <div class="container mx-auto px-2 md:px-4 py-6">
             <div class="flex flex-col md:flex-row gap-6">
                 <!-- Sidebar -->
                 <AdCategories />
@@ -23,7 +23,7 @@
                     </div>
 
                     <!-- Product Grid -->
-                    <div v-else-if="ads.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div v-else-if="ads.length > 0" class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
                         <AdCard v-for="ad in ads" :ad="ad" :key="ad.id"
                             class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow" />
                     </div>
