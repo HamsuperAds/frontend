@@ -150,11 +150,11 @@
                             <!-- Content -->
                             <div class="flex-1 flex flex-col justify-between">
                                 <div>
-                                    <div class="flex items-start justify-between mb-2">
+                                    <div class="block md:flex items-start justify-between mb-2">
                                         <div>
-                                            <span v-if="result.status === 'active'"
+                                            <span
                                                 class="inline-block bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded mb-2">
-                                                Active
+                                                {{ result.status }}
                                             </span>
                                             <h3 class="font-semibold text-gray-900 text-lg">{{ result.title }}</h3>
                                         </div>

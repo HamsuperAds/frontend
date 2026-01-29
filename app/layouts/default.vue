@@ -59,7 +59,6 @@ watch(() => appResourceInfoStore.toastMessage, (newMessage) => {
 
 .main-content {
     flex: 1;
-    padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
