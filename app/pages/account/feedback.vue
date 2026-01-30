@@ -51,7 +51,7 @@
                                 <img :src="getTargetUser(feedback)?.avatar || '/images/placeholder-user.png'"
                                     class="w-8 h-8 rounded-full object-cover">
                                 <span class="text-sm font-medium text-gray-900">{{ getTargetUser(feedback)?.first_name
-                                    }} {{
+                                }} {{
                                         getTargetUser(feedback)?.last_name }}</span>
                             </div>
                         </td>
@@ -72,7 +72,12 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(feedback.created_at) }}</td>
                         <td class="px-6 py-4">
-                            <DropdownMenu>
+                            <template v-if="deletingFeedbackId === feedback.id">
+                                <div class="flex justify-center">
+                                    <Icon name="svg-spinners:ring-resize" class="w-5 h-5 text-blue-600" />
+                                </div>
+                            </template>
+                            <DropdownMenu v-else>
                                 <DropdownMenuTrigger as-child>
                                     <button class="text-gray-400 hover:text-gray-600">
                                         <Icon name="heroicons:ellipsis-vertical" class="w-5 h-5" />
@@ -83,11 +88,11 @@
                                         <Icon name="heroicons:pencil-square" class="w-4 h-4 mr-2" />
                                         Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem @click="replyFeedback(feedback)"
+                                    <!-- <DropdownMenuItem @click="replyFeedback(feedback)"
                                         :disabled="filterType === 'sent'">
                                         <Icon name="heroicons:chat-bubble-left-right" class="w-4 h-4 mr-2" />
                                         Reply
-                                    </DropdownMenuItem>
+                                    </DropdownMenuItem> -->
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem @click="showDeleteDialog(feedback)"
                                         :disabled="filterType === 'received'" class="text-red-600 focus:text-red-600">
@@ -171,7 +176,10 @@
             <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                 <h3 class="text-lg font-semibold mb-2">Delete Feedback</h3>
                 <p class="text-sm text-gray-600 mb-6">
-                    You are about to delete this Feedback (by {{ selectedFeedback?.seller }}). This action is permanent
+                    You are about to delete this Feedback (sent to <span class="font-bold">{{
+                        selectedFeedback?.to_user.first_name }}</span>). This
+                    action is
+                    permanent
                     and cannot be undone
                 </p>
                 <div class="flex gap-3">
@@ -194,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import type { User } from '~/types'; // Assuming User type exists or I'll define a minimal one if not
+import { toast } from 'vue-sonner';
 
 definePageMeta({
     layout: 'profile'
@@ -229,6 +237,7 @@ const searchQuery = ref('')
 const showReplyDialog = ref(false)
 const showDeleteConfirm = ref(false)
 const showEditDialog = ref(false)
+const deletingFeedbackId = ref<string | null>(null)
 const selectedFeedback = ref<Feedback | null>(null)
 const replyText = ref('')
 const isLoading = ref(false)
@@ -291,12 +300,6 @@ const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
 }
 
-// Get Feedback Type (Positive/Negative/Neutral)
-const getFeedbackType = (rating: number) => {
-    if (rating >= 4) return 'Positive'
-    if (rating <= 2) return 'Negative'
-    return 'Neutral'
-}
 
 const getTargetUser = (feedback: Feedback) => {
     return filterType.value === 'received' ? feedback.from_user : feedback.to_user;
@@ -329,10 +332,25 @@ const submitReply = () => {
     replyText.value = ''
 }
 
-const confirmDelete = () => {
-    if (selectedFeedback.value) {
-        feedbacks.value = feedbacks.value.filter(f => f.id !== selectedFeedback.value!.id)
-        showDeleteConfirm.value = false
+const confirmDelete = async () => {
+    if (!selectedFeedback.value) return
+
+    const feedbackId = selectedFeedback.value.id
+    deletingFeedbackId.value = feedbackId
+    showDeleteConfirm.value = false
+
+    try {
+        const response = await useApi().fetchDelete<{ success: boolean; message: string }>(`/user-feedbacks/${feedbackId}`)
+
+        if (response.success) {
+            toast.success(response.message || 'Feedback deleted successfully')
+            // Refresh the feedback list
+            await fetchFeedbacks()
+        }
+    } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to delete feedback')
+    } finally {
+        deletingFeedbackId.value = null
         selectedFeedback.value = null
     }
 }
