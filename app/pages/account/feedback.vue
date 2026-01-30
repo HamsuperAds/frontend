@@ -51,7 +51,7 @@
                                 <img :src="getTargetUser(feedback)?.avatar || '/images/placeholder-user.png'"
                                     class="w-8 h-8 rounded-full object-cover">
                                 <span class="text-sm font-medium text-gray-900">{{ getTargetUser(feedback)?.first_name
-                                }} {{
+                                    }} {{
                                         getTargetUser(feedback)?.last_name }}</span>
                             </div>
                         </td>
@@ -186,6 +186,10 @@
                 </div>
             </div>
         </div>
+
+        <!-- Feedback Form Dialog -->
+        <FeedbackFormDialog v-model:isOpen="showEditDialog" :feedback="selectedFeedback"
+            @success="handleFeedbackSuccess" />
     </div>
 </template>
 
@@ -224,6 +228,7 @@ const filterType = ref<'sent' | 'received'>('sent')
 const searchQuery = ref('')
 const showReplyDialog = ref(false)
 const showDeleteConfirm = ref(false)
+const showEditDialog = ref(false)
 const selectedFeedback = ref<Feedback | null>(null)
 const replyText = ref('')
 const isLoading = ref(false)
@@ -299,16 +304,18 @@ const getTargetUser = (feedback: Feedback) => {
 
 // Actions
 const editFeedback = (feedback: Feedback) => {
-    console.log('Edit feedback:', feedback)
+    selectedFeedback.value = feedback
+    showEditDialog.value = true
+}
+
+const handleFeedbackSuccess = () => {
+    // Refresh the feedback list after successful edit
+    fetchFeedbacks()
 }
 
 const replyFeedback = (feedback: Feedback) => {
     selectedFeedback.value = feedback
     showReplyDialog.value = true
-}
-
-const hideFeedback = (feedback: Feedback) => {
-    console.log('Hide feedback:', feedback)
 }
 
 const showDeleteDialog = (feedback: Feedback) => {
