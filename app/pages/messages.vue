@@ -1,9 +1,10 @@
 <template>
     <div class="min-h-screen bg-gray-50">
-        <div class="container mx-auto px-4 py-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+        <div class="container mx-auto px-2 md:px-4 py-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Left Sidebar - Conversations List -->
-                <div class="lg:col-span-1 bg-white rounded-lg shadow overflow-hidden flex flex-col">
+                <div class="lg:col-span-1 bg-white rounded-lg max-h-[calc(100vh-20px)] shadow overflow-hidden flex-col"
+                    :class="selectedConversation ? 'hidden lg:flex' : 'flex'">
                     <div class="px-4 py-3 border-b">
                         <h2 class="text-lg font-semibold text-blue-600">My messages</h2>
                     </div>
@@ -65,7 +66,8 @@
                 </div>
 
                 <!-- Right Side - Chat Area -->
-                <div class=" lg:col-span-2 bg-white rounded-lg shadow flex flex-col">
+                <div class="lg:col-span-2 bg-white rounded-lg shadow flex-col"
+                    :class="!selectedConversation ? 'hidden lg:flex' : 'flex'">
                     <!-- No Conversation Selected -->
                     <div v-if="!selectedConversation"
                         class="flex-1 flex flex-col items-center justify-center text-gray-400">
@@ -81,9 +83,13 @@
                     <template v-else>
                         <!-- Chat Header -->
                         <div class="p-4 border-b flex items-center gap-3">
+                            <button @click="selectedConversation = null"
+                                class="lg:hidden p-2 -ml-2 hover:bg-gray-100 rounded-full text-gray-600 transition-colors">
+                                <Icon name="heroicons-solid:chevron-left" />
+                            </button>
                             <img :src="selectedConversation.other_user?.avatar || '/images/placeholder-user.png'"
                                 :alt="selectedConversation.other_user?.first_name"
-                                class="w-10 h-10 rounded object-cover" />
+                                class="w-10 h-10 -ml-2 rounded object-cover" />
                             <div class="flex-1">
                                 <h3 class="font-semibold text-gray-900">
                                     {{ selectedConversation.other_user?.first_name }} {{
@@ -94,7 +100,7 @@
                                     <img :src="selectedConversation.ad.primary_image?.image_path || '/images/placeholder.png'"
                                         :alt="selectedConversation.ad.title" class="w-6 h-6 rounded object-cover" />
                                     <span class="text-gray-600 truncate max-w-[200px]">{{ selectedConversation.ad.title
-                                    }}</span>
+                                        }}</span>
                                     <span class="text-blue-600 font-semibold">₦{{
                                         Number(selectedConversation.ad.price).toLocaleString() }}</span>
                                 </NuxtLink>
