@@ -3,7 +3,7 @@
         <!-- Navbar -->
         <NavBar :showSearch="false" />
 
-        <div class="container mx-auto px-4 py-8">
+        <div class="container mx-auto px-1 md:px-4 py-8">
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <!-- Left Sidebar -->
                 <div class="lg:col-span-1">

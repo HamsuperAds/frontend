@@ -6,7 +6,7 @@
         </div>
 
         <!-- Content -->
-        <div class="p-6">
+        <div class="p-2 md:p-6">
             <!-- Loading State -->
             <div v-if="isLoading" class="text-center py-12">
                 <Icon name="svg-spinners:ring-resize" class="w-8 h-8 mx-auto text-blue-500" />
@@ -33,18 +33,19 @@
 
                     <!-- Content -->
                     <div class="flex-1">
-                        <div class="flex items-start justify-between mb-2">
-                            <div>
+                        <div class="mb-2">
+                            <div
+                                class="text-blue-600 flex items-center justify-between font-bold text-lg whitespace-nowrap">
                                 <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded mb-2">
                                     {{ ad.status }}
                                 </span>
-                                <NuxtLink :to="`/ad-details?id=${ad.id}`"
-                                    class="font-semibold text-gray-900 line-clamp-1">{{ ad.title }}</NuxtLink>
-                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">{{ ad.description }}</p>
+                                <p class="ml-2">
+                                    ₦{{ Number(ad.price).toLocaleString() }}
+                                </p>
                             </div>
-                            <div class="text-blue-600 font-bold text-lg whitespace-nowrap ml-4">
-                                ₦{{ Number(ad.price).toLocaleString() }}
-                            </div>
+                            <NuxtLink :to="`/ad-details?id=${ad.id}`" class="font-semibold text-gray-900 line-clamp-1">
+                                {{ ad.title }}</NuxtLink>
+                            <p class="text-sm text-gray-600 mt-1 line-clamp-2">{{ ad.description }}</p>
                         </div>
                         <div class="flex items-center justify-between mt-3">
                             <div class="flex items-center text-gray-500 text-sm">

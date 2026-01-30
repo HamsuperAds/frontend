@@ -6,71 +6,57 @@
             <div class="flex gap-2">
                 <button @click="filterType = 'received'" class="px-4 py-1 rounded text-sm"
                     :class="filterType === 'received' ? 'bg-white text-blue-500' : 'bg-blue-600 hover:bg-blue-700'">
-                    Received(0)
+                    Received({{ stats.received_count }})
                 </button>
                 <button @click="filterType = 'sent'" class="px-4 py-1 rounded text-sm"
                     :class="filterType === 'sent' ? 'bg-white text-blue-500' : 'bg-blue-600 hover:bg-blue-700'">
-                    Sent(10)
+                    Sent({{ stats.sent_count }})
                 </button>
             </div>
-        </div>
-
-        <!-- Search and Filter -->
-        <div class="p-6 border-b flex items-center gap-4">
-            <div class="relative flex-1 max-w-md">
-                <input v-model="searchQuery" type="text" placeholder="Search feedback"
-                    class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <button class="absolute right-3 top-1/2 -translate-y-1/2">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </button>
-            </div>
-            <button class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                    </path>
-                </svg>
-                Filter
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </button>
         </div>
 
         <!-- Table -->
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto mt-8">
             <table class="w-full">
                 <thead class="bg-gray-50 border-b">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">S/N</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Advert</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Replies</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y">
-                    <tr v-for="(feedback, index) in feedbacks" :key="index" class="hover:bg-gray-50">
+                    <tr v-for="(feedback, index) in feedbacks" :key="feedback.id" class="hover:bg-gray-50">
                         <td class="px-6 py-4 text-sm">{{ index + 1 }}</td>
                         <td class="px-6 py-4">
-                            <div class="text-sm font-medium text-gray-900">{{ feedback.seller }}</div>
-                            <div class="text-sm text-gray-500">{{ feedback.advert }}</div>
+                            <div class="flex items-center gap-3">
+                                <img :src="getTargetUser(feedback)?.avatar || '/images/placeholder-user.png'"
+                                    class="w-8 h-8 rounded-full object-cover">
+                                <span class="text-sm font-medium text-gray-900">{{ getTargetUser(feedback)?.first_name
+                                    }} {{
+                                        getTargetUser(feedback)?.last_name }}</span>
+                            </div>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="text-sm" :class="{
-                                'text-green-600': feedback.type === 'Positive',
-                                'text-gray-600': feedback.type === 'Neutral',
-                                'text-red-600': feedback.type === 'Negative'
-                            }">
-                                {{ feedback.type }}
+                            <div class="text-sm text-gray-500 line-clamp-2 max-w-xs" :title="feedback.message">{{
+                                feedback.message }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-sm px-2 py-1 rounded bg-gray-100 text-gray-700">
+                                {{ filterType === 'sent' ? 'Sent' : 'Received' }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm">{{ feedback.replies }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">{{ feedback.created }}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <div class="flex items-center text-yellow-500">
+                                <Icon name="heroicons:star-solid" class="w-4 h-4 mr-1" />
+                                <span class="text-gray-700">{{ feedback.rating }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(feedback.created_at) }}</td>
                         <td class="px-6 py-4">
                             <div class="relative">
                                 <button @click="toggleDropdown(index)" class="text-gray-400 hover:text-gray-600">
@@ -91,8 +77,8 @@
                                         </svg>
                                         Edit
                                     </button>
-                                    <button @click="replyFeedback(feedback)"
-                                        class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <button @click="replyFeedback(feedback)" :disabled="filterType === 'sent'"
+                                        class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
@@ -108,8 +94,8 @@
                                         </svg>
                                         Hide
                                     </button>
-                                    <button @click="showDeleteDialog(feedback)"
-                                        class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                    <button @click="showDeleteDialog(feedback)" :disabled="filterType === 'received'"
+                                        class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
@@ -126,14 +112,17 @@
         </div>
 
         <!-- Pagination -->
-        <div class="flex items-center justify-between p-6 border-t">
-            <button class="flex items-center text-sm text-gray-600 hover:text-gray-900">
+        <div v-if="lastPage > 1" class="flex items-center justify-between p-6 border-t">
+            <button @click="prevPage" :disabled="currentPage === 1"
+                class="flex items-center text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
                 Prev
             </button>
-            <button class="flex items-center text-sm text-gray-600 hover:text-gray-900">
+            <span class="text-sm text-gray-500">Page {{ currentPage }} of {{ lastPage }}</span>
+            <button @click="nextPage" :disabled="currentPage === lastPage"
+                class="flex items-center text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed">
                 Next
                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -210,113 +199,136 @@
 </template>
 
 <script setup lang="ts">
+import type { User } from '~/types'; // Assuming User type exists or I'll define a minimal one if not
+
 definePageMeta({
     layout: 'profile'
 })
 
-const filterType = ref('sent')
+// Types
+interface FeedbackUser {
+    id: string;
+    first_name: string;
+    last_name: string;
+    avatar: string | null;
+}
+
+interface Feedback {
+    id: string;
+    message: string;
+    rating: number;
+    created_at: string;
+    from_user: FeedbackUser;
+    to_user: FeedbackUser;
+    replies: any[];
+    [key: string]: any;
+}
+
+interface Stats {
+    sent_count: number;
+    received_count: number;
+}
+
+const filterType = ref<'sent' | 'received'>('sent')
 const searchQuery = ref('')
 const activeDropdown = ref<number | null>(null)
 const showReplyDialog = ref(false)
 const showDeleteConfirm = ref(false)
-const selectedFeedback = ref<any>(null)
+const selectedFeedback = ref<Feedback | null>(null)
 const replyText = ref('')
+const isLoading = ref(false)
+const currentPage = ref(1)
+const lastPage = ref(1)
 
-const feedbacks = ref([
-    {
-        seller: 'Clem Dura',
-        advert: 'I bought from him and he is very reliable and truthful. I recommend him ...',
-        message: 'I bought from him and he is very reliable and truthful. I recommend him. The HP Laptop GB that I got from him is neat and working well without issues.',
-        type: 'Positive',
-        replies: 0,
-        created: '23/04/2025'
-    },
-    {
-        seller: 'Clem Dura',
-        advert: 'Qlinq Motorcycle 2024 Black',
-        type: 'Neutral',
-        replies: 1,
-        created: '23/04/2025'
-    },
-    {
-        seller: 'Nick Limi',
-        advert: 'What I bought was not a good shape when I received it',
-        type: 'Negative',
-        replies: 4,
-        created: '23/04/2025'
-    },
-    {
-        seller: 'Clem Dura',
-        advert: 'HP Elitebook GB 16gb RAM 254GB SSD',
-        type: 'Positive',
-        replies: 0,
-        created: '23/04/2025'
-    },
-    {
-        seller: 'Clem Dura',
-        advert: 'Toyota Camry 2012 Black',
-        type: 'Neutral',
-        replies: 3,
-        created: '23/04/2025'
-    },
-    {
-        seller: 'Clem Dura',
-        advert: 'Canadian Solar Panel 450watts',
-        type: 'Negative',
-        replies: 4,
-        created: '23/04/2025'
-    },
-    {
-        seller: 'Clem Dura',
-        advert: 'Oraim H210 earpod, 5hr listening time',
-        type: 'Negative',
-        replies: 1,
-        created: '23/04/2025'
-    },
-    {
-        seller: 'Clem Dura',
-        advert: 'Sharp AR2340 # in-one printer',
-        type: 'Neutral',
-        replies: 2,
-        created: '23/04/2025'
-    },
-    {
-        seller: 'Clem Dura',
-        advert: 'HP high resolution A4 scanner',
-        type: 'Positive',
-        replies: 6,
-        created: '23/04/2025'
-    },
-    {
-        seller: 'Clem Dura',
-        advert: 'HP Elitebook GB 16gb RAM 254GB SSD',
-        type: 'Positive',
-        replies: 2,
-        created: '23/04/2025'
+const feedbacks = ref<Feedback[]>([])
+const stats = ref<Stats>({ sent_count: 0, received_count: 0 })
+
+// Fetch Stats
+// Fetch Stats
+const fetchStats = async () => {
+    try {
+        const response = await useApi().fetchGet<{ success: boolean; data: Stats }>('/my-user-feedbacks', {
+            params: { type: 'stats' }
+        })
+        if (response.success) {
+            stats.value = response.data
+        }
+    } catch (error) {
+        console.error('Failed to fetch stats:', error)
     }
-])
+}
 
+// Fetch Feedbacks
+const fetchFeedbacks = async () => {
+    isLoading.value = true
+    try {
+        const response = await useApi().fetchGet<{ success: boolean; data: { data: Feedback[]; current_page: number; last_page: number } }>('/my-user-feedbacks', {
+            params: {
+                type: filterType.value,
+                page: currentPage.value
+            }
+        })
+
+        if (response.success) {
+            feedbacks.value = response.data.data
+            currentPage.value = response.data.current_page
+            lastPage.value = response.data.last_page
+        }
+    } catch (error) {
+        console.error('Failed to fetch feedbacks:', error)
+    } finally {
+        isLoading.value = false
+    }
+}
+
+// Watchers
+watch(filterType, () => {
+    currentPage.value = 1
+    fetchFeedbacks()
+})
+
+watch(currentPage, () => {
+    fetchFeedbacks()
+})
+
+// Format Date
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString()
+}
+
+// Get Feedback Type (Positive/Negative/Neutral)
+const getFeedbackType = (rating: number) => {
+    if (rating >= 4) return 'Positive'
+    if (rating <= 2) return 'Negative'
+    return 'Neutral'
+}
+
+const getTargetUser = (feedback: Feedback) => {
+    return filterType.value === 'received' ? feedback.from_user : feedback.to_user;
+}
+
+// Actions
 const toggleDropdown = (index: number) => {
     activeDropdown.value = activeDropdown.value === index ? null : index
 }
 
-const editFeedback = (feedback: any) => {
+const editFeedback = (feedback: Feedback) => {
     console.log('Edit feedback:', feedback)
     activeDropdown.value = null
 }
 
-const replyFeedback = (feedback: any) => {
+const replyFeedback = (feedback: Feedback) => {
     selectedFeedback.value = feedback
     showReplyDialog.value = true
     activeDropdown.value = null
 }
 
-const hideFeedback = (feedback: any) => {
+const hideFeedback = (feedback: Feedback) => {
     console.log('Hide feedback:', feedback)
     activeDropdown.value = null
 }
 
-const showDeleteDialog = (feedback: any) => {
+const showDeleteDialog = (feedback: Feedback) => {
     selectedFeedback.value = feedback
     showDeleteConfirm.value = true
     activeDropdown.value = null
@@ -329,8 +341,27 @@ const submitReply = () => {
 }
 
 const confirmDelete = () => {
-    feedbacks.value = feedbacks.value.filter(f => f !== selectedFeedback.value)
-    showDeleteConfirm.value = false
-    selectedFeedback.value = null
+    if (selectedFeedback.value) {
+        feedbacks.value = feedbacks.value.filter(f => f.id !== selectedFeedback.value!.id)
+        showDeleteConfirm.value = false
+        selectedFeedback.value = null
+    }
 }
+
+const nextPage = () => {
+    if (currentPage.value < lastPage.value) {
+        currentPage.value++
+    }
+}
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value--
+    }
+}
+
+onMounted(() => {
+    fetchStats()
+    fetchFeedbacks()
+})
 </script>
