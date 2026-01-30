@@ -51,7 +51,7 @@
                                 <img :src="getTargetUser(feedback)?.avatar || '/images/placeholder-user.png'"
                                     class="w-8 h-8 rounded-full object-cover">
                                 <span class="text-sm font-medium text-gray-900">{{ getTargetUser(feedback)?.first_name
-                                }} {{
+                                    }} {{
                                         getTargetUser(feedback)?.last_name }}</span>
                             </div>
                         </td>
@@ -72,53 +72,34 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(feedback.created_at) }}</td>
                         <td class="px-6 py-4">
-                            <div class="relative">
-                                <button @click="toggleDropdown(index)" class="text-gray-400 hover:text-gray-600">
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path
-                                            d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <div v-if="activeDropdown === index"
-                                    class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border z-10">
-                                    <button @click="editFeedback(feedback)"
-                                        class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                            </path>
-                                        </svg>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger as-child>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <Icon name="heroicons:ellipsis-vertical" class="w-5 h-5" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem @click="editFeedback(feedback)">
+                                        <Icon name="heroicons:pencil-square" class="w-4 h-4 mr-2" />
                                         Edit
-                                    </button>
-                                    <button @click="replyFeedback(feedback)" :disabled="filterType === 'sent'"
-                                        class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
-                                        </svg>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @click="replyFeedback(feedback)"
+                                        :disabled="filterType === 'sent'">
+                                        <Icon name="heroicons:chat-bubble-left-right" class="w-4 h-4 mr-2" />
                                         Reply
-                                    </button>
-                                    <button @click="hideFeedback(feedback)"
-                                        class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21">
-                                            </path>
-                                        </svg>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @click="hideFeedback(feedback)">
+                                        <Icon name="heroicons:eye-slash" class="w-4 h-4 mr-2" />
                                         Hide
-                                    </button>
-                                    <button @click="showDeleteDialog(feedback)" :disabled="filterType === 'received'"
-                                        class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                            </path>
-                                        </svg>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem @click="showDeleteDialog(feedback)"
+                                        :disabled="filterType === 'received'" class="text-red-600 focus:text-red-600">
+                                        <Icon name="heroicons:trash" class="w-4 h-4 mr-2" />
                                         Delete
-                                    </button>
-                                </div>
-                            </div>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </td>
                     </tr>
                 </tbody>
@@ -245,7 +226,6 @@ interface Stats {
 
 const filterType = ref<'sent' | 'received'>('sent')
 const searchQuery = ref('')
-const activeDropdown = ref<number | null>(null)
 const showReplyDialog = ref(false)
 const showDeleteConfirm = ref(false)
 const selectedFeedback = ref<Feedback | null>(null)
@@ -257,7 +237,7 @@ const lastPage = ref(1)
 const feedbacks = ref<Feedback[]>([])
 const stats = ref<Stats>({ sent_count: 0, received_count: 0 })
 
-// Fetch Stats
+
 // Fetch Stats
 const fetchStats = async () => {
     try {
@@ -322,30 +302,22 @@ const getTargetUser = (feedback: Feedback) => {
 }
 
 // Actions
-const toggleDropdown = (index: number) => {
-    activeDropdown.value = activeDropdown.value === index ? null : index
-}
-
 const editFeedback = (feedback: Feedback) => {
     console.log('Edit feedback:', feedback)
-    activeDropdown.value = null
 }
 
 const replyFeedback = (feedback: Feedback) => {
     selectedFeedback.value = feedback
     showReplyDialog.value = true
-    activeDropdown.value = null
 }
 
 const hideFeedback = (feedback: Feedback) => {
     console.log('Hide feedback:', feedback)
-    activeDropdown.value = null
 }
 
 const showDeleteDialog = (feedback: Feedback) => {
     selectedFeedback.value = feedback
     showDeleteConfirm.value = true
-    activeDropdown.value = null
 }
 
 const submitReply = () => {
