@@ -17,7 +17,21 @@
 
         <!-- Table -->
         <div class="overflow-x-auto mt-8">
-            <table class="w-full">
+            <!-- Loading State -->
+            <div v-if="isLoading" class="flex justify-center items-center py-12">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="feedbacks.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+                <div class="bg-gray-100 rounded-full p-4 mb-4">
+                    <Icon name="heroicons:inbox" class="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 class="text-lg font-medium text-gray-900">No feedbacks yet</h3>
+                <p class="text-gray-500 mt-1">When you receive or send feedback, it will appear here.</p>
+            </div>
+
+            <table v-else class="w-full">
                 <thead class="bg-gray-50 border-b">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">S/N</th>
@@ -37,7 +51,7 @@
                                 <img :src="getTargetUser(feedback)?.avatar || '/images/placeholder-user.png'"
                                     class="w-8 h-8 rounded-full object-cover">
                                 <span class="text-sm font-medium text-gray-900">{{ getTargetUser(feedback)?.first_name
-                                    }} {{
+                                }} {{
                                         getTargetUser(feedback)?.last_name }}</span>
                             </div>
                         </td>
