@@ -65,11 +65,11 @@
                                         :alt="advert.title" class="w-12 h-12 object-cover rounded" />
                                     <div class="">
                                         <span class="text-sm font-medium text-gray-900 line-clamp-1">{{ advert.title
-                                            }}</span>
+                                        }}</span>
                                         <!-- show ad price -->
                                         <span class="text-sm text-gray-600 block">₦{{
                                             Number(advert.price).toLocaleString()
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                 </div>
                             </NuxtLink>
@@ -86,56 +86,36 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(advert.created_at) }}</td>
                         <td class="px-6 py-4">
-                            <div class="relative">
-                                <template v-if="promotingAdId === advert.id">
-                                    <div class="p-2 flex justify-center text-blue-600">
-                                        <Icon name="svg-spinners:ring-resize" class="w-5 h-5" />
-                                    </div>
-                                </template>
-                                <template v-else>
-                                    <button @click="toggleDropdown(index)" class="text-gray-400 hover:text-gray-600">
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path
-                                                d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z">
-                                            </path>
-                                        </svg>
+                            <template v-if="promotingAdId === advert.id">
+                                <div class="p-2 flex justify-center text-blue-600">
+                                    <Icon name="svg-spinners:ring-resize" class="w-5 h-5" />
+                                </div>
+                            </template>
+                            <DropdownMenu v-else>
+                                <DropdownMenuTrigger as-child>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <Icon name="heroicons:ellipsis-vertical" class="w-5 h-5" />
                                     </button>
-                                    <div v-if="activeDropdown === index"
-                                        class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border z-10">
-                                        <button @click="editAdvert(advert)"
-                                            class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                                </path>
-                                            </svg>
-                                            Edit
-                                        </button>
-                                        <button @click="promoteAdvert(advert)"
-                                            :disabled="advert.promotion_plan?.slug !== 'bronze'"
-                                            class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            :title="advert.promotion_plan?.slug !== 'bronze' ? 'Already promoted' : ''">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                            </svg>
-                                            Promote
-                                        </button>
-                                        <button @click="showDeleteDialog(advert)"
-                                            class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                </path>
-                                            </svg>
-                                            Delete
-                                        </button>
-                                    </div>
-                                </template>
-                            </div>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem @click="editAdvert(advert)">
+                                        <Icon name="heroicons:pencil-square" class="w-4 h-4 mr-2" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @click="promoteAdvert(advert)"
+                                        :disabled="advert.promotion_plan?.slug !== 'bronze'"
+                                        :title="advert.promotion_plan?.slug !== 'bronze' ? 'Already promoted' : ''">
+                                        <Icon name="heroicons:bolt" class="w-4 h-4 mr-2" />
+                                        Promote
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem @click="showDeleteDialog(advert)"
+                                        class="text-red-600 focus:text-red-600">
+                                        <Icon name="heroicons:trash" class="w-4 h-4 mr-2" />
+                                        Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </td>
                     </tr>
                 </tbody>
@@ -199,7 +179,6 @@ definePageMeta({
 const isLoading = ref(true)
 const isDeleting = ref(false)
 const searchQuery = ref('')
-const activeDropdown = ref<number | null>(null)
 const showDeleteConfirm = ref(false)
 const selectedAdvert = ref<any>(null)
 const showPricingDialog = ref(false)
@@ -264,13 +243,8 @@ const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB')
 }
 
-const toggleDropdown = (index: number) => {
-    activeDropdown.value = activeDropdown.value === index ? null : index
-}
-
 const editAdvert = (advert: any) => {
     console.log('Edit advert:', advert)
-    activeDropdown.value = null
     // Navigate to edit page
     navigateTo(`/account/edit-ad/${advert.id}`)
 }
@@ -279,7 +253,6 @@ const promotingAdId = ref<string | null>(null)
 
 const promoteAdvert = async (advert: any) => {
     selectedAdvert.value = advert;
-    activeDropdown.value = null;
     if (plans.value.length === 0) {
         await appResourceStore.fetchPromotionPlans();
     }
@@ -325,7 +298,6 @@ const handlePlanSelection = async (plan: PromotionPlan) => {
 const showDeleteDialog = (advert: any) => {
     selectedAdvert.value = advert
     showDeleteConfirm.value = true
-    activeDropdown.value = null
 }
 
 const confirmDelete = async () => {

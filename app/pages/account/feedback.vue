@@ -51,7 +51,7 @@
                                 <img :src="getTargetUser(feedback)?.avatar || '/images/placeholder-user.png'"
                                     class="w-8 h-8 rounded-full object-cover">
                                 <span class="text-sm font-medium text-gray-900">{{ getTargetUser(feedback)?.first_name
-                                    }} {{
+                                }} {{
                                         getTargetUser(feedback)?.last_name }}</span>
                             </div>
                         </td>
@@ -87,10 +87,6 @@
                                         :disabled="filterType === 'sent'">
                                         <Icon name="heroicons:chat-bubble-left-right" class="w-4 h-4 mr-2" />
                                         Reply
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem @click="hideFeedback(feedback)">
-                                        <Icon name="heroicons:eye-slash" class="w-4 h-4 mr-2" />
-                                        Hide
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem @click="showDeleteDialog(feedback)"
