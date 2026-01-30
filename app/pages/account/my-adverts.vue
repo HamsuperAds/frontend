@@ -19,17 +19,64 @@
                     <Icon name="heroicons:magnifying-glass" class="w-5 h-5 text-gray-400" />
                 </button>
             </div>
-            <button class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                    </path>
-                </svg>
-                Filter
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </button>
+            <div class="relative">
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                        <button
+                            class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <template v-if="activeFilter">
+                                <Icon name="heroicons:funnel" class="w-4 h-4" />
+                                <span>{{ getFilterLabel() }}</span>
+                                <button @click.stop="clearFilter" class="ml-1 text-gray-400 hover:text-gray-600">
+                                    <Icon name="heroicons:x-mark" class="w-4 h-4" />
+                                </button>
+                            </template>
+                            <template v-else>
+                                <Icon name="heroicons:funnel" class="w-4 h-4" />
+                                <span>Filter</span>
+                                <Icon name="heroicons:chevron-down" class="w-4 h-4" />
+                            </template>
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" class="w-48">
+                        <!-- Status Section -->
+                        <div class="px-2 py-1.5 text-xs font-semibold text-gray-500">Status</div>
+                        <DropdownMenuItem @click="applyFilter('status', 'active')">
+                            <Icon name="heroicons:check-circle" class="w-4 h-4 mr-2" />
+                            Active Ads
+                        </DropdownMenuItem>
+                        <DropdownMenuItem @click="applyFilter('status', 'suspended')">
+                            <Icon name="heroicons:pause-circle" class="w-4 h-4 mr-2" />
+                            Suspended Ads
+                        </DropdownMenuItem>
+                        <DropdownMenuItem @click="applyFilter('status', 'sold')">
+                            <Icon name="heroicons:currency-dollar" class="w-4 h-4 mr-2" />
+                            Sold Ads
+                        </DropdownMenuItem>
+                        <DropdownMenuItem @click="applyFilter('status', 'pending')">
+                            <Icon name="heroicons:clock" class="w-4 h-4 mr-2" />
+                            Pending Ads
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator />
+
+                        <!-- Promotion Type Section -->
+                        <div class="px-2 py-1.5 text-xs font-semibold text-gray-500">Promotion Type</div>
+                        <DropdownMenuItem @click="applyFilter('promotion_type', 'bronze')">
+                            <Icon name="heroicons:star" class="w-4 h-4 mr-2 text-amber-700" />
+                            Bronze Ads
+                        </DropdownMenuItem>
+                        <DropdownMenuItem @click="applyFilter('promotion_type', 'silver')">
+                            <Icon name="heroicons:star" class="w-4 h-4 mr-2 text-gray-400" />
+                            Silver Ads
+                        </DropdownMenuItem>
+                        <DropdownMenuItem @click="applyFilter('promotion_type', 'gold')">
+                            <Icon name="heroicons:star" class="w-4 h-4 mr-2 text-yellow-500" />
+                            Gold Ads
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </div>
 
         <!-- Table -->
@@ -66,11 +113,11 @@
                                         :alt="advert.title" class="w-12 h-12 object-cover rounded" />
                                     <div class="">
                                         <span class="text-sm font-medium text-gray-900 line-clamp-1">{{ advert.title
-                                        }}</span>
+                                            }}</span>
                                         <!-- show ad price -->
                                         <span class="text-sm text-gray-600 block">₦{{
                                             Number(advert.price).toLocaleString()
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                 </div>
                             </NuxtLink>
@@ -191,6 +238,9 @@ const totalPages = ref(1)
 const totalCount = ref(0)
 const perPage = ref(10)
 
+// Filter state
+const activeFilter = ref<{ type: 'status' | 'promotion_type'; value: string } | null>(null)
+
 const statusClasses: Record<string, string> = {
     active: 'bg-green-100 text-green-700',
     pending: 'bg-yellow-100 text-yellow-700',
@@ -200,12 +250,15 @@ const statusClasses: Record<string, string> = {
 const appResourceStore = useAppResourceInfoStore();
 const plans = computed(() => appResourceStore.promotionPlans as PromotionPlan[]);
 
-const fetchAds = async (page = 1, query = '') => {
+const fetchAds = async (page = 1, query = '', filterType = '', filterValue = '') => {
     isLoading.value = true
     try {
         let url = `/my-ads?per_page=${perPage.value}&page=${page}`
         if (query) {
             url += `&query=${encodeURIComponent(query)}`
+        }
+        if (filterType && filterValue) {
+            url += `&${filterType}=${encodeURIComponent(filterValue)}`
         }
 
         const response = await useApi().fetchGet<{
@@ -242,10 +295,20 @@ watchDebounced(
     (newQuery) => {
         // Reset to page 1 when searching
         if (newQuery.length > 2) {
-            fetchAds(1, newQuery)
+            fetchAds(
+                1,
+                newQuery,
+                activeFilter.value?.type || '',
+                activeFilter.value?.value || ''
+            )
         } else if (newQuery.length === 0) {
             // Fetch without query when user clears input
-            fetchAds(1)
+            fetchAds(
+                1,
+                '',
+                activeFilter.value?.type || '',
+                activeFilter.value?.value || ''
+            )
         }
     },
     { debounce: 500 }
@@ -255,10 +318,51 @@ const clearSearch = () => {
     searchQuery.value = ''
 }
 
+const applyFilter = (type: 'status' | 'promotion_type', value: string) => {
+    activeFilter.value = { type, value }
+    fetchAds(
+        1,
+        searchQuery.value.length > 2 ? searchQuery.value : '',
+        type,
+        value
+    )
+}
+
+const clearFilter = () => {
+    activeFilter.value = null
+    fetchAds(
+        1,
+        searchQuery.value.length > 2 ? searchQuery.value : ''
+    )
+}
+
+const getFilterLabel = () => {
+    if (!activeFilter.value) return 'Filter'
+    const labels = {
+        status: {
+            active: 'Active Ads',
+            suspended: 'Suspended Ads',
+            sold: 'Sold Ads',
+            pending: 'Pending Ads'
+        },
+        promotion_type: {
+            bronze: 'Bronze Ads',
+            silver: 'Silver Ads',
+            gold: 'Gold Ads'
+        }
+    }
+    return labels[activeFilter.value.type][activeFilter.value.value] || 'Filter'
+}
+
 const changePage = (page: number) => {
     if (page < 1 || page > totalPages.value) return
-    // Pass current search query when changing pages
-    fetchAds(page, searchQuery.value.length > 2 ? searchQuery.value : '')
+    // Pass current search query and filter when changing pages
+    fetchAds(
+        page,
+        searchQuery.value.length > 2 ? searchQuery.value : '',
+        activeFilter.value?.type || '',
+        activeFilter.value?.value || ''
+    )
 }
 
 const formatDate = (dateString: string) => {
