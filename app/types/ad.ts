@@ -23,6 +23,7 @@ export interface Ad {
   state_id: number;
   lga_id: number;
   price: string;
+  is_negotiable: boolean;
   place: string;
   description: string;
   promotion_plan_id: string | number | null;
@@ -41,7 +42,7 @@ export interface Ad {
   state: State;
   lga: LGA;
   images: AdImage[];
-  primary_image: AdImage;
+  primaryImage: AdImage;
   promotion_plan?: PromotionPlan;
   additional_info: Record<string, any> | null;
   is_liked: boolean;

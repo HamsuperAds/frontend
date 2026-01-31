@@ -109,15 +109,15 @@
                         <td class="px-6 py-4">
                             <NuxtLink :to="`/ad-details?id=${advert.id}`">
                                 <div class="flex items-center gap-3">
-                                    <img :src="advert.primary_image?.image_path || '/images/placeholder.png'"
+                                    <img :src="advert.primaryImage?.image_path || '/images/placeholder.png'"
                                         :alt="advert.title" class="w-12 h-12 object-cover rounded" />
                                     <div class="">
                                         <span class="text-sm font-medium text-gray-900 line-clamp-1">{{ advert.title
-                                        }}</span>
+                                            }}</span>
                                         <!-- show ad price -->
                                         <span class="text-sm text-gray-600 block">₦{{
                                             Number(advert.price).toLocaleString()
-                                        }}</span>
+                                            }}</span>
                                     </div>
                                 </div>
                             </NuxtLink>

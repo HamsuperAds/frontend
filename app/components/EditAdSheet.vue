@@ -1,5 +1,5 @@
 <template>
-    <Sheet :open="isOpen" @update:open="$emit('update:open', $event)">
+    <Sheet :open="isOpen" @update:open="$emit('update:isOpen', $event)">
         <SheetContent side="right" class="w-full sm:max-w-2xl overflow-y-auto custom-scroll">
             <SheetHeader>
                 <SheetTitle>
@@ -96,7 +96,7 @@
                                 <!-- Existing Images -->
                                 <div v-for="(image, index) in existingImages" :key="'existing-' + image.id"
                                     class="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
-                                    <img :src="image.image_url" :alt="'Image ' + (index + 1)"
+                                    <img :src="image.image_path" :alt="'Image ' + (index + 1)"
                                         class="w-full h-full object-cover" />
                                     <button type="button" @click="removeExistingImage(index)"
                                         class="absolute top-1 right-1 bg-black bg-opacity-60 hover:bg-opacity-80 rounded-full px-1 transition-colors">
@@ -174,7 +174,7 @@
                             Update additional details for your ad to increase buyer confidence.
                         </p>
                     </div>
-                    <form @submit.prevent="submitEdit" class="space-y-4">
+                    <form @submit.prevent="submitEdit(false)" class="space-y-4">
                         <!-- Loading State -->
                         <div v-if="subcategoryAttributesLoading" class="text-sm text-gray-500 py-4 text-center">
                             Loading attributes...
@@ -223,13 +223,13 @@
                         </div>
                         <!-- Action Buttons -->
                         <div class="flex justify-between pt-4">
-                            <button type="button" @click="submitEdit(true)" :disabled="isSubmitting"
+                            <button type="button" @click="submitEdit(true)" :disabled="isSubmitting || !hasChanges"
                                 class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                 <Icon v-if="isSubmitting && isSkipSubmit" name="svg-spinners:ring-resize"
                                     class="w-5 h-5" />
                                 Skip & Update
                             </button>
-                            <button type="submit" :disabled="isSubmitting"
+                            <button type="submit" :disabled="isSubmitting || !hasChanges"
                                 class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                 <Icon v-if="isSubmitting && !isSkipSubmit" name="svg-spinners:ring-resize"
                                     class="w-5 h-5" />
@@ -256,7 +256,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-    'update:open': [value: boolean]
+    'update:isOpen': [value: boolean]
     'success': [void]
 }>()
 
@@ -297,6 +297,22 @@ const newImagePreviews = ref<ImagePreview[]>([])
 const subcategoryAttributes = ref<SubcategoryAttribute[]>([])
 const subcategoryAttributesLoading = ref(false)
 const additionalInfo = ref<Record<string, any>>({})
+
+// Original state for change detection
+const originalForm = ref<Record<string, any>>({})
+const originalAdditionalInfo = ref<Record<string, any>>({})
+
+const hasChanges = computed(() => {
+    const formChanged = JSON.stringify(editForm.value) !== JSON.stringify(originalForm.value)
+
+    // Clean up empty values for comparison as they might differ in representation but mean the same
+    // But for simplicity, direct comparison works if populate is consistent
+    const infoChanged = JSON.stringify(additionalInfo.value) !== JSON.stringify(originalAdditionalInfo.value)
+
+    const imagesChanged = deletedImageIds.value.length > 0 || newImages.value.length > 0
+
+    return formChanged || infoChanged || imagesChanged
+})
 
 // Computed
 const subcategories = computed(() => {
@@ -347,7 +363,13 @@ const populateForm = (ad: any) => {
     // Set additional info if available
     if (ad.additional_info) {
         additionalInfo.value = { ...ad.additional_info }
+    } else {
+        additionalInfo.value = {}
     }
+
+    // Set original state
+    originalForm.value = JSON.parse(JSON.stringify(editForm.value))
+    originalAdditionalInfo.value = JSON.parse(JSON.stringify(additionalInfo.value))
 
     // Reset step
     currentStep.value = 1
@@ -412,6 +434,25 @@ const fetchSubcategoryAttributes = async (subcategoryId: string | number) => {
                 newAdditionalInfo[attr.slug] = additionalInfo.value[attr.slug] || ''
             })
             additionalInfo.value = newAdditionalInfo
+
+            // Update original additional info structure if it was empty/different
+            // We need to re-sync originalAdditionalInfo if we loaded new structure so we don't count structure change as user change
+            // BUT, only if we are just loading for the first time or if the values haven't been touched yet.
+            // Actually, populateForm sets originalAdditionalInfo.
+            // If user changes subcategory, attributes change, that IS a change.
+            // If we are just loading attributes for the existing subcategory on mount/watch, 
+            // the populateForm might have run before attributes loaded.
+
+            if (JSON.stringify(originalAdditionalInfo.value) === '{}' && Object.keys(newAdditionalInfo).length > 0) {
+                // First load for existing ad, sync original if keys match values in editForm?
+                // Wait, populateForm sets additionalInfo from ad.additional_info.
+                // If ad.additional_info was partial, we just filled the rest with ''.
+                // logic: re-sync original if we just hydrated it. 
+
+                // Simpler approach: update originalAdditionalInfo to match the hydrated structure 
+                // respecting the values from ad.additional_info
+                originalAdditionalInfo.value = JSON.parse(JSON.stringify(newAdditionalInfo))
+            }
         }
     } catch (err) {
         console.error('Error fetching subcategory attributes:', err)
@@ -491,7 +532,7 @@ const submitEdit = async (skipDetails = false) => {
         // Close sheet after short delay
         setTimeout(() => {
             emit('success')
-            emit('update:open', false)
+            emit('update:isOpen', false)
         }, 1000)
 
     } catch (error: any) {

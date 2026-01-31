@@ -3,7 +3,7 @@
     @click="navigateToDetails">
     <!-- Product Image -->
     <div class="aspect-video bg-gray-200 relative">
-      <img :src="ad?.primary_image?.image_path || 'https://via.placeholder.com/400x300?text=No+Image'" :alt="ad.title"
+      <img :src="ad?.primaryImage?.image_path || 'https://via.placeholder.com/400x300?text=No+Image'" :alt="ad.title"
         class="w-full h-full object-cover" @error="handleImageError">
       <div v-if="ad.promotion_plan?.slug !== 'bronze'"
         class="absolute top-2 left-2 text-white px-2 py-1 rounded text-xs capitalize"
