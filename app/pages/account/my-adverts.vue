@@ -113,11 +113,11 @@
                                         :alt="advert.title" class="w-12 h-12 object-cover rounded" />
                                     <div class="">
                                         <span class="text-sm font-medium text-gray-900 line-clamp-1">{{ advert.title
-                                            }}</span>
+                                        }}</span>
                                         <!-- show ad price -->
                                         <span class="text-sm text-gray-600 block">₦{{
                                             Number(advert.price).toLocaleString()
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                 </div>
                             </NuxtLink>
@@ -195,7 +195,9 @@
             <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                 <h3 class="text-lg font-semibold mb-2">Delete Ad</h3>
                 <p class="text-sm text-gray-600 mb-6">
-                    You are about to delete this ad ({{ selectedAdvert?.title }}). This action is permanent and cannot
+                    You are about to delete this ad (<span class="font-semibold">{{ selectedAdvert?.title }}</span>).
+                    This
+                    action is permanent and cannot
                     be undone
                 </p>
                 <div class="flex gap-3">
@@ -213,6 +215,8 @@
         </div>
         <PricingPlansDialog v-model="showPricingDialog" :selected-plan-id="selectedAdvert?.promotion_plan?.id"
             @select="handlePlanSelection" />
+
+        <EditAdSheet v-model:isOpen="showEditSheet" :ad="editingAd" @success="handleEditSuccess" />
     </div>
 </template>
 
@@ -231,6 +235,8 @@ const searchQuery = ref('')
 const showDeleteConfirm = ref(false)
 const selectedAdvert = ref<any>(null)
 const showPricingDialog = ref(false)
+const showEditSheet = ref(false)
+const editingAd = ref<any>(null)
 
 const adverts = ref<any[]>([])
 const currentPage = ref(1)
@@ -370,9 +376,12 @@ const formatDate = (dateString: string) => {
 }
 
 const editAdvert = (advert: any) => {
-    console.log('Edit advert:', advert)
-    // Navigate to edit page
-    navigateTo(`/account/edit-ad/${advert.id}`)
+    editingAd.value = advert
+    showEditSheet.value = true
+}
+
+const handleEditSuccess = () => {
+    fetchAds(currentPage.value)
 }
 
 const promotingAdId = ref<string | null>(null)
