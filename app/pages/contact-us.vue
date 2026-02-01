@@ -51,10 +51,20 @@
             <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                 <form @submit.prevent="handleSubmit" class="space-y-6">
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input v-model="form.name" type="text" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter your name" />
+                        <span v-if="formHasError && formRules.name.hasError" class="errorText">{{
+                            formRules.name.message }}</span>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                         <input v-model="form.email" type="email" required
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="you@example.com" />
+                            placeholder="Enter your email" />
+                        <span v-if="formHasError && formRules.email.hasError" class="errorText">{{
+                            formRules.email.message }}</span>
                     </div>
 
                     <div>
@@ -62,6 +72,8 @@
                         <input v-model="form.subject" type="text" required
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="How can we help?" />
+                        <span v-if="formHasError && formRules.subject.hasError" class="errorText">{{
+                            formRules.subject.message }}</span>
                     </div>
 
                     <div>
@@ -69,9 +81,16 @@
                         <textarea v-model="form.message" rows="4" required
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Describe your inquiry..."></textarea>
+                        <div class="flex justify-between mt-1">
+                            <span v-if="formHasError && formRules.message.hasError" class="errorText">{{
+                                formRules.message.message }}</span>
+                            <span v-else></span>
+                            <span class="text-xs text-gray-500 text-right">{{ form.message?.length || 0 }} / {{
+                                formRules.message.maxLength }}</span>
+                        </div>
                     </div>
 
-                    <button type="submit" :disabled="submitting"
+                    <button type="submit" :disabled="submitting || formHasError"
                         class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:bg-gray-400">
                         {{ submitting ? 'Sending...' : 'Send Message' }}
                     </button>
@@ -86,30 +105,81 @@
 </template>
 
 <script setup lang="ts">
+import { toast } from 'vue-sonner'
+import { useStorage } from '@vueuse/core'
+
 definePageMeta({
     auth: false,
 });
-const form = ref({
+const validate = useValidate();
+const form = ref<Record<string, any>>({
+    name: '',
     email: '',
     subject: '',
     message: ''
 })
+const formRules = ref<Record<string, any>>({
+    name: { minLength: 5, maxLength: 100 },
+    email: { type: 'email' },
+    subject: { minLength: 5, maxLength: 100 },
+    message: { minLength: 15, maxLength: 1000 },
+});
+const formHasError = ref(true)
+const checkForm = () => {
+    formRules.value = validate(form.value, formRules.value);
+    formHasError.value = false;
+    for (const field in formRules.value) {
+        if (formRules.value[field]?.hasError || !form.value[field]) {
+            formHasError.value = true;
+            break;
+        }
+    }
+}
+watch(form, () => {
+    checkForm()
+}, { deep: true })
 
 const submitting = ref(false)
 const submitted = ref(false)
 
+const lastSubmission = useStorage('last_contact_submission', 0)
+
 const handleSubmit = async () => {
+    // Check rate limit (1 hour = 3600000 ms)
+    const now = Date.now()
+    if (now - lastSubmission.value < 3600000) {
+        const last = Number(lastSubmission.value) || 0;
+        const remainingMinutes = Math.ceil((3600000 - (now - last)) / 60000)
+        const mins = remainingMinutes > 0 ? remainingMinutes : 60;
+        toast.error(`Please wait ${mins} minutes before sending another message.`)
+        return
+    }
+
     submitting.value = true
-    // Simulate API call
-    console.log('Contact form submission:', form.value)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+        const response = await useApi().fetchPost<{
+            success: boolean
+            message: string
+            data: any
+        }>('/feedback', form.value, { requiresAuth: false })
 
-    submitting.value = false
-    submitted.value = true
-    form.value = { email: '', subject: '', message: '' }
+        if (response.success) {
+            submitted.value = true
+            lastSubmission.value = Date.now()
+            toast.success(response.message || 'Message sent successfully!')
+            form.value = { name: '', email: '', subject: '', message: '' }
 
-    setTimeout(() => {
-        submitted.value = false
-    }, 3000)
+            // Trigger validation to reset/update UI
+            checkForm()
+
+            setTimeout(() => {
+                submitted.value = false
+            }, 3000)
+        }
+    } catch (error: any) {
+        toast.error(error.message || error.data?.message || 'Failed to send message. Please try again.')
+    } finally {
+        submitting.value = false
+    }
 }
 </script>
