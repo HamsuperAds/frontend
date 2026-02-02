@@ -24,12 +24,17 @@
                                 </svg>
                             </button>
                             <!-- Bell Icon -->
-                            <button class="hover:opacity-80 transition-opacity">
+                            <button @click="isNotificationsOpen = true"
+                                class="hover:opacity-80 transition-opacity relative">
                                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                                     <path
                                         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
                                     </path>
                                 </svg>
+                                <!-- Unread dot -->
+                                <span v-if="unreadCount > 0"
+                                    class="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-blue-600">
+                                </span>
                             </button>
                             <!-- Message Icon -->
                             <button @click="navigateTo('/messages')" class="hover:opacity-80 transition-opacity">
@@ -84,13 +89,19 @@
                                     </svg>
                                     <span>Favorites</span>
                                 </a>
-                                <a class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                                        </path>
-                                    </svg>
+                                <a @click="isNotificationsOpen = true; isMenuOpen = false"
+                                    class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer relative">
+                                    <div class="relative">
+                                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                            </path>
+                                        </svg>
+                                        <span v-if="unreadCount > 0"
+                                            class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-1 ring-white">
+                                        </span>
+                                    </div>
                                     <span>Notifications</span>
                                 </a>
                                 <a @click="navigateTo('/messages'); isMenuOpen = false"
@@ -174,7 +185,11 @@
             </div>
         </div>
 
+        <!-- Notifications Sheet -->
+        <NotificationsSheet v-model:is-open="isNotificationsOpen" :unread-count="unreadCount"
+            @refresh-count="fetchUnreadCount" />
     </nav>
+
 </template>
 
 <script setup lang="ts">
@@ -187,6 +202,27 @@ const route = useRoute();
 const isVerifyPaymentPage = computed(() => route.path === '/verify-payment' || route.name === 'verify-payment');
 
 const isMenuOpen = ref(false)
+const isNotificationsOpen = ref(false)
+const unreadCount = ref(0)
+
+const fetchUnreadCount = async () => {
+    if (!useNuxtApp().$isLoggedIn()) return
+    try {
+        const { data } = await useApi().fetchGet<{ success: boolean, data: { unread_count: number } }>('/notifications/unread-count')
+        if (data) {
+            unreadCount.value = data.unread_count
+        }
+    } catch (error) {
+        console.error('Error fetching unread count:', error)
+    }
+}
+
+onMounted(() => {
+    fetchUnreadCount()
+    // Optional: Refresh periodically
+    const interval = setInterval(fetchUnreadCount, 60000) // Every minute
+    onBeforeUnmount(() => clearInterval(interval))
+})
 
 const searchQuery = ref('')
 const showLocationModal = ref(false)
