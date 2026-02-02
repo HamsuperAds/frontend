@@ -43,7 +43,7 @@
                             <div class="flex-1">
                                 <p class="text-sm text-gray-900 leading-relaxed">{{ notification.data.message }}</p>
                                 <p class="text-xs text-gray-500 mt-1 capitalize">{{ formatTime(notification.created_at)
-                                }}</p>
+                                    }}</p>
 
                                 <!-- Action Buttons -->
                                 <div class="flex items-center gap-4 mt-3" @click.stop>
@@ -70,13 +70,17 @@
                 <!-- Pagination -->
                 <div v-if="totalPages > 1" class="flex items-center justify-between py-6">
                     <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1 || loading"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        class="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                        <Icon v-if="loading && paginationDirection === 'prev'" name="svg-spinners:ring-resize"
+                            class="w-3 h-3" />
                         Previous
                     </button>
                     <span class="text-xs text-gray-500">Page {{ currentPage }} of {{ totalPages }}</span>
                     <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages || loading"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        class="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
                         Next
+                        <Icon v-if="loading && paginationDirection === 'next'" name="svg-spinners:ring-resize"
+                            class="w-3 h-3" />
                     </button>
                 </div>
             </div>
@@ -119,11 +123,12 @@ const processingId = ref<string | null>(null)
 const bulkProcessing = ref<string | null>(null)
 const currentPage = ref(1)
 const totalPages = ref(1)
+const paginationDirection = ref<'prev' | 'next' | null>(null)
 
 const hasReadNotifications = computed(() => notifications.value.some(n => n.read_at !== null))
 
 const fetchNotifications = async (page = 1) => {
-    loading.ref = true
+    loading.value = true
     try {
         const response = await useApi().fetchGet<NotificationResponse>(`/notifications?page=${page}`)
         if (response.success) {
@@ -135,6 +140,7 @@ const fetchNotifications = async (page = 1) => {
         console.error('Error fetching notifications:', error)
     } finally {
         loading.value = false
+        paginationDirection.value = null
     }
 }
 
@@ -231,6 +237,7 @@ const deleteAllRead = async () => {
 
 const changePage = (page: number) => {
     if (page < 1 || page > totalPages.value) return
+    paginationDirection.value = page < currentPage.value ? 'prev' : 'next'
     fetchNotifications(page)
 }
 
