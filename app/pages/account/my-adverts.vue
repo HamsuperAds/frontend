@@ -109,7 +109,7 @@
                         <td class="px-6 py-4">
                             <NuxtLink :to="`/ad-details?id=${advert.id}`">
                                 <div class="flex items-center gap-3">
-                                    <img :src="advert.primaryImage?.image_path || '/images/placeholder.png'"
+                                    <img :src="advert.primary_image?.image_path || '/images/placeholder.png'"
                                         :alt="advert.title" class="w-12 h-12 object-cover rounded" />
                                     <div class="">
                                         <span class="text-sm font-medium text-gray-900 line-clamp-1">{{ advert.title
@@ -123,7 +123,7 @@
                             </NuxtLink>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="text-sm text-gray-600">{{ advert.promotionPlan?.name }}/{{
+                            <span class="text-sm text-gray-600">{{ advert.promotion_plan?.name }}/{{
                                 advert.subcategory?.name }}</span>
                         </td>
                         <td class="px-6 py-4">
@@ -151,8 +151,8 @@
                                         Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuItem @click="promoteAdvert(advert)"
-                                        :disabled="advert.promotionPlan?.slug !== 'bronze'"
-                                        :title="advert.promotionPlan?.slug !== 'bronze' ? 'Already promoted' : ''">
+                                        :disabled="advert.promotion_plan?.slug !== 'bronze'"
+                                        :title="advert.promotion_plan?.slug !== 'bronze' ? 'Already promoted' : ''">
                                         <Icon name="heroicons:bolt" class="w-4 h-4 mr-2" />
                                         Promote
                                     </DropdownMenuItem>

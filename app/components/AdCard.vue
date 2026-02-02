@@ -3,12 +3,18 @@
     @click="navigateToDetails">
     <!-- Product Image -->
     <div class="aspect-video bg-gray-200 relative">
-      <img :src="ad?.primaryImage?.image_path || 'https://via.placeholder.com/400x300?text=No+Image'" :alt="ad.title"
+      <img :src="ad?.primary_image?.image_path || 'https://via.placeholder.com/400x300?text=No+Image'" :alt="ad.title"
         class="w-full h-full object-cover" @error="handleImageError">
-      <div v-if="ad.promotion_plan?.slug !== 'bronze'"
+      <div v-if="ad.promotion_plan?.slug !== 'bronze' && ad.promotion_plan?.name"
         class="absolute top-2 left-2 text-white px-2 py-1 rounded text-xs capitalize"
         :class="ad.promotion_plan?.slug === 'silver' ? 'bg-yellow-500' : 'bg-blue-500'">
         {{ ad.promotion_plan?.name }}
+      </div>
+      <div v-if="ad?.user?.verified" class="absolute top-1 right-2 text-white py-1 rounded capitalize">
+        <Badge variant="secondary" class="bg-blue-500/80 text-white dark:bg-blue-600">
+          <BadgeCheckIcon />
+          <span class="text-[0.5rem]">Verified</span>
+        </Badge>
       </div>
     </div>
 
@@ -38,6 +44,8 @@
 import { navigateTo } from '#app';
 import type { PropType } from 'vue';
 import type { Ad } from '~/types'
+import { BadgeCheckIcon } from 'lucide-vue-next'
+import { Badge } from '@/components/ui/badge'
 
 const props = defineProps({
   ad: {

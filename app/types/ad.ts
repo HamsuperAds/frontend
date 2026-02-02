@@ -42,7 +42,7 @@ export interface Ad {
   state: State;
   lga: LGA;
   images: AdImage[];
-  primaryImage: AdImage;
+  primary_image: AdImage;
   promotion_plan?: PromotionPlan;
   additional_info: Record<string, any> | null;
   is_liked: boolean;
