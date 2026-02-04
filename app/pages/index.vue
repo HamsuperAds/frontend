@@ -9,7 +9,7 @@
                 <!-- Main Content -->
                 <main class="flex-1">
                     <!-- Loading State -->
-                    <div v-if="pending" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div v-for="i in 6" :key="i" class="bg-white rounded-lg shadow-sm p-4 animate-pulse">
                             <div class="aspect-video bg-gray-200 rounded mb-4"></div>
                             <div class="h-4 bg-gray-200 rounded mb-2"></div>
@@ -62,9 +62,13 @@ const { data: adsData, pending, error } = await useApi().get<{
     requiresAuth: false
 })
 
+const isFiltering = ref(false)
+const isLoading = computed(() => pending.value || isFiltering.value)
+
 const fetchAds = async () => {
     try {
-        pending.value = true
+        isFiltering.value = true
+        error.value = null
         let endpoint = '/ads'
         const query: Record<string, any> = {}
 
@@ -76,7 +80,7 @@ const fetchAds = async () => {
             query.state_id = appResourceInfoStore.state.id
         }
 
-        const { data } = await useApi().get<{
+        const data = await useApi().fetchGet<{
             success: boolean
             data: {
                 data: Ad[]
@@ -88,14 +92,14 @@ const fetchAds = async () => {
             requiresAuth: false
         })
 
-        if (data.value) {
-            adsData.value = data.value
+        if (data) {
+            adsData.value = data
         }
     } catch (err) {
         console.error('Error fetching ads:', err)
         error.value = err as any
     } finally {
-        pending.value = false
+        isFiltering.value = false
     }
 }
 
