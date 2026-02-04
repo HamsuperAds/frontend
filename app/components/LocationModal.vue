@@ -26,6 +26,28 @@
 
                     <!-- States List -->
                     <div v-else-if="!selectedState" class="space-y-2">
+                        <!-- All Regions Option -->
+                        <div v-if="appResourceInfoStore.state" @click="clearSelection"
+                            class="flex items-center justify-between p-3 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 cursor-pointer transition-colors mb-4">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-blue-100 rounded text-blue-600">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-blue-900">All regions</div>
+                                    <div class="text-sm text-blue-700">Show ads from everywhere</div>
+                                </div>
+                            </div>
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+
                         <div v-for="state in states" :key="state.id"
                             @click="state.adsCount > 0 ? selectState(state) : null"
                             class="flex items-center justify-between p-3 rounded-lg border border-gray-200 transition-colors"
@@ -141,6 +163,13 @@ onMounted(async () => {
 
 const selectState = (state: State) => {
     selectedState.value = state
+}
+
+const clearSelection = () => {
+    appResourceInfoStore.state = null
+    appResourceInfoStore.lga = null
+    emit('select', { stateSlug: '' })
+    closeModal()
 }
 
 const selectWholeState = () => {
