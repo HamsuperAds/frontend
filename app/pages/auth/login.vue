@@ -13,6 +13,8 @@
                     <!-- Error Message -->
                     <div v-if="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-3">
                         <p class="text-sm text-red-600">{{ errorMessage }}</p>
+                        <!-- contact support link -->
+                        <a href="/contact-us" class="text-sm text-blue-600">Contact support</a>
                     </div>
 
                     <!-- Email -->
