@@ -238,18 +238,20 @@ let debounceTimer: any = null;
 const loadingSuggestions = ref(false);
 
 const handleLocationSelect = ({ stateSlug, lgaSlug }: { stateSlug: string; lgaSlug?: string }) => {
-    selectedStateSlug.value = stateSlug
+    selectedStateSlug.value = stateSlug || null
     selectedLgaSlug.value = lgaSlug || null
 
-    // Update display text (capitalize first letter of each word)
+    // Update display text
     if (lgaSlug) {
         selectedLocationName.value = lgaSlug.split('-').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ')
-    } else {
+    } else if (stateSlug) {
         selectedLocationName.value = stateSlug.split('-').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ')
+    } else {
+        selectedLocationName.value = 'All Regions'
     }
 }
 
