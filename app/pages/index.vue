@@ -50,7 +50,24 @@ definePageMeta({
 // Fetch ads from API
 const appResourceInfoStore = useAppResourceInfoStore()
 
-// Fetch ads from API
+// Initial fetch configuration based on store state
+const getAdsConfig = () => {
+    let endpoint = '/ads'
+    const query: Record<string, any> = {}
+
+    if (appResourceInfoStore.lga) {
+        endpoint = '/ads/search'
+        query.lga_id = appResourceInfoStore.lga.id
+    } else if (appResourceInfoStore.state) {
+        endpoint = '/ads/search'
+        query.state_id = appResourceInfoStore.state.id
+    }
+    return { endpoint, query }
+}
+
+const { endpoint: initialEndpoint, query: initialQuery } = getAdsConfig()
+
+// Fetch ads from API (Initial load)
 const { data: adsData, pending, error } = await useApi().get<{
     success: boolean
     data: {
@@ -58,7 +75,8 @@ const { data: adsData, pending, error } = await useApi().get<{
         current_page: number
         total: number
     }
-}>('/ads', {
+}>(initialEndpoint, {
+    params: initialQuery,
     requiresAuth: false
 })
 

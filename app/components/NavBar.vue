@@ -132,7 +132,7 @@
         </div>
 
         <!-- Lower Section - Search -->
-        <div v-if="showSearch" class="px-6 pb-6">
+        <div v-if="showSearch" class="px-6 pb-6 hero">
             <div class="container mx-auto flex justify-center py-20">
                 <form @submit.prevent="handleSearch" class="flex w-full max-w-2xl">
                     <!-- Location Button -->
@@ -322,4 +322,12 @@ const handleSearch = () => {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.hero {
+    background-image: url('/images/hamsuper_top_bg.png');
+    background-size: cover;
+    background-position: bottom;
+    background-repeat: no-repeat;
+    background-color: #111111;
+}
+</style>
