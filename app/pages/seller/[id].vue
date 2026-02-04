@@ -1,16 +1,28 @@
 <template>
     <div class="min-h-screen bg-gray-50 pb-12">
         <!-- Header Section -->
-        <div class="bg-blue-600 h-48 relative">
+        <div class="bg-blue-600 h-48 relative bg-[url('/images/hamsuper_top_bg.png')] bg-cover bg-center bg-no-repeat">
             <div class="container mx-auto px-4 py-6">
                 <div class="flex justify-between items-center text-white">
                     <button @click="$router.back()" class="p-2 hover:bg-blue-700 rounded-full transition">
                         <Icon name="heroicons:chevron-left" class="w-6 h-6" />
                     </button>
                     <h1 class="text-lg font-semibold">Seller Profile</h1>
-                    <button class="p-2 hover:bg-blue-700 rounded-full transition">
-                        <Icon name="heroicons:share" class="w-6 h-6" />
-                    </button>
+                    <div class="relative">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger as-child>
+                                <button class="p-2 hover:bg-blue-700 rounded-full transition outline-none">
+                                    <Icon name="heroicons:share" class="w-6 h-6" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" class="w-48">
+                                <DropdownMenuItem @click="copySellerLink" class="flex items-center gap-3 py-3 cursor-pointer">
+                                    <Icon name="heroicons:link" class="w-5 h-5 text-gray-500" />
+                                    <span class="text-sm font-medium">Copy seller link</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
             </div>
         </div>
@@ -197,6 +209,17 @@ const sellerLocation = computed(() => {
 // Phone number functionality
 const showPhoneNumber = ref(false)
 const showFeedbackDialog = ref(false)
+const appResourceInfoStore = useAppResourceInfoStore()
+
+const copySellerLink = async () => {
+    try {
+        await navigator.clipboard.writeText(window.location.href)
+        appResourceInfoStore.toastMessage = 'Link copied to clipboard!'
+    } catch (err) {
+        console.error('Failed to copy link:', err)
+        appResourceInfoStore.toastMessage = 'Failed to copy link'
+    }
+}
 
 const handleCallSeller = () => {
     if (!seller.value) return
