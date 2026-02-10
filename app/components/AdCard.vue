@@ -20,9 +20,13 @@
 
     <!-- Product Info -->
     <div class="p-4">
-      <div class="text-blue-600 font-bold text-lg mb-1">₦{{ Number(ad.price).toLocaleString() }}</div>
-      <h3 class="font-semibold text-gray-800 mb-2">{{ ad.title }}</h3>
-      <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ ad.description }}</p>
+      <div class="text-blue-600 text-sm md:text-lg font-bold mb-1">₦{{ Number(ad.price).toLocaleString() }}
+      </div>
+      <h3
+        class="font-semibold text-gray-800 mb-1 md:mb-2 text-sm md:text-base leading-tight md:leading-normal line-clamp-2">
+        {{
+          ad.title }}</h3>
+      <p class="text-gray-600 text-sm mb-3 line-clamp-2 leading-tight md:leading-normal">{{ ad.description }}</p>
 
       <!-- Location and Date -->
       <div class="flex items-center justify-between text-xs text-gray-500">

@@ -16,7 +16,8 @@
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" class="w-48">
-                                <DropdownMenuItem @click="copySellerLink" class="flex items-center gap-3 py-3 cursor-pointer">
+                                <DropdownMenuItem @click="copySellerLink"
+                                    class="flex items-center gap-3 py-3 cursor-pointer">
                                     <Icon name="heroicons:link" class="w-5 h-5 text-gray-500" />
                                     <span class="text-sm font-medium">Copy seller link</span>
                                 </DropdownMenuItem>
@@ -139,7 +140,7 @@
                 </div>
             </div>
 
-            <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div v-else class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 <AdCard v-for="ad in ads" :key="ad.id" :ad="ad" />
             </div>
 

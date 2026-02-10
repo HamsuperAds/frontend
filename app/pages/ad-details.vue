@@ -4,7 +4,7 @@
         <div class="bg-white border-b">
             <div class="container mx-auto px-6 py-4">
                 <div v-if="pending" class="h-5 bg-gray-200 rounded w-96 animate-pulse"></div>
-                <div v-else-if="ad" class="text-sm text-gray-600 space-x-2">
+                <div v-else-if="ad" class="text-xs md:text-sm text-gray-600 space-x-2">
                     <a href="/" class="hover:text-blue-600">All ads</a>
                     <span>›</span>
                     <span class="hover:text-blue-600">{{ ad.category?.name }}</span>
@@ -99,7 +99,7 @@
                     <!-- Description -->
                     <div v-if="ad" class="bg-white rounded-lg p-6 shadow">
                         <h2 class="font-semibold text-gray-900 mb-3">Description</h2>
-                        <p class="text-gray-700 leading-relaxed whitespace-pre-line">
+                        <p class="text-gray-700 text-sm md:text-base leading-relaxed whitespace-pre-line">
                             {{ ad.description }}
                         </p>
                     </div>
@@ -193,7 +193,7 @@
                                 </div>
                             </div>
                         </div>
-                        <button
+                        <!-- <button
                             class="w-full border border-red-500 text-red-500 py-2 rounded-lg text-sm font-semibold hover:bg-red-50 flex items-center justify-center">
                             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
@@ -201,7 +201,7 @@
                                     clip-rule="evenodd"></path>
                             </svg>
                             Report Seller
-                        </button>
+                        </button> -->
                     </div>
 
                     <!-- Safety Quotes -->

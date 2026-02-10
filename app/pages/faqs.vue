@@ -1,7 +1,7 @@
 <template>
     <div class="bg-white rounded-lg shadow">
         <!-- Header -->
-        <div class="bg-blue-500 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
+        <div class="bg-blue-500 text-white px-6 py-4 rounded-t-lg flex items-center justify-between mt-8">
             <h2 class="text-xl font-semibold">Frequently Asked Questions</h2>
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd"
