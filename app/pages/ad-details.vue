@@ -35,8 +35,8 @@
                     </div>
 
                     <!-- Main Image -->
-                    <div v-else-if="ad" class="bg-white rounded-lg overflow-hidden shadow">
-                        <img :src="selectedImage" :alt="ad.title" class="w-full h-auto" />
+                    <div v-else-if="ad" class="bg-white rounded-lg overflow-hidden shadow flex justify-center">
+                        <img :src="selectedImage" :alt="ad.title" class="max-w-full" />
                     </div>
 
                     <!-- Thumbnail Images -->

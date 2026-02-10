@@ -266,7 +266,7 @@ const showNewPassword = ref(false)
 const showConfirmPassword = ref(false)
 
 const loginData = ref({
-    email: 'chiamaka.nnadi10@hamsuper.com',
+    email: 'garba.okeke25@hamsuper.test',
     password: '12345678',
 })
 

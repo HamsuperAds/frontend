@@ -9,6 +9,10 @@
                 </div>
 
                 <form @submit.prevent="handleCreateAccount" class="space-y-4">
+                    <!-- Error Message -->
+                    <div v-if="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p class="text-sm text-red-600">{{ errorMessage }}</p>
+                    </div>
                     <!-- First Name -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">First name</label>
@@ -64,14 +68,21 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
                         <input v-model="formData.phoneNumber" type="tel" placeholder="enter your phone number"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                            required />
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
                     </div>
 
                     <!-- Create Account Button -->
-                    <button type="submit"
-                        class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6">
-                        Create account
+                    <button type="submit" :disabled="registerFormHasError || isLoading"
+                        class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ isLoading ? 'Creating account...' : 'Create account' }}
                     </button>
                 </form>
 
@@ -118,27 +129,54 @@
                     </p>
 
                     <!-- Verification Code Inputs -->
-                    <div class="flex justify-center gap-2 mb-6">
-                        <input v-for="(digit, index) in verificationCode" :key="index"
-                            :ref="el => (codeInputs[index] = el)" v-model="verificationCode[index]" type="text"
-                            maxlength="1"
-                            class="w-12 h-12 text-center text-xl font-semibold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            @input="handleCodeInput(index, $event)"
-                            @keydown.backspace="handleBackspace(index, $event)" />
+                    <div class="flex justify-center mb-6">
+                        <InputOTP v-model="verificationCode" :max-length="5">
+                            <InputOTPGroup>
+                                <InputOTPSlot v-for="i in 5" :key="i - 1" :index="i - 1" />
+                            </InputOTPGroup>
+                        </InputOTP>
+                    </div>
+
+                    <!-- Verify Error Message -->
+                    <div v-if="verifyErrorMessage" class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                        <p class="text-sm text-red-600">{{ verifyErrorMessage }}</p>
                     </div>
 
                     <!-- Verify Button -->
-                    <button @click="handleVerify"
-                        class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors">
-                        Verify
+                    <button @click="handleVerify" :disabled="isVerifying || verificationCode.length < 5"
+                        class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg v-if="isVerifying" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ isVerifying ? 'Verifying...' : 'Verify' }}
                     </button>
 
                     <!-- Resend Code -->
                     <div class="mt-4 text-sm text-gray-600">
                         <p>Didn't get the verification code? It may take a while.</p>
-                        <button @click="handleResendCode" class="text-blue-500 hover:text-blue-600 font-medium mt-1">
-                            Resend Code
-                        </button>
+                        <div class="mt-1 flex items-center justify-center gap-1">
+                            <button @click="handleResendCode" :disabled="resendCountdown > 0 || isResending"
+                                class="text-blue-500 hover:text-blue-600 font-medium disabled:text-gray-400 disabled:cursor-not-allowed inline-flex items-center gap-1">
+                                <svg v-if="isResending" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                                {{ isResending ? 'Sending...' : 'Resend Code' }}
+                            </button>
+                            <span v-if="resendCountdown > 0" class="text-gray-400">
+                                ({{ resendCountdown }}s)
+                            </span>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -147,6 +185,11 @@
 </template>
 
 <script setup lang="ts">
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '~/components/ui/input-otp'
+import { toast } from 'vue-sonner'
+const { getSession } = useAuth();
+const { setToken } = useAuthState();
+
 definePageMeta({
     auth: {
         unauthenticatedOnly: true,
@@ -155,53 +198,164 @@ definePageMeta({
 });
 const showVerification = ref(false)
 const showPassword = ref(false)
+const validate = useValidate();
+const registerFormHasError = ref(true);
+const isLoading = ref(false)
+const errorMessage = ref('')
+const isVerifying = ref(false)
+const verifyErrorMessage = ref('')
+const isResending = ref(false)
+const resendCountdown = ref(0)
+let resendCountdownInterval: ReturnType<typeof setInterval> | null = null
+let nextResendDuration = 60 // After first resend, countdown is 60s
 
-const formData = ref({
+const formData = ref<Record<string, any>>({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     phoneNumber: '',
 })
+const registerFormRules = ref<Record<string, any>>({
+    firstName: { minLength: 2, maxLength: 50 },
+    lastName: { minLength: 2, maxLength: 50 },
+    email: { minLength: 5, maxLength: 100 },
+    password: { minLength: 5, maxLength: 100 },
+    phoneNumber: { type: 'tel' },
+});
 
-const verificationCode = ref(['', '', '', '', ''])
-const codeInputs = ref<(HTMLInputElement | null)[]>([])
-
-const handleCreateAccount = () => {
-    // Here you would typically make an API call to create the account
-    // For now, we'll just show the verification screen
-    showVerification.value = true
+const checkAdForm = () => {
+    registerFormRules.value = validate(formData.value, registerFormRules.value);
+    registerFormHasError.value = false;
+    for (const field in registerFormRules.value) {
+        if ((registerFormRules.value[field]?.hasError || !formData.value[field]) && (field !== 'phoneNumber' || (field === 'phoneNumber' && formData.value[field]))) {
+            registerFormHasError.value = true;
+            break;
+        }
+    }
 }
+watch(formData.value, () => {
+    checkAdForm()
+})
 
-const handleCodeInput = (index: number, event: Event) => {
-    const input = event.target as HTMLInputElement
-    const value = input.value
+const verificationCode = ref('')
 
-    if (value && index < 4) {
-        // Move to next input
-        codeInputs.value[index + 1]?.focus()
+const handleCreateAccount = async () => {
+    try {
+        isLoading.value = true
+        errorMessage.value = ''
+
+        const response = await useApi().fetchPost<{
+            status: string
+            message: string
+            data: {
+                first_name: string
+                last_name: string
+                email: string
+                id: string
+                updated_at: string
+                created_at: string
+                avatar: string
+            }
+        }>('/auth/signup', {
+            first_name: formData.value.firstName,
+            last_name: formData.value.lastName,
+            email: formData.value.email,
+            password: formData.value.password,
+            phone_number: formData.value.phoneNumber || undefined,
+        }, { requiresAuth: false })
+
+        if (response.status === 'success') {
+            showVerification.value = true
+            startResendCountdown(30) // First countdown is 30s
+        }
+    } catch (error: any) {
+        console.error('Registration error:', error)
+        errorMessage.value = error.data?.message || 'Account creation failed. Please try again.'
+    } finally {
+        isLoading.value = false
     }
 }
 
-const handleBackspace = (index: number, event: KeyboardEvent) => {
-    if (!verificationCode.value[index] && index > 0) {
-        // Move to previous input on backspace if current is empty
-        codeInputs.value[index - 1]?.focus()
+const handleVerify = async () => {
+    if (verificationCode.value.length < 5) return
+
+    try {
+        isVerifying.value = true
+        verifyErrorMessage.value = ''
+
+        const response = await useApi().fetchPost<{
+            status: string
+            message: string
+            data: {
+                id: string
+                first_name: string
+                last_name: string
+                email: string
+                token: string
+            }
+        }>('/auth/verify-otp', {
+            email: formData.value.email,
+            otp: verificationCode.value,
+        }, { requiresAuth: false })
+
+        if (response.status === 'success' && response.data.token) {
+            setToken(response.data.token)
+            await getSession()
+
+            if (process.client) {
+                localStorage.setItem('authToken', response.data.token)
+                localStorage.setItem('user', JSON.stringify(response.data))
+            }
+
+            window.location.href = '/account'
+        }
+    } catch (error: any) {
+        console.error('OTP verification error:', error)
+        verifyErrorMessage.value = error.data?.message || 'OTP verification failed. Please try again.'
+    } finally {
+        isVerifying.value = false
     }
 }
 
-const handleVerify = () => {
-    const code = verificationCode.value.join('')
-    if (code.length === 5) {
-        // Here you would verify the code with your API
-        console.log('Verifying code:', code)
-        // On success, redirect to dashboard or login
-        navigateTo('/')
+const startResendCountdown = (seconds: number) => {
+    if (resendCountdownInterval) clearInterval(resendCountdownInterval)
+    resendCountdown.value = seconds
+    resendCountdownInterval = setInterval(() => {
+        resendCountdown.value--
+        if (resendCountdown.value <= 0) {
+            if (resendCountdownInterval) clearInterval(resendCountdownInterval)
+            resendCountdownInterval = null
+        }
+    }, 1000)
+}
+
+const handleResendCode = async () => {
+    try {
+        isResending.value = true
+
+        const response = await useApi().fetchPost<{
+            status: string
+            message: string
+        }>('/auth/send-otp', {
+            email: formData.value.email,
+            action: 'email_verification',
+        }, { requiresAuth: false })
+
+        if (response.status === 'success') {
+            toast.success(response.message || 'Verification code sent to your email.')
+            startResendCountdown(nextResendDuration)
+            nextResendDuration = 60 // Subsequent resends always use 60s
+        }
+    } catch (error: any) {
+        console.error('Resend OTP error:', error)
+        toast.error(error.data?.message || 'Failed to resend code. Please try again.')
+    } finally {
+        isResending.value = false
     }
 }
 
-const handleResendCode = () => {
-    // Here you would make an API call to resend the verification code
-    console.log('Resending verification code to:', formData.value.email)
-}
+onBeforeUnmount(() => {
+    if (resendCountdownInterval) clearInterval(resendCountdownInterval)
+})
 </script>

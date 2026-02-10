@@ -6,7 +6,7 @@
                 :class="isVerifyPaymentPage ? 'justify-center' : 'justify-between'">
                 <!-- Logo -->
                 <NuxtLink to="/" class="text-xl font-bold hover:opacity-90 transition-opacity">
-                    HamSuper
+                    Hamsuper
                 </NuxtLink>
 
                 <!-- Right Side Icons and Button -->
@@ -143,7 +143,7 @@
                                 d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
                                 clip-rule="evenodd"></path>
                         </svg>
-                        <span class="truncate text-xs md:text-lg md:max-w-24">{{ selectedLocationText }}</span>
+                        <span class="truncate text-xs md:text-base md:max-w-24">{{ selectedLocationText }}</span>
                     </button>
 
                     <!-- Search Input -->
