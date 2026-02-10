@@ -160,20 +160,31 @@
                         </button>
 
                         <!-- Search Suggestions Dropdown -->
-                        <div v-if="showSuggestions && suggestions.length > 0"
+                        <div v-if="showSuggestions"
                             class="absolute top-full left-0 right-0 bg-white divide-y shadow-lg rounded-b-md z-50 mt-1 border border-gray-100 max-h-96 overflow-y-auto">
-                            <div v-for="category in suggestions" :key="category.id"
-                                @click="handleSuggestionClick(category)"
-                                class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-none flex items-center justify-between group text-black">
-                                <div class="">
-                                    <span class="font-medium text-gray-900">{{ searchQuery }}</span>
-                                    <span class="text-gray-500"> in </span>
-                                    <span
-                                        class="text-blue-600 text-sm md:text-base font-medium group-hover:text-blue-700">{{
-                                            category.name
-                                        }}</span>
+                            <template v-if="suggestions.length > 0">
+                                <div v-for="category in suggestions" :key="category.id"
+                                    @click="handleSuggestionClick(category)"
+                                    class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-none flex items-center justify-between group text-black">
+                                    <div class="">
+                                        <span class="font-medium text-gray-900">{{ searchQuery }}</span>
+                                        <span class="text-gray-500"> in </span>
+                                        <span
+                                            class="text-blue-600 text-sm md:text-base font-medium group-hover:text-blue-700">{{
+                                                category.name
+                                            }}</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400">{{ category.results_count }} results</span>
                                 </div>
-                                <span class="text-xs text-gray-400">{{ category.results_count }} results</span>
+                            </template>
+                            <div v-else class="px-4 py-8 text-center text-gray-500 flex flex-col items-center gap-2">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                <p class="text-sm">No results found for "<span class="font-medium text-gray-700">{{
+                                    searchQuery }}</span>"</p>
                             </div>
                         </div>
                     </div>
@@ -275,15 +286,14 @@ watch(searchQuery, (newQuery) => {
 
                 if (data && data.categories) {
                     suggestions.value = data.categories
-                    showSuggestions.value = suggestions.value.length > 0
                 } else {
                     suggestions.value = []
-                    showSuggestions.value = false
                 }
+                showSuggestions.value = true
             } catch (error) {
                 console.error('Error fetching suggestions:', error)
                 suggestions.value = []
-                showSuggestions.value = false
+                showSuggestions.value = true // Show no results on error
             } finally {
                 loadingSuggestions.value = false;
             }
