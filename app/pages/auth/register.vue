@@ -2,7 +2,7 @@
     <div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
         <div class="w-full max-w-md">
             <!-- Registration Form -->
-            <div v-if="!showVerification" class="bg-white rounded-lg shadow-lg border-2 border-blue-300 p-8">
+            <div v-if="showVerification" class="bg-white rounded-lg shadow-lg border-2 border-blue-300 p-8">
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold text-gray-900">User Account Creation</h2>
                     <p class="text-sm text-gray-600 mt-1">Create an account for an upgraded experience</p>
@@ -262,7 +262,11 @@ const handleCreateAccount = async () => {
             last_name: formData.value.lastName,
             email: formData.value.email,
             password: formData.value.password,
-            phone_number: formData.value.phoneNumber || undefined,
+            phone_number: formData.value.phoneNumber
+                ? (formData.value.phoneNumber.replace(/^(\+|0)+/, '').startsWith('234')
+                    ? formData.value.phoneNumber.replace(/^(\+|0)+/, '')
+                    : '234' + formData.value.phoneNumber.replace(/^(\+|0)+/, ''))
+                : undefined,
         }, { requiresAuth: false })
 
         if (response.status === 'success') {
