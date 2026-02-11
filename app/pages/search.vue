@@ -27,7 +27,7 @@
                     <!-- Categories -->
                     <div class="bg-white rounded-lg shadow mb-6">
                         <div class="bg-blue-500 text-white px-4 py-3 rounded-t-lg font-semibold">
-                            {{ sidebarCategoryName || 'Categories' }}
+                            {{ sidebarCategoryName || 'Category' }}
                         </div>
                         <div class="p-4 space-y-2">
                             <div v-if="loadingSidebar" class="space-y-2 animate-pulse">
@@ -75,7 +75,11 @@
                             <input type="number" placeholder="Max" v-model="maxPrice"
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
-                        <div class="flex justify-end mt-3">
+                        <div class="flex justify-end mt-3 gap-2">
+                            <button v-if="minPrice || maxPrice" @click="clearPriceFilter"
+                                class="border border-gray-300 text-gray-600 text-sm px-4 py-1 rounded-lg hover:bg-gray-50 transition-colors">
+                                Clear
+                            </button>
                             <button @click="applyPriceFilter" :disabled="!minPrice && !maxPrice" :class="[
                                 !minPrice && !maxPrice
                                     ? 'border-gray-300 text-gray-400 cursor-not-allowed'
@@ -87,7 +91,7 @@
                     </div>
 
                     <!-- Condition -->
-                    <div class="bg-white rounded-lg shadow p-4">
+                    <!-- <div class="bg-white rounded-lg shadow p-4">
                         <h3 class="font-semibold text-gray-900 mb-3">Condition</h3>
                         <div class="space-y-2">
                             <label class="flex items-center text-sm text-gray-700 cursor-pointer">
@@ -103,7 +107,7 @@
                                 Refurbished
                             </label>
                         </div>
-                    </div>
+                    </div> -->
                 </aside>
 
                 <!-- Search Results -->
@@ -313,17 +317,36 @@ const maxPrice = ref<number | null>(null);
 const applyPriceFilter = async () => {
     const query: Record<string, any> = { ...route.query };
 
-    if (minPrice.value) {
+    // Handle maxPrice without minPrice case
+    if (maxPrice.value !== null && (minPrice.value === null || minPrice.value === undefined)) {
+        minPrice.value = 0;
+    }
+
+    if (minPrice.value !== null) {
         query.min_price = minPrice.value;
     } else {
         delete query.min_price;
     }
 
-    if (maxPrice.value) {
+    if (maxPrice.value !== null) {
         query.max_price = maxPrice.value;
     } else {
         delete query.max_price;
     }
+
+    await navigateTo({
+        path: '/search',
+        query
+    });
+}
+
+const clearPriceFilter = async () => {
+    minPrice.value = null;
+    maxPrice.value = null;
+
+    const query: Record<string, any> = { ...route.query };
+    delete query.min_price;
+    delete query.max_price;
 
     await navigateTo({
         path: '/search',

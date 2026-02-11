@@ -35,10 +35,12 @@ const handleLocationSelect = ({ stateSlug, lgaSlug }: { stateSlug: string; lgaSl
         selectedLocationName.value = lgaSlug.split('-').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ')
-    } else {
+    } else if (stateSlug) {
         selectedLocationName.value = stateSlug.split('-').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ')
+    } else {
+        selectedLocationName.value = 'All Regions'
     }
 
     emit('change', { state: stateSlug, lga: lgaSlug });
