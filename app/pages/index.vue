@@ -48,18 +48,19 @@ definePageMeta({
 });
 
 // Fetch ads from API
-const appResourceInfoStore = useAppResourceInfoStore()
+const appResourceInfoStore = useAppResourceInfoStore();
+const perPage = ref(18);
 
 // Initial fetch configuration based on store state
 const getAdsConfig = () => {
-    let endpoint = '/ads'
+    let endpoint = '/ads?per_page=' + perPage.value
     const query: Record<string, any> = {}
 
     if (appResourceInfoStore.lga) {
-        endpoint = '/ads/search'
+        endpoint = '/ads/search?per_page=' + perPage.value
         query.lga_id = appResourceInfoStore.lga.id
     } else if (appResourceInfoStore.state) {
-        endpoint = '/ads/search'
+        endpoint = '/ads/search?per_page=' + perPage.value
         query.state_id = appResourceInfoStore.state.id
     }
     return { endpoint, query }
@@ -87,14 +88,14 @@ const fetchAds = async () => {
     try {
         isFiltering.value = true
         error.value = null
-        let endpoint = '/ads'
+        let endpoint = '/ads?per_page=' + perPage.value
         const query: Record<string, any> = {}
 
         if (appResourceInfoStore.lga) {
-            endpoint = '/ads/search'
+            endpoint = '/ads/search?per_page=' + perPage.value
             query.lga_id = appResourceInfoStore.lga.id
         } else if (appResourceInfoStore.state) {
-            endpoint = '/ads/search'
+            endpoint = '/ads/search?per_page=' + perPage.value
             query.state_id = appResourceInfoStore.state.id
         }
 
