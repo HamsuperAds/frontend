@@ -14,7 +14,7 @@
         <!-- Main Content -->
         <div class="container mx-auto px-6 py-8">
             <template v-if="!isSubcategorySearch">
-                <h1 class="text-3xl font-bold text-gray-900 text-center mb-8">
+                <h1 class="text-lg md:text-3xl font-bold text-gray-900 text-center mb-8">
                     Search results for "{{ route.query.query || 'all items' }}"
                 </h1>
                 <p v-if="totalResults > 0" class="text-center text-gray-600 -mt-6 mb-8">{{ totalResults }} results found
@@ -112,10 +112,33 @@
 
                 <!-- Search Results -->
                 <div class="lg:col-span-3 space-y-4">
+                    <!-- View Toggle Toolbar -->
+                    <div v-if="!loading && searchResults.length > 0" class="flex justify-end mb-4">
+                        <div class="flex items-center bg-white rounded-lg shadow-sm p-1 border">
+                            <button @click="viewMode = 'rows'" class="p-2 rounded transition-colors"
+                                :class="viewMode === 'rows' ? 'bg-gray-100 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                                title="List View">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6h16M4 12h16M4 18h16"></path>
+                                </svg>
+                            </button>
+                            <button @click="viewMode = 'grid'" class="p-2 rounded transition-colors"
+                                :class="viewMode === 'grid' ? 'bg-gray-100 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                                title="Grid View">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Loading State -->
                     <div v-if="loading" class="space-y-4">
                         <div v-for="i in 5" :key="i" class="bg-white rounded-lg shadow p-4 animate-pulse flex gap-4">
-                            <div class="w-32 h-32 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                            <div class="w-32 h-32 bg-gray-200 rounded-lg shrink-0"></div>
                             <div class="flex-1 space-y-3">
                                 <div class="flex justify-between">
                                     <div class="h-6 bg-gray-200 rounded w-1/3"></div>
@@ -140,44 +163,53 @@
                         </p>
                     </div>
 
-                    <!-- Results List -->
-                    <NuxtLink v-else v-for="result in searchResults" :key="result.id"
-                        class="block bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
-                        :to="`/ad-details?id=${result.id}`">
-                        <div class="flex p-4 gap-4">
-                            <!-- Image -->
-                            <div class="w-32 h-32 flex-shrink-0">
-                                <img :src="result.primary_image?.image_path || '/images/placeholder.png'"
-                                    :alt="result.title" class="w-full h-full object-cover rounded-lg" />
-                            </div>
+                    <!-- Results List (Rows) -->
+                    <div v-if="viewMode === 'rows'" class="space-y-4">
+                        <NuxtLink v-for="result in searchResults" :key="result.id"
+                            class="block bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
+                            :to="`/ad-details?id=${result.id}`">
+                            <div class="flex p-4 gap-4">
+                                <!-- Image -->
+                                <div class="w-32 h-32 flex-shrink-0">
+                                    <img :src="result.primary_image?.image_path || '/images/placeholder.png'"
+                                        :alt="result.title" class="w-full h-full object-cover rounded-lg" />
+                                </div>
 
-                            <!-- Content -->
-                            <div class="flex-1 flex flex-col justify-between">
-                                <div>
-                                    <div class="block md:flex items-start justify-between mb-2">
-                                        <div>
-                                            <span
-                                                class="inline-block bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded mb-2">
-                                                {{ result.status }}
-                                            </span>
-                                            <h3 class="font-semibold text-gray-900 text-lg">{{ result.title }}</h3>
+                                <!-- Content -->
+                                <div class="flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <div class="block md:flex items-start justify-between mb-1 md:mb-2">
+                                            <div>
+                                                <span
+                                                    class="inline-block bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded mb-2">
+                                                    {{ result.status }}
+                                                </span>
+                                                <h3
+                                                    class="font-semibold text-gray-900 mb-1 text-sm md:text-lg leading-tight md:leading-normal">
+                                                    {{ result.title }}</h3>
+                                            </div>
+                                            <div class="text-blue-600 font-bold text-lg md:text-xl">₦{{
+                                                Number(result.price).toLocaleString() }}</div>
                                         </div>
-                                        <div class="text-blue-600 font-bold text-xl">₦{{
-                                            Number(result.price).toLocaleString() }}</div>
+                                        <p class="text-gray-600 text-sm mb-2 line-clamp-2">{{ result.description }}</p>
                                     </div>
-                                    <p class="text-gray-600 text-sm mb-2 line-clamp-2">{{ result.description }}</p>
-                                </div>
-                                <div class="flex items-center text-gray-500 text-xs">
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd"
-                                            d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                                            clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span>{{ result.location }}</span>
+                                    <div class="flex items-center text-gray-500 text-xs">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                                clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>{{ result.location }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </NuxtLink>
+                        </NuxtLink>
+                    </div>
+
+                    <!-- Results Grid -->
+                    <div v-else class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                        <AdCard v-for="result in searchResults" :key="result.id" :ad="result" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -189,6 +221,7 @@ import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useApi } from '#imports';
 import type { Ad } from '~/types';
+import AdCard from '~/components/AdCard.vue';
 
 definePageMeta({
     auth: false
@@ -198,6 +231,7 @@ const route = useRoute();
 const searchResults = ref<Ad[]>([]);
 const totalResults = ref(0);
 const loading = ref(false);
+const viewMode = ref<'rows' | 'grid'>('rows');
 
 const isSubcategorySearch = ref(false);
 const fetchResults = async () => {
