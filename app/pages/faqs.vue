@@ -13,7 +13,7 @@
         <!-- Search -->
         <div class="p-6 border-b">
             <div class="relative max-w-md mx-auto">
-                <input v-model="searchQuery" type="text" placeholder="Search feedback"
+                <input v-model="searchQuery" type="text" placeholder="Search faqs..."
                     class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <button class="absolute right-3 top-1/2 -translate-y-1/2">
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,11 +26,19 @@
 
         <!-- FAQ List -->
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div v-if="loading" class="space-y-4 animate-pulse">
+                <div v-for="i in 6" :key="i" class="h-12 bg-gray-100 rounded-lg"></div>
+            </div>
+
+            <div v-else-if="filteredFaqs.length === 0" class="text-center py-8 text-gray-500">
+                No FAQs found matching your search.
+            </div>
+
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Left Column -->
                 <div class="space-y-2">
-                    <div v-for="(faq, index) in leftColumnFaqs" :key="index" class="border border-gray-200 rounded-lg">
-                        <button @click="toggleFaq(index)"
+                    <div v-for="(faq, index) in leftColumnFaqs" :key="faq.id" class="border border-gray-200 rounded-lg">
+                        <button @click="toggleFaq(faq.id)"
                             class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50">
                             <span class="text-sm font-medium text-gray-900">{{ faq.question }}</span>
                             <svg class="w-5 h-5 text-gray-500 transition-transform"
@@ -40,7 +48,7 @@
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div v-if="faq.isOpen" class="px-4 pb-3 text-sm text-gray-600">
+                        <div v-if="faq.isOpen" class="px-4 pb-3 text-sm text-gray-600 border-t border-gray-100 pt-2">
                             {{ faq.answer }}
                         </div>
                     </div>
@@ -48,9 +56,9 @@
 
                 <!-- Right Column -->
                 <div class="space-y-2">
-                    <div v-for="(faq, index) in rightColumnFaqs" :key="`right-${index}`"
+                    <div v-for="(faq, index) in rightColumnFaqs" :key="faq.id"
                         class="border border-gray-200 rounded-lg">
-                        <button @click="toggleRightFaq(index)"
+                        <button @click="toggleFaq(faq.id)"
                             class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50">
                             <span class="text-sm font-medium text-gray-900">{{ faq.question }}</span>
                             <svg class="w-5 h-5 text-gray-500 transition-transform"
@@ -60,7 +68,7 @@
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div v-if="faq.isOpen" class="px-4 pb-3 text-sm text-gray-600">
+                        <div v-if="faq.isOpen" class="px-4 pb-3 text-sm text-gray-600 border-t border-gray-100 pt-2">
                             {{ faq.answer }}
                         </div>
                     </div>
@@ -71,106 +79,70 @@
 </template>
 
 <script setup lang="ts">
+import { useApi } from '#imports';
+import type { Faq } from '~/types';
+
 definePageMeta({
     auth: false,
 });
-const searchQuery = ref('')
 
-const leftColumnFaqs = ref([
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua',
-        isOpen: true
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    }
-])
+// Start with empty state
+interface FaqWithState extends Faq {
+    isOpen: boolean;
+}
 
-const rightColumnFaqs = ref([
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    },
-    {
-        question: 'What does "ads limit" mean?',
-        answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        isOpen: false
-    }
-])
+const searchQuery = ref('');
+const faqs = ref<FaqWithState[]>([]);
+const loading = ref(true);
 
-const toggleFaq = (index: number) => {
-    if (leftColumnFaqs.value[index]) {
-        leftColumnFaqs.value[index].isOpen = !leftColumnFaqs.value[index].isOpen
+const fetchFaqs = async () => {
+    loading.value = true;
+    try {
+        const response = await useApi().fetchGet<{ success: boolean, data: Faq[] }>('/faqs', {
+            requiresAuth: false // Assuming faqs are public
+        });
+
+        if (response && response.success) {
+            faqs.value = response.data.map((faq, index) => ({
+                ...faq,
+                isOpen: index === 0 // Open first one by default, or all closed
+            }));
+        }
+    } catch (error) {
+        console.error('Error fetching FAQs:', error);
+    } finally {
+        loading.value = false;
     }
 }
 
-const toggleRightFaq = (index: number) => {
-    if (rightColumnFaqs.value[index]) {
-        rightColumnFaqs.value[index].isOpen = !rightColumnFaqs.value[index].isOpen
+// Filter FAQs based on search query
+const filteredFaqs = computed(() => {
+    if (!searchQuery.value) return faqs.value;
+
+    const query = searchQuery.value.toLowerCase();
+    return faqs.value.filter(faq =>
+        faq.question.toLowerCase().includes(query) ||
+        faq.answer.toLowerCase().includes(query)
+    );
+});
+
+// split into two columns
+const leftColumnFaqs = computed(() => {
+    return filteredFaqs.value.filter((_, index) => index % 2 === 0);
+});
+
+const rightColumnFaqs = computed(() => {
+    return filteredFaqs.value.filter((_, index) => index % 2 !== 0);
+});
+
+const toggleFaq = (id: number) => {
+    const faq = faqs.value.find(f => f.id === id);
+    if (faq) {
+        faq.isOpen = !faq.isOpen;
     }
 }
+
+onMounted(() => {
+    fetchFaqs();
+});
 </script>
