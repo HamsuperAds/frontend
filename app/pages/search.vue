@@ -53,10 +53,10 @@
                         <AdLocations class="shrink-0" @change="handleLocationChange" />
 
                         <!-- Price Dropdown -->
-                        <DropdownMenu>
+                        <DropdownMenu v-model:open="isPriceDropdownOpen">
                             <DropdownMenuTrigger as-child>
                                 <button
-                                    class="flex items-center gap-2 bg-white border border-gray-300 px-4 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0">
+                                    class="flex items-center gap-2 bg-white border border-gray-300 px-4 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 shrink-0">
                                     <span>Price range</span>
                                     <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
@@ -67,8 +67,15 @@
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent class="w-72 p-4 bg-white rounded-lg shadow-lg border border-gray-200">
-                                <div class="space-y-4">
-                                    <h3 class="font-medium text-gray-900">Price Range</h3>
+                                <div class="space-y-4 relative">
+                                    <button @click="isPriceDropdownOpen = false"
+                                        class="absolute -top-2 -right-2 text-gray-400 hover:text-gray-600 p-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                    <h3 class="font-medium text-gray-900 pr-6">Price Range</h3>
                                     <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="text-xs text-gray-500 mb-1 block">Min Price</label>
@@ -84,7 +91,7 @@
                                     <div class="flex justify-between pt-2">
                                         <button @click="clearPriceFilter"
                                             class="text-sm text-gray-600 hover:text-gray-900">Clear</button>
-                                        <button @click="applyPriceFilter"
+                                        <button @click="applyMobilePriceFilter"
                                             class="bg-blue-600 text-white text-sm px-4 py-1.5 rounded hover:bg-blue-700">Apply</button>
                                     </div>
                                 </div>
@@ -423,6 +430,7 @@ const handleLocationChange = async ({ state, lga }: { state: string; lga?: strin
 
 const minPrice = ref<number | null>(null);
 const maxPrice = ref<number | null>(null);
+const isPriceDropdownOpen = ref(false);
 
 const applyPriceFilter = async () => {
     const query: Record<string, any> = { ...route.query };
@@ -448,6 +456,11 @@ const applyPriceFilter = async () => {
         path: '/search',
         query
     });
+}
+
+const applyMobilePriceFilter = async () => {
+    await applyPriceFilter();
+    isPriceDropdownOpen.value = false;
 }
 
 const clearPriceFilter = async () => {
