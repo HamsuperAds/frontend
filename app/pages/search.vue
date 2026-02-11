@@ -22,8 +22,79 @@
             </template>
 
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <!-- Sidebar Filters -->
-                <aside class="lg:col-span-1">
+                <!-- Mobile Filters & Subcategories (Visible only on lg:hidden) -->
+                <div class="lg:hidden space-y-4 mb-4">
+                    <!-- Subcategories Grid -->
+                    <div v-if="sidebarSubcategories.length > 0" class="overflow-x-auto pb-2">
+                        <div class="flex gap-2 min-w-max">
+                            <a v-for="sub in sidebarSubcategories" :key="sub.id" href="#"
+                                @click.prevent="sub.adsCount > 0 ? navigateTo(`/search?subcategory=${sub.slug}`) : null"
+                                class="flex flex-col items-center w-24 space-y-2 group">
+                                <div class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border group-hover:border-blue-500 transition-colors"
+                                    :class="route.query.subcategory === sub.slug ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
+                                    <img v-if="sub.image" :src="sub.image" :alt="sub.name"
+                                        class="w-full h-full object-cover">
+                                    <svg v-else class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 6h16M4 12h16M4 18h16"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-xs text-center text-gray-700 font-medium leading-tight line-clamp-2"
+                                    :class="route.query.subcategory === sub.slug ? 'text-blue-600' : ''">
+                                    {{ sub.name }}
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Filter Bar -->
+                    <div class="flex gap-3 pt-2 overflow-x-auto pb-1">
+                        <AdLocations class="shrink-0" @change="handleLocationChange" />
+
+                        <!-- Price Dropdown -->
+                        <DropdownMenu>
+                            <DropdownMenuTrigger as-child>
+                                <button
+                                    class="flex items-center gap-2 bg-white border border-gray-300 px-4 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0">
+                                    <span>Price range</span>
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent class="w-72 p-4 bg-white rounded-lg shadow-lg border border-gray-200">
+                                <div class="space-y-4">
+                                    <h3 class="font-medium text-gray-900">Price Range</h3>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="text-xs text-gray-500 mb-1 block">Min Price</label>
+                                            <input type="number" v-model="minPrice" placeholder="Min"
+                                                class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-500 mb-1 block">Max Price</label>
+                                            <input type="number" v-model="maxPrice" placeholder="Max"
+                                                class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between pt-2">
+                                        <button @click="clearPriceFilter"
+                                            class="text-sm text-gray-600 hover:text-gray-900">Clear</button>
+                                        <button @click="applyPriceFilter"
+                                            class="bg-blue-600 text-white text-sm px-4 py-1.5 rounded hover:bg-blue-700">Apply</button>
+                                    </div>
+                                </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+
+                <!-- Sidebar Filters (Desktop) -->
+                <aside class="hidden lg:col-span-1 lg:block">
                     <!-- Categories -->
                     <div class="bg-white rounded-lg shadow mb-6">
                         <div class="bg-blue-500 text-white px-4 py-3 rounded-t-lg font-semibold">
@@ -222,6 +293,11 @@ import { useRoute } from 'vue-router';
 import { useApi } from '#imports';
 import type { Ad } from '~/types';
 import AdCard from '~/components/AdCard.vue';
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+} from '@/components/ui/dropdown-menu'
 
 definePageMeta({
     auth: false
