@@ -2,7 +2,7 @@
     <div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
         <div class="w-full max-w-md">
             <!-- Registration Form -->
-            <div v-if="showVerification" class="bg-white rounded-lg shadow-lg border-2 border-blue-300 p-8">
+            <div v-if="!showVerification" class="bg-white rounded-lg shadow-lg border-2 border-blue-300 p-8">
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold text-gray-900">User Account Creation</h2>
                     <p class="text-sm text-gray-600 mt-1">Create an account for an upgraded experience</p>
@@ -130,9 +130,10 @@
 
                     <!-- Verification Code Inputs -->
                     <div class="flex justify-center mb-6">
-                        <InputOTP v-model="verificationCode" :max-length="5">
+                        <InputOTP v-model="verificationCode" :maxlength="5" :pattern="REGEXP_ONLY_DIGITS"
+                            @complete="handleVerify">
                             <InputOTPGroup>
-                                <InputOTPSlot v-for="i in 5" :key="i - 1" :index="i - 1" />
+                                <InputOTPSlot v-for="(_, i) in 5" :key="i" :index="i" />
                             </InputOTPGroup>
                         </InputOTP>
                     </div>
@@ -185,7 +186,8 @@
 </template>
 
 <script setup lang="ts">
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '~/components/ui/input-otp'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import { REGEXP_ONLY_DIGITS } from 'vue-input-otp'
 import { toast } from 'vue-sonner'
 const { getSession } = useAuth();
 const { setToken } = useAuthState();
@@ -206,8 +208,19 @@ const isVerifying = ref(false)
 const verifyErrorMessage = ref('')
 const isResending = ref(false)
 const resendCountdown = ref(0)
+const verificationCode = ref('')
 let resendCountdownInterval: ReturnType<typeof setInterval> | null = null
 let nextResendDuration = 60 // After first resend, countdown is 60s
+
+onMounted(() => {
+    const userInfoStore = useUserInfoStore()
+    if (userInfoStore.loginEmail) {
+        formData.value.email = userInfoStore.loginEmail
+        showVerification.value = true
+        startResendCountdown(30)
+        userInfoStore.loginEmail = ''
+    }
+})
 
 const formData = ref<Record<string, any>>({
     firstName: '',
@@ -238,7 +251,6 @@ watch(formData.value, () => {
     checkAdForm()
 })
 
-const verificationCode = ref('')
 
 const handleCreateAccount = async () => {
     try {

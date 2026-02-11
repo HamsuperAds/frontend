@@ -317,7 +317,14 @@ const handleSignIn = async () => {
         }
     } catch (error: any) {
         console.error('Login error:', error)
-        errorMessage.value = error.data?.message || 'Invalid email or password. Please try again.'
+        const message = error.data?.message || ''
+        if (message === 'Account not verified') {
+            const userInfoStore = useUserInfoStore()
+            userInfoStore.loginEmail = loginData.value.email
+            navigateTo('/auth/register')
+            return
+        }
+        errorMessage.value = message || 'Invalid email or password. Please try again.'
     } finally {
         isLoading.value = false
     }
