@@ -248,7 +248,7 @@
                             :to="`/ad-details?id=${result.id}`">
                             <div class="flex p-4 gap-4">
                                 <!-- Image -->
-                                <div class="w-32 h-32 flex-shrink-0">
+                                <div class="w-32 h-32 shrink-0">
                                     <img :src="result.primary_image?.image_path || '/images/placeholder.png'"
                                         :alt="result.title" class="w-full h-full object-cover rounded-lg" />
                                 </div>
@@ -412,6 +412,9 @@ onMounted(() => {
 
 // Watch for route changes to re-fetch
 watch(() => route.query, () => {
+    // Only fetch if we're still on the search page
+    // This prevents fetching when navigating to ad details or other pages
+    if (route.path !== '/search') return;
     fetchResults();
 });
 
