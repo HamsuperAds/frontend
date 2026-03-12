@@ -43,6 +43,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Terms and Conditions - Hamsuper',
+  description: 'Read the terms and conditions for using the Hamsuper platform.'
+})
 definePageMeta({
     auth: false,
 });

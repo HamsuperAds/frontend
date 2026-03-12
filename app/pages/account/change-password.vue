@@ -89,6 +89,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Change Password - Hamsuper',
+  description: 'Change your Hamsuper account password securely.'
+})
 import { toast } from 'vue-sonner';
 import { useApi } from '~/composables/useApi';
 

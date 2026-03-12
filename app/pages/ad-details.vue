@@ -253,6 +253,11 @@ const { data: adData, pending, error } = await useApi().get<{
 
 const ad = computed(() => adData.value?.data)
 
+useSeoMeta({
+  title: () => ad.value ? ad.value.title : 'Ad Details - Hamsuper',
+  description: () => ad.value?.description?.substring(0, 150) || 'View details of this ad on Hamsuper.'
+})
+
 // Images handling
 const images = computed(() => {
     if (!ad.value?.images || ad.value.images.length === 0) {

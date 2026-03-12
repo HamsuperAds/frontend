@@ -80,6 +80,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'My Favorites - Hamsuper',
+  description: 'View your favorite ads saved on Hamsuper.'
+})
 import { ref, onMounted } from 'vue'
 import { toast } from 'vue-sonner'
 

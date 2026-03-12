@@ -158,6 +158,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Messages - Hamsuper',
+  description: 'View and manage your messages with other users on Hamsuper.'
+})
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { toast } from 'vue-sonner'
 import Skeleton from '~/components/ui/skeleton/Skeleton.vue'

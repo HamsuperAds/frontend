@@ -152,6 +152,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Delete Account - Hamsuper',
+  description: 'Permanently delete your Hamsuper account and data.'
+})
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 

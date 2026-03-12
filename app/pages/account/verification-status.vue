@@ -231,6 +231,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Verification Status - Hamsuper',
+  description: 'Check the status of your account verification on Hamsuper.'
+})
 import type { VerificationRequest, VerificationGetResponse } from '~/types/verification'
 
 definePageMeta({

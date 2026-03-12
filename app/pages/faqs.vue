@@ -90,6 +90,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'FAQs - Hamsuper',
+  description: 'Find answers to frequently asked questions about Hamsuper.'
+})
 import { useApi } from '#imports';
 import type { Faq } from '~/types';
 

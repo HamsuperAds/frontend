@@ -105,6 +105,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Transactions - Hamsuper',
+  description: 'View your transaction history on Hamsuper.'
+})
 import { ref, onMounted, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import type { Transaction } from '~/types/transaction';

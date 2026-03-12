@@ -340,6 +340,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Create Ad - Hamsuper',
+  description: 'Post a new classified ad on Hamsuper to reach potential buyers.'
+})
 import { ref, computed, onMounted, watch } from 'vue';
 import { useCategories } from '~/composables/useCategories';
 import { useStates } from '~/composables/useStates';

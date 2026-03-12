@@ -153,6 +153,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Verification Request - Hamsuper',
+  description: 'Submit a verification request for your Hamsuper account.'
+})
 definePageMeta({
     layout: 'profile'
 })

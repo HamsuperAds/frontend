@@ -76,6 +76,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Notification Preferences - Hamsuper',
+  description: 'Manage your notification preferences on Hamsuper.'
+})
 import { ref, onMounted, computed } from 'vue'
 import { toast } from 'vue-sonner'
 import Switch from '@/components/ui/switch/Switch.vue'

@@ -202,6 +202,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Send Feedback - Hamsuper',
+  description: 'Send us your feedback regarding Hamsuper.'
+})
 import { toast } from 'vue-sonner';
 
 definePageMeta({

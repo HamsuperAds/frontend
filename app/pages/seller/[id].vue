@@ -196,6 +196,11 @@ const { data: sellerData, pending } = await useApi().get<{
 
 const seller = computed(() => sellerData.value?.data)
 
+useSeoMeta({
+  title: () => seller.value ? `${seller.value.first_name} ${seller.value.last_name} - Hamsuper` : 'Seller Profile - Hamsuper',
+  description: () => seller.value ? `View the profile and active listings of ${seller.value.first_name} ${seller.value.last_name} on Hamsuper.` : 'View seller profile on Hamsuper.'
+})
+
 // Computed properties for display
 const sellerName = computed(() => {
     if (!seller.value) return ''

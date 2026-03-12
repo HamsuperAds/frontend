@@ -40,6 +40,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Verify Payment - Hamsuper',
+  description: 'Verify your payment status securely on Hamsuper.'
+})
 import { ref, onMounted } from 'vue'
 
 definePageMeta({

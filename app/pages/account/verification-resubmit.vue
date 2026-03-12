@@ -252,6 +252,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Resubmit Verification - Hamsuper',
+  description: 'Resubmit your identity verification request to Hamsuper.'
+})
 import type { VerificationRequest, VerificationGetResponse } from '~/types/verification'
 
 definePageMeta({

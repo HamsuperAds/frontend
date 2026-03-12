@@ -44,6 +44,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Privacy Policy - Hamsuper',
+  description: 'Read the privacy policy of Hamsuper and understand how we protect your data.'
+})
 definePageMeta({
     auth: false,
 });

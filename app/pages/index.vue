@@ -43,6 +43,12 @@ import { computed, watch } from 'vue';
 import { useApi } from '#imports';
 import type { Ad } from '~/types';
 import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
+
+useSeoMeta({
+  title: 'Classified ads in its best. Easy, safe & affordable',
+  description: 'Buy and sell items quickly, safely, and affordably on Hamsuper. Browse thousands of classified ads in your area.'
+})
+
 definePageMeta({
     auth: false
 });

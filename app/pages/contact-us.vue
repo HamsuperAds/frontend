@@ -105,6 +105,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Contact Us - Hamsuper',
+  description: 'Get in touch with the Hamsuper team for support and inquiries.'
+})
 import { toast } from 'vue-sonner'
 import { useStorage } from '@vueuse/core'
 

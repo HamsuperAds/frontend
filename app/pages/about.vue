@@ -69,6 +69,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'About - Hamsuper',
+  description: 'Learn more about Hamsuper, your trusted classified ads platform.'
+})
 definePageMeta({
     auth: false,
 });

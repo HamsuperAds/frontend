@@ -221,6 +221,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'My Adverts - Hamsuper',
+  description: 'Manage your posted classified ads on Hamsuper.'
+})
 import { watchDebounced } from '@vueuse/core'
 import { toast } from 'vue-sonner';
 import type { PromotionPlan } from '~/types/promotionPlan';

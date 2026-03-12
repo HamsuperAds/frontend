@@ -248,6 +248,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Login - Hamsuper',
+  description: 'Log in to your Hamsuper account to manage ads, messages, and more.'
+})
 import { definePageMeta } from '#imports';
 const { getSession } = useAuth();
 const { setToken } = useAuthState();

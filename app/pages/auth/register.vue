@@ -186,6 +186,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'Register - Hamsuper',
+  description: 'Create a new Hamsuper account to start buying and selling.'
+})
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
 import { REGEXP_ONLY_DIGITS } from 'vue-input-otp'
 import { toast } from 'vue-sonner'

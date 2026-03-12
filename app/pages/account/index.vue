@@ -136,6 +136,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: 'My Account - Hamsuper',
+  description: 'Manage your Hamsuper profile and account settings.'
+})
 
 import { definePageMeta, onMounted, computed, ref } from '#imports'
 import { useStates } from '~/composables/useStates'

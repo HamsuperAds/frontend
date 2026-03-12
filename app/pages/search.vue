@@ -311,6 +311,12 @@ definePageMeta({
 });
 
 const route = useRoute();
+
+useSeoMeta({
+  title: () => route.query.query ? (route.query.query as string) : 'Search Results - Hamsuper',
+  description: () => route.query.query ? `Find the best deals for ${route.query.query} on Hamsuper.` : 'Search for items on Hamsuper.'
+})
+
 const searchResults = ref<Ad[]>([]);
 const totalResults = ref(0);
 const loading = ref(false);
