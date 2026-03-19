@@ -4,7 +4,7 @@ export interface Subcategory {
   name: string;
   slug: string;
   image: string;
-  adsCount: number;
+  active_ads_count: number;
   is_active: boolean;
   deleted_at: string | null;
   created_at: string;
@@ -16,7 +16,7 @@ export interface Category {
   name: string;
   slug: string;
   image: string;
-  adsCount: number;
+  active_ads_count: number;
   is_active: boolean;
   deleted_at: string | null;
   created_at: string;

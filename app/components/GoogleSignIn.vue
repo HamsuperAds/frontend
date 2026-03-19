@@ -2,7 +2,8 @@
     <div v-if="isLoading" class="flex justify-center">
         <button type="button" disabled
             class="flex items-center justify-center gap-2 bg-white border border-gray-300 py-2 px-4 rounded shadow-sm opacity-70 cursor-not-allowed h-[40px] min-w-[200px]">
-            <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor"
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
@@ -42,12 +43,6 @@ async function handleGoogleSuccess(response: CredentialResponse) {
         if (res.status === 'success' && res.data.token) {
             setToken(res.data.token);
             await getSession();
-
-            // Store token in localStorage
-            /* if (process.client) {
-                localStorage.setItem('authToken', res.data.token)
-                localStorage.setItem('user', JSON.stringify(res.data))
-            } */
 
             // Redirect to account page using window.location for a full page reload
             window.location.href = '/account';

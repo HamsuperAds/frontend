@@ -49,9 +49,9 @@
                         </div>
 
                         <div v-for="state in states" :key="state.id"
-                            @click="state.adsCount > 0 ? selectState(state) : null"
+                            @click="state.active_ads_count > 0 ? selectState(state) : null"
                             class="flex items-center justify-between p-3 rounded-lg border border-gray-200 transition-colors"
-                            :class="state.adsCount > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed bg-gray-50'">
+                            :class="state.active_ads_count > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed bg-gray-50'">
                             <div class="flex items-center gap-3">
                                 <!-- State Image or Icon -->
                                 <div class="w-10 h-10 flex-shrink-0">
@@ -65,7 +65,8 @@
                                 </div>
                                 <div>
                                     <div class="font-medium text-gray-900">{{ state.name }}</div>
-                                    <div class="text-sm text-gray-500">{{ state.adsCount.toLocaleString() }} ads</div>
+                                    <div class="text-sm text-gray-500">{{ state.active_ads_count.toLocaleString() }} ads
+                                    </div>
                                 </div>
                             </div>
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,7 +93,8 @@
                             class="flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 rounded-lg cursor-pointer border-2 border-blue-300">
                             <div>
                                 <div class="font-semibold text-blue-900">The whole {{ selectedState.name }}</div>
-                                <div class="text-sm text-blue-700">{{ selectedState.adsCount.toLocaleString() }} ads
+                                <div class="text-sm text-blue-700">{{ selectedState.active_ads_count.toLocaleString() }}
+                                    ads
                                 </div>
                             </div>
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,10 +105,10 @@
 
                         <!-- LGAs -->
                         <div v-for="lga in selectedState.lgas" :key="lga.id"
-                            @click="lga.adsCount > 0 ? selectLGA(lga) : null"
+                            @click="lga.active_ads_count > 0 ? selectLGA(lga) : null"
                             class="flex items-center justify-between p-3 rounded-lg border border-gray-200 transition-colors"
                             :class="[
-                                lga.adsCount > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed bg-gray-50',
+                                lga.active_ads_count > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed bg-gray-50',
                                 { 'bg-blue-50 border-blue-400': appResourceInfoStore.lga?.id === lga.id }
                             ]">
                             <div class="flex items-center gap-3">
@@ -122,7 +124,8 @@
                                 </div>
                                 <div>
                                     <div class="font-medium text-gray-900">{{ lga.name }}</div>
-                                    <div class="text-sm text-gray-500">{{ lga.adsCount.toLocaleString() }} ads</div>
+                                    <div class="text-sm text-gray-500">{{ lga.active_ads_count.toLocaleString() }} ads
+                                    </div>
                                 </div>
                             </div>
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

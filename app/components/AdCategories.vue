@@ -25,7 +25,7 @@
               <img :src="category.image" :alt="category.name" class="w-10 h-10 object-contain flex-shrink-0" />
               <div class="flex-1 min-w-0">
                 <p class="text-sm mb-0 truncate">{{ category.name }}</p>
-                <span class="text-xs text-gray-600 block">{{ category.adsCount.toLocaleString() }} ads</span>
+                <span class="text-xs text-gray-600 block">{{ category.active_ads_count.toLocaleString() }} ads</span>
               </div>
             </div>
             <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,13 +42,13 @@
           <div class="space-y-1">
             <div v-for="subcategory in targetCategory.subcategories" :key="subcategory.id"
               class="flex items-center justify-between rounded-md p-2 transition-colors"
-              :class="subcategory.adsCount > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed'"
-              @click="subcategory.adsCount > 0 && navigateTo(`/search?subcategory=${subcategory.slug}`)">
+              :class="subcategory.active_ads_count > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed'"
+              @click="subcategory.active_ads_count > 0 && navigateTo(`/search?subcategory=${subcategory.slug}`)">
               <div class="flex items-center gap-2 flex-1 min-w-0">
                 <img :src="subcategory.image" :alt="subcategory.name" class="w-8 h-8 object-contain flex-shrink-0" />
                 <span class="text-sm truncate">{{ subcategory.name }}</span>
               </div>
-              <span class="text-xs text-gray-500 flex-shrink-0 ml-2">{{ subcategory.adsCount }}</span>
+              <span class="text-xs text-gray-500 flex-shrink-0 ml-2">{{ subcategory.active_ads_count }}</span>
             </div>
           </div>
         </div>
@@ -105,13 +105,13 @@
             <div class="space-y-1">
               <div v-for="subcategory in selectedMobileCategory?.subcategories" :key="subcategory.id"
                 class="flex items-center justify-between rounded-md p-3 transition-colors"
-                :class="subcategory.adsCount > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed'"
-                @click="subcategory.adsCount > 0 && handleMobileSubcategoryClick(subcategory)">
+                :class="subcategory.active_ads_count > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed'"
+                @click="subcategory.active_ads_count > 0 && handleMobileSubcategoryClick(subcategory)">
                 <div class="flex items-center gap-3 flex-1 min-w-0">
                   <img :src="subcategory.image" :alt="subcategory.name" class="w-8 h-8 object-contain flex-shrink-0" />
                   <span class="text-sm font-medium text-gray-700">{{ subcategory.name }}</span>
                 </div>
-                <span class="text-xs text-gray-500 flex-shrink-0 ml-2">{{ subcategory.adsCount }}</span>
+                <span class="text-xs text-gray-500 flex-shrink-0 ml-2">{{ subcategory.active_ads_count }}</span>
               </div>
             </div>
             <div v-if="!selectedMobileCategory?.subcategories?.length" class="text-center py-8 text-gray-500">

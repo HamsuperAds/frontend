@@ -28,7 +28,7 @@
                     <div v-if="sidebarSubcategories.length > 0" class="overflow-x-auto pb-2">
                         <div class="flex gap-2 min-w-max">
                             <a v-for="sub in sidebarSubcategories" :key="sub.id" href="#"
-                                @click.prevent="sub.adsCount > 0 ? navigateTo(`/search?subcategory=${sub.slug}`) : null"
+                                @click.prevent="sub.active_ads_count > 0 ? navigateTo(`/search?subcategory=${sub.slug}`) : null"
                                 class="flex flex-col items-center w-24 space-y-2 group">
                                 <div class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border group-hover:border-blue-500 transition-colors"
                                     :class="route.query.subcategory === sub.slug ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
@@ -115,14 +115,14 @@
                             </div>
                             <div v-else-if="sidebarSubcategories.length > 0">
                                 <a v-for="sub in displayedSubcategories" :key="sub.id"
-                                    @click.prevent="sub.adsCount > 0 ? navigateTo(`/search?subcategory=${sub.slug}`) : null"
+                                    @click.prevent="sub.active_ads_count > 0 ? navigateTo(`/search?subcategory=${sub.slug}`) : null"
                                     href="#" :class="[
                                         route.query.subcategory === sub.slug ? 'font-bold' : '',
-                                        sub.adsCount === 0
+                                        sub.active_ads_count === 0
                                             ? 'text-gray-400 cursor-not-allowed'
                                             : route.query.subcategory !== sub.slug ? 'text-gray-700 hover:text-blue-600' : ''
                                     ]" class="block text-sm mb-2">
-                                    {{ sub.name }} ({{ sub.adsCount }})
+                                    {{ sub.name }} ({{ sub.active_ads_count }})
                                 </a>
 
                                 <button v-if="sidebarSubcategories.length > 7"
@@ -313,8 +313,8 @@ definePageMeta({
 const route = useRoute();
 
 useSeoMeta({
-  title: () => route.query.query ? (route.query.query as string) : 'Search Results - Hamsuper',
-  description: () => route.query.query ? `Find the best deals for ${route.query.query} on Hamsuper.` : 'Search for items on Hamsuper.'
+    title: () => route.query.query ? (route.query.query as string) : 'Search Results - Hamsuper',
+    description: () => route.query.query ? `Find the best deals for ${route.query.query} on Hamsuper.` : 'Search for items on Hamsuper.'
 })
 
 const searchResults = ref<Ad[]>([]);
