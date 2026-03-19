@@ -11,7 +11,7 @@
 
         <!-- Footer -->
         <PageFooter v-if="route.name !== 'verify-payment'" />
-        <Toaster />
+        <Toaster rich-colors />
     </div>
 </template>
 

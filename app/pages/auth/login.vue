@@ -81,8 +81,9 @@
                 </div>
 
                 <!-- Google Sign In -->
-                <div class="mt-4">
-                    <button type="button"
+                <div class="mt-4 flex justify-center">
+                    <GoogleSignInButton @success="handleGoogleSuccess" @error="handleGoogleError" />
+                    <!-- <button type="button" @click="handleGoogleSignIn"
                         class="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition-colors">
                         <svg class="w-5 h-5" viewBox="0 0 24 24">
                             <path fill="#4285F4"
@@ -99,7 +100,7 @@
                             </path>
                         </svg>
                         <span class="text-gray-700 font-medium">Google</span>
-                    </button>
+                    </button> -->
                 </div>
             </div>
 
@@ -217,10 +218,6 @@
                                 <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21">
-
-                                        import { navigateTo } from '#app';
-
-                                        import { useApi } from '#imports';
                                     </path>
                                 </svg>
                             </button>
@@ -249,10 +246,12 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Login - Hamsuper',
-  description: 'Log in to your Hamsuper account to manage ads, messages, and more.'
+    title: 'Login - Hamsuper',
+    description: 'Log in to your Hamsuper account to manage ads, messages, and more.'
 })
 import { definePageMeta } from '#imports';
+import { GoogleSignInButton, type CredentialResponse } from 'vue3-google-signin';
+import { toast } from 'vue-sonner';
 const { getSession } = useAuth();
 const { setToken } = useAuthState();
 
@@ -285,6 +284,43 @@ const newPasswordData = ref({
 
 const isLoading = ref(false)
 const errorMessage = ref('')
+
+async function handleGoogleSuccess(response: CredentialResponse) {
+    try {
+        const res = await useApi().fetchPost<{
+            status: string
+            message: string
+            data: {
+                id: string
+                first_name: string
+                last_name: string
+                email: string
+                token: string
+            }
+        }>('/auth/google/mobile', { id_token: response.credential }, { requiresAuth: false })
+
+        if (res.status === 'success' && res.data.token) {
+            setToken(res.data.token)
+            await getSession()
+
+            /* if (process.client) {
+                localStorage.setItem('authToken', res.data.token)
+                localStorage.setItem('user', JSON.stringify(res.data))
+            } */
+
+            // Redirect to account page using window.location for a full page reload
+            window.location.href = '/account'
+        }
+    } catch (error: any) {
+        console.error('Google login failed:', error)
+        // Show error to user
+        toast.error('Google sign-in failed. Please try again.')
+    }
+}
+
+function handleGoogleError() {
+    toast.error('Google sign-in was cancelled or failed.')
+}
 
 const handleSignIn = async () => {
     try {

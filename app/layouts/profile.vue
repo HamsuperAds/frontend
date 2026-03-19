@@ -42,12 +42,11 @@
 
         <!-- Footer -->
         <PageFooter />
-        <Toaster />
+        <Toaster rich-colors />
     </div>
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
 import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'vue-sonner'

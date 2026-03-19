@@ -27,6 +27,7 @@
     "lucide-vue-next": "^0.548.0",
     "next-auth": "~4.21.1",
     "nuxt": "^4.2.0",
+    "nuxt-vue3-google-signin": "^0.0.13",
     "pinia": "^3.0.3",
     "reka-ui": "^2.6.0",
     "shadcn-nuxt": "2.3.2",

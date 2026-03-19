@@ -21,6 +21,7 @@ export default defineNuxtConfig({
     "@vueuse/nuxt",
     "@pinia/nuxt",
     "@sidebase/nuxt-auth",
+    "nuxt-vue3-google-signin",
   ],
   css: ["~/assets/css/tailwind.css", "~/assets/css/main.css"],
   vite: {
@@ -55,5 +56,8 @@ export default defineNuxtConfig({
   shadcn: {
     prefix: "",
     componentDir: "./app/components/ui",
+  },
+  googleSignIn: {
+    clientId: process.env.GOOGLE_CLIENT_ID,
   },
 });
