@@ -25,7 +25,8 @@
               <img :src="category.image" :alt="category.name" class="w-10 h-10 object-contain flex-shrink-0" />
               <div class="flex-1 min-w-0">
                 <p class="text-sm mb-0 truncate">{{ category.name }}</p>
-                <span class="text-xs text-gray-600 block">{{ category.active_ads_count.toLocaleString() }} ads</span>
+                <span v-if="countsRefreshing" class="inline-block h-3 w-12 bg-gray-200 rounded animate-pulse"></span>
+                <span v-else class="text-xs text-gray-600 block">{{ category.active_ads_count.toLocaleString() }} ads</span>
               </div>
             </div>
             <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,9 +127,12 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useCategories } from '~/composables/useCategories';
+import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
 import type { Category } from '~/types';
+
+const appResourceInfoStore = useAppResourceInfoStore();
 
 const hoveredCategory = ref<number | null>(null)
 const isShowingSubcategory = ref(false);
@@ -169,12 +173,27 @@ function handleMouseEnteredSubcategory() {
   isShowingSubcategory.value = true
 }
 
-const { categories, loading, fetchCategories } = useCategories()
+const { categories, loading, countsRefreshing, fetchCategories, refetchCategoryCounts } = useCategories()
 
 // Fetch categories on mount
 onMounted(async () => {
   await fetchCategories();
 })
+
+// Refetch with location params whenever the selected location changes
+watch(
+  () => [appResourceInfoStore.state, appResourceInfoStore.lga],
+  ([newState, newLga]) => {
+    const params: { state?: string; lga?: string } = {}
+    if (newLga) {
+      params.lga = (newLga as any).slug
+    } else if (newState) {
+      params.state = (newState as any).slug
+    }
+    refetchCategoryCounts(Object.keys(params).length ? params : undefined)
+  },
+  { deep: true }
+)
 
 const targetCategory = computed(() => categories.value.find((c: Category) => c.id == hoveredCategory.value))
 </script>
