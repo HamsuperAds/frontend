@@ -145,28 +145,14 @@
             </div>
 
             <!-- Pagination -->
-            <div v-if="paginationData && paginationData.last_page > 1"
-                class="flex justify-center items-center gap-4 mt-8">
-                <button @click="goToPrevPage" :disabled="!paginationData.prev_page_url"
-                    class="flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors" :class="paginationData.prev_page_url
-                        ? 'border-blue-600 text-blue-600 hover:bg-blue-50'
-                        : 'border-gray-300 text-gray-400 cursor-not-allowed'">
-                    <Icon name="heroicons:chevron-left" class="w-4 h-4" />
-                    Previous
-                </button>
-
-                <span class="text-sm text-gray-600">
-                    Page {{ paginationData.current_page }} of {{ paginationData.last_page }}
-                </span>
-
-                <button @click="goToNextPage" :disabled="!paginationData.next_page_url"
-                    class="flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors" :class="paginationData.next_page_url
-                        ? 'border-blue-600 text-blue-600 hover:bg-blue-50'
-                        : 'border-gray-300 text-gray-400 cursor-not-allowed'">
-                    Next
-                    <Icon name="heroicons:chevron-right" class="w-4 h-4" />
-                </button>
-            </div>
+            <AppPagination 
+                v-if="paginationData"
+                :current-page="paginationData.current_page"
+                :last-page="paginationData.last_page"
+                :has-prev="!!paginationData.prev_page_url"
+                :has-next="!!paginationData.next_page_url"
+                @page-change="goToPage"
+            />
         </div>
 
         <!-- Seller Feedback Dialog -->
@@ -352,18 +338,6 @@ const changeTab = async (tabId: string) => {
 const goToPage = async (page: number) => {
     currentPage.value = page
     await refreshAds()
-}
-
-const goToPrevPage = () => {
-    if (paginationData.value?.prev_page_url) {
-        goToPage(currentPage.value - 1)
-    }
-}
-
-const goToNextPage = () => {
-    if (paginationData.value?.next_page_url) {
-        goToPage(currentPage.value + 1)
-    }
 }
 </script>
 

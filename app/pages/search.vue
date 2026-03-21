@@ -288,6 +288,16 @@
                     <div v-else class="grid grid-cols-2 lg:grid-cols-3 gap-4">
                         <AdCard v-for="result in searchResults" :key="result.id" :ad="result" />
                     </div>
+
+                    <!-- Pagination -->
+                    <AppPagination 
+                        v-if="lastPage > 1"
+                        :current-page="currentPage"
+                        :last-page="lastPage"
+                        :has-prev="hasPrevPage"
+                        :has-next="hasNextPage"
+                        @page-change="handlePageChange"
+                    />
                 </div>
             </div>
         </div>
@@ -321,6 +331,10 @@ const searchResults = ref<Ad[]>([]);
 const totalResults = ref(0);
 const loading = ref(false);
 const viewMode = ref<'rows' | 'grid'>('rows');
+const currentPage = ref(Number(route.query.page) || 1);
+const lastPage = ref(1);
+const hasPrevPage = ref(false);
+const hasNextPage = ref(false);
 
 const isSubcategorySearch = ref(false);
 const fetchResults = async () => {
@@ -338,12 +352,17 @@ const fetchResults = async () => {
         if (route.query.category) queryParams.category = route.query.category;
         if (route.query.min_price) queryParams.min_price = route.query.min_price;
         if (route.query.max_price) queryParams.max_price = route.query.max_price;
+        if (route.query.page) queryParams.page = route.query.page;
 
         const response = await useApi().fetchGet<{
             success: boolean,
             data: {
                 data: Ad[],
-                total: number
+                total: number,
+                current_page: number,
+                last_page: number,
+                prev_page_url: string | null,
+                next_page_url: string | null
             }
         }>('/ads/search', {
             params: queryParams,
@@ -353,6 +372,10 @@ const fetchResults = async () => {
         if (response && response.success) {
             searchResults.value = response.data.data;
             totalResults.value = response.data.total;
+            currentPage.value = response.data.current_page || 1;
+            lastPage.value = response.data.last_page || 1;
+            hasPrevPage.value = !!response.data.prev_page_url;
+            hasNextPage.value = !!response.data.next_page_url;
 
             // If category search (explicit or inferred), fetch subcategories for sidebar
             // We use the category of the first ad result if available
@@ -370,9 +393,21 @@ const fetchResults = async () => {
         console.error('Error fetching search results:', error);
         searchResults.value = [];
         totalResults.value = 0;
+        currentPage.value = 1;
+        lastPage.value = 1;
+        hasPrevPage.value = false;
+        hasNextPage.value = false;
     } finally {
         loading.value = false;
     }
+};
+
+const handlePageChange = async (page: number) => {
+    const query: Record<string, any> = { ...route.query, page };
+    await navigateTo({
+        path: '/search',
+        query
+    });
 };
 
 const sidebarSubcategories = ref<any[]>([]); // Dynamic subcategories
