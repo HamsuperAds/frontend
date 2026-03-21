@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useApi } from '#imports';
 import type { Ad } from '~/types';
 import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
@@ -131,6 +131,15 @@ const fetchAds = async () => {
 watch(() => [appResourceInfoStore.state, appResourceInfoStore.lga], async () => {
     await fetchAds()
 }, { deep: true })
+
+// On mount (including back-navigation), re-fetch if a location is already set.
+// Nuxt restores the stale cached response on back-navigation, so the watch
+// won't fire (store state unchanged) — this corrects the displayed ads.
+onMounted(() => {
+    if (appResourceInfoStore.state || appResourceInfoStore.lga) {
+        fetchAds()
+    }
+})
 
 // Use the fetched data or fallback to empty array
 const ads = computed(() => adsData.value?.data?.data || [])
