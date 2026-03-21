@@ -13,6 +13,7 @@ export const useAppResourceInfoStore = defineStore("appResourceInfoStore", {
     promotionPlans: [] as PromotionPlan[],
     toastMessage: null as string | null,
     loading: reactive<Record<string, boolean>>({}),
+    unfilteredStates: [] as State[], // Cache for global unfitered location counts
     // Homepage ads cache
     homepageAds: [] as Ad[],
     homepageAdsLocationKey: null as string | null, // e.g. "", "state:abia", "lga:udenu"

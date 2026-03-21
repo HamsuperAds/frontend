@@ -10,9 +10,20 @@ export const useStates = () => {
 
     const states = computed(() => appResourceInfoStore.states || []);
 
-    const fetchStates = async () => {
-        // Only fetch if states are not already in store AND not currently loading
-        if (appResourceInfoStore.states.length > 0 || appResourceInfoStore.loading.states) return;
+    const fetchStates = async (params?: { category?: string, subcategory?: string }) => {
+        const isFiltered = !!(params && (params.category || params.subcategory));
+        
+        // Use cached global unfiltered states to avoid useless API calls
+        if (!isFiltered && appResourceInfoStore.unfilteredStates && appResourceInfoStore.unfilteredStates.length > 0) {
+            appResourceInfoStore.setStates(appResourceInfoStore.unfilteredStates);
+            return;
+        }
+
+        // Prevent simultaneous duplicate fetches, but bypass if we specifically need filtered data NOT matching current store
+        if (!isFiltered && (appResourceInfoStore.states.length > 0 || appResourceInfoStore.loading.states)) {
+             // If we already have unfiltered states active and we don't need filtered, return
+             if (appResourceInfoStore.unfilteredStates && appResourceInfoStore.unfilteredStates.length > 0) return;
+        }
 
         appResourceInfoStore.loading.states = true;
         error.value = null;
@@ -22,11 +33,16 @@ export const useStates = () => {
                 success: boolean;
                 data: State[];
             }>('/states', {
+                params,
                 requiresAuth: false
             });
 
             if (data) {
                 appResourceInfoStore.setStates(data);
+                // When we fetch the global unfiltered list, cache it heavily!
+                if (!isFiltered) {
+                    appResourceInfoStore.unfilteredStates = data;
+                }
             }
         } catch (err: any) {
             error.value = err.message || 'Failed to fetch states';

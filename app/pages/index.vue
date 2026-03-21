@@ -43,6 +43,7 @@ import { computed, onMounted, watch } from 'vue';
 import { useApi } from '#imports';
 import type { Ad } from '~/types';
 import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
+import { useStates } from '~/composables/useStates';
 
 useSeoMeta({
   title: 'Classified ads in its best. Easy, safe & affordable',
@@ -150,6 +151,9 @@ watch(() => [appResourceInfoStore.state, appResourceInfoStore.lga], async () => 
 // On mount (including back-navigation): use the store cache if valid,
 // otherwise re-fetch. This avoids an API call on every back-navigation.
 onMounted(() => {
+    // Restore raw unfiltered global locations dynamically instantly from cache
+    useStates().fetchStates();
+
     const cacheKey = currentLocationKey()
     const cacheIsValid =
         appResourceInfoStore.homepageAdsLocationKey === cacheKey &&

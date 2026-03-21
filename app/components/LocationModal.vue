@@ -158,10 +158,18 @@ const emit = defineEmits<{
 const appResourceInfoStore = useAppResourceInfoStore()
 const { states, loading: pending, fetchStates } = useStates()
 const selectedState = ref<State | null>(null)
+const route = useRoute()
 
 // Fetch states on mount
 onMounted(async () => {
-    await fetchStates();
+    const params: Record<string, string> = {};
+    if (route.query.subcategory) {
+        params.subcategory = route.query.subcategory as string;
+    } else if (route.query.category) {
+        params.category = route.query.category as string;
+    }
+    
+    await fetchStates(Object.keys(params).length ? params : undefined);
 })
 
 const selectState = (state: State) => {
