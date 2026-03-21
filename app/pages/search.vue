@@ -28,7 +28,7 @@
                     <div v-if="sidebarSubcategories.length > 0" class="overflow-x-auto pb-2">
                         <div class="flex gap-2 min-w-max">
                             <a v-for="sub in sidebarSubcategories" :key="sub.id" href="#"
-                                @click.prevent="sub.active_ads_count > 0 ? navigateTo(`/search?subcategory=${sub.slug}`) : null"
+                                @click.prevent="handleSubcategoryClick(sub)"
                                 class="flex flex-col items-center w-24 space-y-2 group">
                                 <div class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border group-hover:border-blue-500 transition-colors"
                                     :class="route.query.subcategory === sub.slug ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
@@ -115,7 +115,7 @@
                             </div>
                             <div v-else-if="sidebarSubcategories.length > 0">
                                 <a v-for="sub in displayedSubcategories" :key="sub.id"
-                                    @click.prevent="sub.active_ads_count > 0 ? navigateTo(`/search?subcategory=${sub.slug}`) : null"
+                                    @click.prevent="handleSubcategoryClick(sub)"
                                     href="#" :class="[
                                         route.query.subcategory === sub.slug ? 'font-bold' : '',
                                         sub.active_ads_count === 0
@@ -379,6 +379,23 @@ const sidebarSubcategories = ref<any[]>([]); // Dynamic subcategories
 const sidebarCategoryName = ref('');
 const loadingSidebar = ref(false);
 const showAllSubcategories = ref(false);
+
+const handleSubcategoryClick = (sub: any) => {
+    // If there is no search query, and we are already on this subcategory, don't re-navigate
+    if (!route.query.query && route.query.subcategory === sub.slug) {
+        return;
+    }
+
+    if (sub.active_ads_count > 0) {
+        // Retain location context (state, lga), but remove the search query so they see all ads in this subcategory
+        const query: Record<string, any> = { ...route.query, subcategory: sub.slug };
+        delete query.query; // Remove user's specific search string
+        navigateTo({
+            path: '/search',
+            query
+        });
+    }
+};
 
 const displayedSubcategories = computed(() => {
     if (showAllSubcategories.value) {
