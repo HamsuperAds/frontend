@@ -232,9 +232,20 @@
                         <div class="flex justify-end pt-4">
                             <Button type="submit"
                                 class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2"
-                                :disabled="adFormHasError">
-                                Next
-                                <Icon name="lucide:arrow-right" class="h-5 w-5" />
+                                :disabled="adFormHasError || isSubmitting">
+                                <template v-if="subcategoryAttributes.length === 0 && !subcategoryAttributesLoading">
+                                    <Icon v-if="isSubmitting" name="svg-spinners:ring-resize" class="w-5 h-5" />
+                                    <span>Create Ad</span>
+                                    <svg v-if="!isSubmitting" class="w-5 h-5" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                </template>
+                                <template v-else>
+                                    <span>Next</span>
+                                    <Icon name="lucide:arrow-right" class="h-5 w-5" />
+                                </template>
                             </Button>
                         </div>
                     </form>
@@ -341,8 +352,8 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Create Ad - Hamsuper',
-  description: 'Post a new classified ad on Hamsuper to reach potential buyers.'
+    title: 'Create Ad - Hamsuper',
+    description: 'Post a new classified ad on Hamsuper to reach potential buyers.'
 })
 import { ref, computed, onMounted, watch } from 'vue';
 import { useCategories } from '~/composables/useCategories';
@@ -550,7 +561,11 @@ const clearForm = () => {
 }
 
 const goToNextStep = () => {
-    currentStep.value = 2
+    if (subcategoryAttributes.value.length === 0 && !subcategoryAttributesLoading.value) {
+        skipAndSubmit();
+    } else {
+        currentStep.value = 2;
+    }
 }
 
 // Submit state
