@@ -210,7 +210,9 @@ defineProps<{
 }>()
 
 import { useRoute } from '#app';
+import { useAppResourceInfoStore } from '~/stores/appResourceInfo';
 const route = useRoute();
+const appResourceInfoStore = useAppResourceInfoStore();
 const isVerifyPaymentPage = computed(() => route.path === '/verify-payment' || route.name === 'verify-payment');
 
 const isMenuOpen = ref(false)
@@ -275,13 +277,20 @@ watch(searchQuery, (newQuery) => {
         if (newQuery.length > 2) {
             loadingSuggestions.value = true;
             try {
+                const suggestionParams: Record<string, any> = { q: newQuery }
+                if (appResourceInfoStore.lga) {
+                    suggestionParams.lga_id = appResourceInfoStore.lga.id
+                } else if (appResourceInfoStore.state) {
+                    suggestionParams.state_id = appResourceInfoStore.state.id
+                }
+
                 const { data } = await useApi().fetchGet<{
                     success: boolean,
                     data: {
                         categories: any[]
                     }
                 }>('/ads/search-suggestions', {
-                    params: { q: newQuery },
+                    params: suggestionParams,
                     requiresAuth: false
                 })
 
