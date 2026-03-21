@@ -214,16 +214,33 @@
                     </div>
 
                     <!-- Loading State -->
-                    <div v-if="loading" class="space-y-4">
-                        <div v-for="i in 5" :key="i" class="bg-white rounded-lg shadow p-4 animate-pulse flex gap-4">
-                            <div class="w-32 h-32 bg-gray-200 rounded-lg shrink-0"></div>
-                            <div class="flex-1 space-y-3">
-                                <div class="flex justify-between">
-                                    <div class="h-6 bg-gray-200 rounded w-1/3"></div>
-                                    <div class="h-6 bg-gray-200 rounded w-20"></div>
+                    <div v-if="loading">
+                        <!-- Rows Skeleton -->
+                        <div v-if="viewMode === 'rows'" class="space-y-4">
+                            <div v-for="i in 8" :key="i" class="bg-white rounded-lg shadow p-4 animate-pulse flex gap-4">
+                                <div class="w-32 h-32 bg-gray-200 rounded-lg shrink-0"></div>
+                                <div class="flex-1 space-y-3 pt-2">
+                                    <div class="flex justify-between">
+                                        <div class="h-6 bg-gray-200 rounded w-1/3"></div>
+                                        <div class="h-6 bg-gray-200 rounded w-20"></div>
+                                    </div>
+                                    <div class="h-4 bg-gray-200 rounded w-full"></div>
+                                    <div class="h-4 bg-gray-200 rounded w-2/3"></div>
                                 </div>
-                                <div class="h-4 bg-gray-200 rounded w-full"></div>
-                                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+                            </div>
+                        </div>
+                        <!-- Grid Skeleton -->
+                        <div v-else class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div v-for="i in 9" :key="i" class="bg-white rounded-lg shadow-sm animate-pulse border border-gray-100">
+                                <div class="aspect-video bg-gray-200 rounded-t-lg"></div>
+                                <div class="p-4 space-y-3">
+                                    <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                                    <div class="flex justify-between mt-2 pt-2 border-t">
+                                        <div class="h-3 bg-gray-200 rounded w-1/3"></div>
+                                        <div class="h-3 bg-gray-200 rounded w-1/4"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -339,6 +356,10 @@ const hasNextPage = ref(false);
 const isSubcategorySearch = ref(false);
 const fetchResults = async () => {
     loading.value = true;
+    if (import.meta.client) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
     try {
         const queryParams: Record<string, any> = {};
 
