@@ -13,6 +13,9 @@ export const useStates = () => {
     const fetchStates = async (params?: { category?: string, subcategory?: string }) => {
         const isFiltered = !!(params && (params.category || params.subcategory));
         
+        // Prevent duplicate simultaneous fetches (e.g. from responsive mobile/desktop components mounting concurrently)
+        if (appResourceInfoStore.loading.states) return;
+        
         // Use cached global unfiltered states to avoid useless API calls
         if (!isFiltered && appResourceInfoStore.unfilteredStates && appResourceInfoStore.unfilteredStates.length > 0) {
             appResourceInfoStore.setStates(appResourceInfoStore.unfilteredStates);
