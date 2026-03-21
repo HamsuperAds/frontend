@@ -446,6 +446,7 @@ const handleSubcategoryClick = (sub: any) => {
         // Retain location context (state, lga), but remove the search query so they see all ads in this subcategory
         const query: Record<string, any> = { ...route.query, subcategory: sub.slug };
         delete query.query; // Remove user's specific search string
+        delete query.page; // Restart pagination tracking when switching subcategory
         navigateTo({
             path: '/search',
             query
