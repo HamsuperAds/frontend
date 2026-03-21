@@ -390,6 +390,10 @@ const displayedSubcategories = computed(() => {
 const fetchSidebarCategory = async (categoryId: number) => {
     loadingSidebar.value = true;
     try {
+        const queryParams: Record<string, string> = {};
+        if (route.query.state) queryParams.state = route.query.state as string;
+        if (route.query.lga) queryParams.lga = route.query.lga as string;
+
         const response = await useApi().fetchGet<{
             success: boolean,
             data: {
@@ -397,6 +401,7 @@ const fetchSidebarCategory = async (categoryId: number) => {
                 subcategories: any[]
             }
         }>(`/categories/${categoryId}`, {
+            params: queryParams,
             requiresAuth: false
         });
 

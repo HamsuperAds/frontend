@@ -57,6 +57,13 @@ definePageMeta({
 const appResourceInfoStore = useAppResourceInfoStore();
 const perPage = ref(18);
 
+/** Stable string key for the current location selection, used to validate the cache. */
+const currentLocationKey = () => {
+    if (appResourceInfoStore.lga) return `lga:${appResourceInfoStore.lga.slug}`
+    if (appResourceInfoStore.state) return `state:${appResourceInfoStore.state.slug}`
+    return ''
+}
+
 // Initial fetch configuration based on store state
 const getAdsConfig = () => {
     let endpoint = '/ads?per_page=' + perPage.value
@@ -119,6 +126,8 @@ const fetchAds = async () => {
 
         if (data) {
             adsData.value = data
+            // Save to store cache so back-navigation is instant
+            appResourceInfoStore.setHomepageAds(data.data?.data || [], currentLocationKey())
         }
     } catch (err) {
         console.error('Error fetching ads:', err)
@@ -128,15 +137,34 @@ const fetchAds = async () => {
     }
 }
 
+// Cache the initial server-fetched ads (first page load, no back-nav)
+// so the store is populated even before any onMounted or watch runs.
+if (adsData.value?.data?.data?.length) {
+    appResourceInfoStore.setHomepageAds(adsData.value.data.data, currentLocationKey())
+}
+
 watch(() => [appResourceInfoStore.state, appResourceInfoStore.lga], async () => {
     await fetchAds()
 }, { deep: true })
 
-// On mount (including back-navigation), re-fetch if a location is already set.
-// Nuxt restores the stale cached response on back-navigation, so the watch
-// won't fire (store state unchanged) — this corrects the displayed ads.
+// On mount (including back-navigation): use the store cache if valid,
+// otherwise re-fetch. This avoids an API call on every back-navigation.
 onMounted(() => {
-    if (appResourceInfoStore.state || appResourceInfoStore.lga) {
+    const cacheKey = currentLocationKey()
+    const cacheIsValid =
+        appResourceInfoStore.homepageAdsLocationKey === cacheKey &&
+        appResourceInfoStore.homepageAds.length > 0
+
+    if (cacheIsValid) {
+        // Patch the reactive adsData so the template renders from cache immediately
+        if (adsData.value) {
+            adsData.value.data = {
+                ...adsData.value.data,
+                data: appResourceInfoStore.homepageAds,
+            }
+        }
+    } else if (appResourceInfoStore.state || appResourceInfoStore.lga) {
+        // Location is set but no valid cache — fetch from API
         fetchAds()
     }
 })

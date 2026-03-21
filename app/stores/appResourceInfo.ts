@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import type { State, LGA, Category } from "~/types";
+import type { Ad } from "~/types";
 import type { PromotionPlan } from "~/types/promotionPlan";
 
 export const useAppResourceInfoStore = defineStore("appResourceInfoStore", {
@@ -12,6 +13,9 @@ export const useAppResourceInfoStore = defineStore("appResourceInfoStore", {
     promotionPlans: [] as PromotionPlan[],
     toastMessage: null as string | null,
     loading: reactive<Record<string, boolean>>({}),
+    // Homepage ads cache
+    homepageAds: [] as Ad[],
+    homepageAdsLocationKey: null as string | null, // e.g. "", "state:abia", "lga:udenu"
   }),
   getters: {},
   actions: {
@@ -24,6 +28,10 @@ export const useAppResourceInfoStore = defineStore("appResourceInfoStore", {
     },
     setCategories(categories: Category[]) {
         this.categories = categories;
+    },
+    setHomepageAds(ads: Ad[], locationKey: string) {
+        this.homepageAds = ads;
+        this.homepageAdsLocationKey = locationKey;
     },
     async fetchPromotionPlans() {
       this.loading.promotionPlans = true;
