@@ -160,8 +160,8 @@
                         <!-- Next Button -->
                         <div class="flex justify-end pt-4">
                             <Button type="submit"
-                                class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2"
-                                :disabled="isSubmitting">
+                                class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                :disabled="isSubmitting || (subcategoryAttributes.length === 0 && !subcategoryAttributesLoading && !hasChanges)">
                                 <template v-if="subcategoryAttributes.length === 0 && !subcategoryAttributesLoading">
                                     <Icon v-if="isSubmitting" name="svg-spinners:ring-resize" class="w-5 h-5" />
                                     <span>Update Ad</span>
