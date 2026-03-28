@@ -160,9 +160,16 @@
                         <!-- Next Button -->
                         <div class="flex justify-end pt-4">
                             <Button type="submit"
-                                class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2">
-                                Next
-                                <Icon name="lucide:arrow-right" class="h-5 w-5" />
+                                class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2"
+                                :disabled="isSubmitting">
+                                <template v-if="subcategoryAttributes.length === 0 && !subcategoryAttributesLoading">
+                                    <Icon v-if="isSubmitting" name="svg-spinners:ring-resize" class="w-5 h-5" />
+                                    <span>Update Ad</span>
+                                </template>
+                                <template v-else>
+                                    <span>Next</span>
+                                    <Icon name="lucide:arrow-right" class="h-5 w-5" />
+                                </template>
                             </Button>
                         </div>
                     </form>
@@ -462,7 +469,11 @@ const fetchSubcategoryAttributes = async (subcategoryId: string | number) => {
 }
 
 const goToNextStep = () => {
-    currentStep.value = 2
+    if (subcategoryAttributes.value.length === 0 && !subcategoryAttributesLoading.value) {
+        submitEdit(true)
+    } else {
+        currentStep.value = 2
+    }
 }
 
 const submitEdit = async (skipDetails = false) => {
