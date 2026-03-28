@@ -403,7 +403,7 @@ const adForm = ref<Record<string, any>>({
     price: '1000',
     negotiable: false,
     promotion_plan_id: '',
-    images: [],
+    images: [] as File[],
     primary_image_index: 0,
 });
 const adFormHasError = ref(true);

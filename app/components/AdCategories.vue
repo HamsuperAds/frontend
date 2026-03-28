@@ -44,7 +44,7 @@
             <div v-for="subcategory in targetCategory.subcategories" :key="subcategory.id"
               class="flex items-center justify-between rounded-md p-2 transition-colors"
               :class="subcategory.active_ads_count > 0 ? 'hover:bg-gray-50 cursor-pointer' : 'opacity-50 cursor-not-allowed'"
-              @click="subcategory.active_ads_count > 0 && navigateTo(`/search?subcategory=${subcategory.slug}`)">
+              @click="subcategory.active_ads_count > 0 && navigateTo(getSearchUrl(subcategory.slug))">
               <div class="flex items-center gap-2 flex-1 min-w-0">
                 <img :src="subcategory.image" :alt="subcategory.name" class="w-8 h-8 object-contain flex-shrink-0" />
                 <span class="text-sm truncate">{{ subcategory.name }}</span>
@@ -153,8 +153,18 @@ const closeMobileSubcategories = () => {
   }, 200)
 }
 
+const getSearchUrl = (subcategorySlug: string) => {
+  let url = `/search?subcategory=${subcategorySlug}`;
+  if (appResourceInfoStore.lga && appResourceInfoStore.lga.slug) {
+    url += `&lga=${appResourceInfoStore.lga.slug}`;
+  } else if (appResourceInfoStore.state && appResourceInfoStore.state.slug) {
+    url += `&state=${appResourceInfoStore.state.slug}`;
+  }
+  return url;
+}
+
 const handleMobileSubcategoryClick = (subcategory: any) => {
-  navigateTo(`/search?subcategory=${subcategory.slug}`)
+  navigateTo(getSearchUrl(subcategory.slug))
   closeMobileSubcategories()
 }
 
