@@ -109,7 +109,7 @@
                     </div>
 
                     <!-- Send OTP Button -->
-                    <button type="submit" :disabled="isLoading"
+                    <button type="submit" :disabled="isLoading || isSendOTPDisabled"
                         class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                         <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -161,7 +161,7 @@
                     </div>
 
                     <!-- Verify Button -->
-                    <button @click="handleVerifyOTP" :disabled="isLoading || verificationCode.join('').length < 5"
+                    <button @click="handleVerifyOTP" :disabled="isLoading || isVerifyOTPDisabled"
                         class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                         <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@
                     </div>
 
                     <!-- Reset Password Button -->
-                    <button type="submit" :disabled="isLoading"
+                    <button type="submit" :disabled="isLoading || isResetPasswordDisabled"
                         class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                         <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -257,7 +257,7 @@ useSeoMeta({
     description: 'Log in to your Hamsuper account to manage ads, messages, and more.'
 })
 import { definePageMeta } from '#imports';
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { toast } from 'vue-sonner';
 const { getSession } = useAuth();
 const { setToken } = useAuthState();
@@ -299,6 +299,15 @@ const errorMessage = ref('')
 const isSignInDisabled = computed(() => {
     const emailPattern = /^\S+@\S+\.\S+$/
     return !emailPattern.test(loginData.value.email.trim()) || loginData.value.password.length < 6
+})
+
+const isSendOTPDisabled = computed(() => resetEmail.value.trim().length === 0)
+const isVerifyOTPDisabled = computed(() => verificationCode.value.join('').length < 5)
+const isResetPasswordDisabled = computed(() => {
+    return (
+        newPasswordData.value.newPassword.length < 6 ||
+        newPasswordData.value.newPassword !== newPasswordData.value.confirmPassword
+    )
 })
 const RESEND_OTP_EXPIRES_KEY = 'forgotPasswordResendExpiresAt'
 
