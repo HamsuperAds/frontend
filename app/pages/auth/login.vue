@@ -53,7 +53,7 @@
                     </div>
 
                     <!-- Sign In Button -->
-                    <button type="submit" :disabled="isLoading"
+                    <button type="submit" :disabled="isLoading || isSignInDisabled"
                         class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                         <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -295,6 +295,11 @@ const isResending = ref(false)
 const resendCountdown = ref(0)
 let resendCountdownInterval: ReturnType<typeof setInterval> | null = null
 const errorMessage = ref('')
+
+const isSignInDisabled = computed(() => {
+    const emailPattern = /^\S+@\S+\.\S+$/
+    return !emailPattern.test(loginData.value.email.trim()) || loginData.value.password.length < 6
+})
 const RESEND_OTP_EXPIRES_KEY = 'forgotPasswordResendExpiresAt'
 
 const startResendCountdown = (seconds: number) => {
