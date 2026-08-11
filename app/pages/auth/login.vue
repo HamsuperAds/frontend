@@ -97,28 +97,30 @@
                 </div>
 
                 <form @submit.prevent="handleSendOTP" class="space-y-4">
+                    <div v-if="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p class="text-sm text-red-600">{{ errorMessage }}</p>
+                    </div>
                     <!-- Email -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <input v-model="resetEmail" type="email" placeholder="enter your email"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                            required />
+                            :disabled="isLoading" required />
                     </div>
 
                     <!-- Send OTP Button -->
-                    <button type="submit"
-                        class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6">
-                        Send OTP
+                    <button type="submit" :disabled="isLoading"
+                        class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ isLoading ? 'Sending OTP...' : 'Send OTP' }}
                     </button>
                 </form>
-
-                <!-- Resend Link -->
-                <div class="mt-4 text-center text-sm">
-                    <span class="text-gray-600">Didn't get token?</span>
-                    <button @click="handleResendOTP" class="text-blue-500 hover:text-blue-600 font-medium ml-1">
-                        Resend
-                    </button>
-                </div>
 
                 <!-- Back to Sign In -->
                 <div class="mt-4 text-center">
@@ -138,6 +140,10 @@
                 </div>
 
                 <div class="text-center mb-6">
+                    <div v-if="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                        <p class="text-sm text-red-600">{{ errorMessage }}</p>
+                    </div>
+
                     <p class="text-sm text-gray-600 mb-4">
                         Enter the verification code that was sent to<br />
                         your email ({{ resetEmail }})
@@ -146,7 +152,7 @@
                     <!-- Verification Code Inputs -->
                     <div class="flex justify-center gap-2 mb-6">
                         <input v-for="(digit, index) in verificationCode" :key="index"
-                            :ref="el => (codeInputs[index] = el)" v-model="verificationCode[index]" type="text"
+                            :ref="el => setCodeInput(index, el as HTMLInputElement | null)" v-model="verificationCode[index]" type="text"
                             maxlength="1"
                             class="w-12 h-12 text-center text-xl font-semibold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             @input="handleCodeInput(index, $event)"
@@ -154,16 +160,24 @@
                     </div>
 
                     <!-- Verify Button -->
-                    <button @click="handleVerifyOTP"
-                        class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors">
-                        Verify
+                    <button @click="handleVerifyOTP" :disabled="isLoading || verificationCode.join('').length < 5"
+                        class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ isLoading ? 'Verifying...' : 'Verify' }}
                     </button>
 
                     <!-- Resend Code -->
                     <div class="mt-4 text-sm text-gray-600">
                         <p>Didn't get the verification code? It may take a while.</p>
-                        <button @click="handleResendOTP" class="text-blue-500 hover:text-blue-600 font-medium mt-1">
-                            Resend Code
+                        <button @click="handleResendOTP" :disabled="isResending || resendCountdown > 0"
+                            class="text-blue-500 hover:text-blue-600 font-medium mt-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                            {{ isResending ? 'Resending code ...' : resendCountdown > 0 ? `Resend code in ${resendCountdown}s` : 'Resend Code' }}
                         </button>
                     </div>
                 </div>
@@ -216,9 +230,16 @@
                     </div>
 
                     <!-- Reset Password Button -->
-                    <button type="submit"
-                        class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6">
-                        Reset password
+                    <button type="submit" :disabled="isLoading"
+                        class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ isLoading ? 'Resetting...' : 'Reset password' }}
                     </button>
                 </form>
             </div>
@@ -255,6 +276,7 @@ const loginData = ref({
 })
 
 const resetEmail = ref('')
+const resetOtp = ref('')
 const verificationCode = ref(['', '', '', '', ''])
 const codeInputs = ref<(HTMLInputElement | null)[]>([])
 
@@ -264,9 +286,24 @@ const newPasswordData = ref({
 })
 
 const isLoading = ref(false)
+const isResending = ref(false)
+const resendCountdown = ref(0)
+let resendCountdownInterval: ReturnType<typeof setInterval> | null = null
 const errorMessage = ref('')
 
-
+const startResendCountdown = (seconds: number) => {
+    if (resendCountdownInterval) {
+        clearInterval(resendCountdownInterval)
+    }
+    resendCountdown.value = seconds
+    resendCountdownInterval = setInterval(() => {
+        resendCountdown.value -= 1
+        if (resendCountdown.value <= 0 && resendCountdownInterval) {
+            clearInterval(resendCountdownInterval)
+            resendCountdownInterval = null
+        }
+    }, 1000)
+}
 
 const handleSignIn = async () => {
     try {
@@ -293,7 +330,7 @@ const handleSignIn = async () => {
             setToken(response.data.token);
             await getSession();
             // Store token in localStorage
-            if (process.client) {
+            if (import.meta.client) {
                 localStorage.setItem('authToken', response.data.token)
                 localStorage.setItem('user', JSON.stringify(response.data))
             }
@@ -316,17 +353,68 @@ const handleSignIn = async () => {
     }
 }
 
-const handleSendOTP = () => {
-    // Here you would make an API call to send OTP
-    console.log('Sending OTP to:', resetEmail.value)
-    // Show OTP verification screen
-    showForgotPassword.value = false
-    showOTPVerification.value = true
+const handleSendOTP = async () => {
+    try {
+        isLoading.value = true
+        errorMessage.value = ''
+
+        const response = await useApi().fetchPost<{
+            status: string
+            message: string
+        }>('/auth/send-otp', {
+            email: resetEmail.value,
+            action: 'password_reset',
+        }, { requiresAuth: false })
+
+        if (response.status === 'success') {
+            showForgotPassword.value = false
+            showOTPVerification.value = true
+            showResetPassword.value = false
+            startResendCountdown(60)
+        }
+    } catch (error: any) {
+        console.error('Send OTP error:', error)
+        errorMessage.value =
+            error.data?.message ||
+            error.data?.errors?.email?.[0] ||
+            'Failed to send OTP. Please try again.'
+    } finally {
+        isLoading.value = false
+    }
 }
 
-const handleResendOTP = () => {
-    // Here you would make an API call to resend OTP
-    console.log('Resending OTP to:', resetEmail.value)
+const handleResendOTP = async () => {
+    if (resendCountdown.value > 0) return
+
+    try {
+        isResending.value = true
+        errorMessage.value = ''
+
+        const response = await useApi().fetchPost<{
+            status: string
+            message: string
+        }>('/auth/send-otp', {
+            email: resetEmail.value,
+            action: 'password_reset',
+        }, { requiresAuth: false })
+
+        if (response.status === 'success') {
+            toast.success(response.message || 'Verification code resent to your email.')
+            startResendCountdown(60)
+        }
+    } catch (error: any) {
+        console.error('Resend OTP error:', error)
+        errorMessage.value =
+            error.data?.message ||
+            error.data?.errors?.email?.[0] ||
+            'Failed to resend code. Please try again.'
+    } finally {
+        isResending.value = false
+    }
+}
+
+const setCodeInput = (index: number, el: HTMLInputElement | null) => {
+    codeInputs.value[index] = el
 }
 
 const handleCodeInput = (index: number, event: Event) => {
@@ -346,26 +434,83 @@ const handleBackspace = (index: number, event: KeyboardEvent) => {
     }
 }
 
-const handleVerifyOTP = () => {
+const handleVerifyOTP = async () => {
     const code = verificationCode.value.join('')
-    if (code.length === 5) {
-        // Here you would verify the code with your API
-        console.log('Verifying code:', code)
-        // On success, show reset password screen
-        showOTPVerification.value = false
-        showResetPassword.value = true
+    if (code.length < 5) {
+        errorMessage.value = 'Please enter the full verification code.'
+        return
+    }
+
+    try {
+        isLoading.value = true
+        errorMessage.value = ''
+
+        const response = await useApi().fetchPost<{
+            status: string
+            message: string
+        }>('/auth/verify-otp', {
+            email: resetEmail.value,
+            otp: code,
+            action: 'password_reset',
+        }, { requiresAuth: false })
+
+        if (response.status === 'success') {
+            resetOtp.value = code
+            showOTPVerification.value = false
+            showResetPassword.value = true
+        }
+    } catch (error: any) {
+        console.error('Verify OTP error:', error)
+        errorMessage.value =
+            error.data?.message ||
+            error.data?.errors?.otp?.[0] ||
+            'OTP verification failed. Please try again.'
+    } finally {
+        isLoading.value = false
     }
 }
 
-const handleResetPassword = () => {
+const handleResetPassword = async () => {
     if (newPasswordData.value.newPassword !== newPasswordData.value.confirmPassword) {
-        alert('Passwords do not match!')
+        errorMessage.value = 'Passwords do not match.'
         return
     }
-    // Here you would make an API call to reset the password
-    console.log('Resetting password')
-    // On success, redirect to login
-    showResetPassword.value = false
-    showForgotPassword.value = false
+
+    try {
+        isLoading.value = true
+        errorMessage.value = ''
+
+        const response = await useApi().fetchPost<{
+            status: string
+            message: string
+        }>('/auth/change-password', {
+            email: resetEmail.value,
+            otp: resetOtp.value,
+            new_password: newPasswordData.value.newPassword,
+        }, { requiresAuth: false })
+
+        if (response.status === 'success') {
+            loginData.value.email = resetEmail.value
+            loginData.value.password = ''
+            showResetPassword.value = false
+            showOTPVerification.value = false
+            showForgotPassword.value = false
+            toast.success(response.message || 'Password updated successfully. Please sign in.')
+        }
+    } catch (error: any) {
+        console.error('Reset password error:', error)
+        errorMessage.value =
+            error.data?.message ||
+            error.data?.errors?.new_password?.[0] ||
+            'Unable to reset password. Please try again.'
+    } finally {
+        isLoading.value = false
+    }
 }
+
+onBeforeUnmount(() => {
+    if (resendCountdownInterval) {
+        clearInterval(resendCountdownInterval)
+    }
+})
 </script>
