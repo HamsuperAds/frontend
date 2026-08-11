@@ -113,7 +113,8 @@
                         class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                         <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
                             <path class="opacity-75" fill="currentColor"
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                             </path>
@@ -152,8 +153,8 @@
                     <!-- Verification Code Inputs -->
                     <div class="flex justify-center gap-2 mb-6">
                         <input v-for="(digit, index) in verificationCode" :key="index"
-                            :ref="el => setCodeInput(index, el as HTMLInputElement | null)" v-model="verificationCode[index]" type="text"
-                            maxlength="1"
+                            :ref="el => setCodeInput(index, el as HTMLInputElement | null)"
+                            v-model="verificationCode[index]" type="text" maxlength="1"
                             class="w-12 h-12 text-center text-xl font-semibold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             @input="handleCodeInput(index, $event)"
                             @keydown.backspace="handleBackspace(index, $event)" />
@@ -164,7 +165,8 @@
                         class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                         <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
                             <path class="opacity-75" fill="currentColor"
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                             </path>
@@ -177,7 +179,8 @@
                         <p>Didn't get the verification code? It may take a while.</p>
                         <button @click="handleResendOTP" :disabled="isResending || resendCountdown > 0"
                             class="text-blue-500 hover:text-blue-600 font-medium mt-1 disabled:opacity-50 disabled:cursor-not-allowed">
-                            {{ isResending ? 'Resending code ...' : resendCountdown > 0 ? `Resend code in ${resendCountdown}s` : 'Resend Code' }}
+                            {{ isResending ? 'Resending code ...' : resendCountdown > 0 ? `Resend code in
+                            ${resendCountdown}s` : 'Resend Code' }}
                         </button>
                     </div>
                 </div>
@@ -234,7 +237,8 @@
                         class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                         <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
                             <path class="opacity-75" fill="currentColor"
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                             </path>
@@ -253,6 +257,7 @@ useSeoMeta({
     description: 'Log in to your Hamsuper account to manage ads, messages, and more.'
 })
 import { definePageMeta } from '#imports';
+import { onMounted } from 'vue';
 import { toast } from 'vue-sonner';
 const { getSession } = useAuth();
 const { setToken } = useAuthState();
@@ -290,17 +295,26 @@ const isResending = ref(false)
 const resendCountdown = ref(0)
 let resendCountdownInterval: ReturnType<typeof setInterval> | null = null
 const errorMessage = ref('')
+const RESEND_OTP_EXPIRES_KEY = 'forgotPasswordResendExpiresAt'
 
 const startResendCountdown = (seconds: number) => {
     if (resendCountdownInterval) {
         clearInterval(resendCountdownInterval)
     }
     resendCountdown.value = seconds
+    if (import.meta.client) {
+        const expiresAt = Date.now() + seconds * 1000
+        localStorage.setItem(RESEND_OTP_EXPIRES_KEY, expiresAt.toString())
+    }
+
     resendCountdownInterval = setInterval(() => {
         resendCountdown.value -= 1
         if (resendCountdown.value <= 0 && resendCountdownInterval) {
             clearInterval(resendCountdownInterval)
             resendCountdownInterval = null
+            if (import.meta.client) {
+                localStorage.removeItem(RESEND_OTP_EXPIRES_KEY)
+            }
         }
     }, 1000)
 }
@@ -367,6 +381,7 @@ const handleSendOTP = async () => {
         }, { requiresAuth: false })
 
         if (response.status === 'success') {
+            toast.success(response.message || 'OTP sent to your email.')
             showForgotPassword.value = false
             showOTPVerification.value = true
             showResetPassword.value = false
@@ -382,6 +397,26 @@ const handleSendOTP = async () => {
         isLoading.value = false
     }
 }
+
+onMounted(() => {
+    if (!import.meta.client) return
+
+    const storedExpiresAt = localStorage.getItem(RESEND_OTP_EXPIRES_KEY)
+    if (!storedExpiresAt) return
+
+    const expiresAt = Number(storedExpiresAt)
+    if (!expiresAt || Number.isNaN(expiresAt)) {
+        localStorage.removeItem(RESEND_OTP_EXPIRES_KEY)
+        return
+    }
+
+    const remainingMs = expiresAt - Date.now()
+    if (remainingMs > 0) {
+        startResendCountdown(Math.ceil(remainingMs / 1000))
+    } else {
+        localStorage.removeItem(RESEND_OTP_EXPIRES_KEY)
+    }
+})
 
 const handleResendOTP = async () => {
     if (resendCountdown.value > 0) return
