@@ -371,7 +371,7 @@
                                 </div>
                                 <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-100">
                                     <span class="font-bold text-gray-900 text-sm block">Right to Erasure ("To be Forgotten"):</span>
-                                    <span class="text-xs text-gray-600">Request complete deletion of your personal data using our in-app delete feature.</span>
+                                    <span class="text-xs text-gray-600">Request complete deletion of your personal data using our in-app delete feature or via our <NuxtLink to="/delete-my-account" class="text-blue-600 underline">public account deletion page</NuxtLink>.</span>
                                 </div>
                                 <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-100">
                                     <span class="font-bold text-gray-900 text-sm block">Notification Preferences:</span>
