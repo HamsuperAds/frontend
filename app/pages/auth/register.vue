@@ -224,7 +224,7 @@ const registerFormRules = ref<Record<string, any>>({
     phoneNumber: { type: 'tel' },
 });
 
-const checkAdForm = () => {
+const checkRegisterForm = () => {
     registerFormRules.value = validate(formData.value, registerFormRules.value);
     registerFormHasError.value = false;
     for (const field in registerFormRules.value) {
@@ -235,7 +235,7 @@ const checkAdForm = () => {
     }
 }
 watch(formData.value, () => {
-    checkAdForm()
+    checkRegisterForm()
 })
 
 
