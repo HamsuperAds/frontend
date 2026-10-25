@@ -46,6 +46,12 @@
                 <!-- Step 1: Main Form -->
                 <div v-else-if="currentStep === 1" class="p-6">
                     <form @submit.prevent="goToNextStep" class="space-y-4">
+                        <div v-if="submitError"
+                            class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+                            role="alert">
+                            {{ submitError }}
+                        </div>
+
                         <!-- Title -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
@@ -281,6 +287,12 @@
                     </div>
 
                     <form @submit.prevent="submitAd(false)" class="space-y-4">
+                        <div v-if="submitError"
+                            class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+                            role="alert">
+                            {{ submitError }}
+                        </div>
+
                         <!-- Loading State -->
                         <div v-if="subcategoryAttributesLoading" class="text-sm text-gray-500 py-4 text-center">
                             Loading attributes...
@@ -327,12 +339,6 @@
                                     :maxlength="attr.rules?.maxLength"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                             </div>
-                        </div>
-
-                        <!-- Error Message -->
-                        <div v-if="submitError"
-                            class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                            {{ submitError }}
                         </div>
 
                         <!-- Action Buttons -->
