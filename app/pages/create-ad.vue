@@ -510,15 +510,7 @@ const adFormRules = ref<Record<string, any>>({
 
 const checkAdForm = () => {
     adFormRules.value = validate(adForm.value, adFormRules.value);
-    adFormHasError.value = false;
-    for (const field in adFormRules.value) {
-        if (adFormRules.value[field]?.hasError || !adForm.value[field]) {
-            adFormHasError.value = true;
-            break;
-        }
-    }
     if (adForm.value.images.length == 0) {
-        adFormHasError.value = true;
         adFormRules.value.images = { hasError: true, message: 'Please select at least one image' };
     } else {
         adFormRules.value.images = {
@@ -527,10 +519,10 @@ const checkAdForm = () => {
                 ? 'Each image must be 2 MB or less and all images together must not exceed 7 MB'
                 : ''
         };
-        if (imageSizeInvalid.value) {
-            adFormHasError.value = true;
-        }
     }
+    adFormHasError.value = Object.keys(adFormRules.value).some(field =>
+        adFormRules.value[field]?.hasError || !adForm.value[field]
+    );
 }
 watch(adForm, () => {
     checkAdForm()
