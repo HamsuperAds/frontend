@@ -48,7 +48,7 @@
                     <form @submit.prevent="goToNextStep" class="space-y-4">
                         <div v-if="submitError"
                             class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
-                            role="alert">
+                            role="alert" ref="submitErrorElement">
                             {{ submitError }}
                         </div>
 
@@ -289,7 +289,7 @@
                     <form @submit.prevent="submitAd(false)" class="space-y-4">
                         <div v-if="submitError"
                             class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
-                            role="alert">
+                            role="alert" ref="submitErrorElement">
                             {{ submitError }}
                         </div>
 
@@ -377,7 +377,7 @@ useSeoMeta({
     title: 'Create Ad - Hamsuper',
     description: 'Post a new classified ad on Hamsuper to reach potential buyers.'
 })
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useCategories } from '~/composables/useCategories';
 import { useStates } from '~/composables/useStates';
 import type { PromotionPlan } from '~/types/promotionPlan';
@@ -387,7 +387,7 @@ import { toast } from 'vue-sonner';
 
 const BYTES_PER_MB = 1024 * 1024;
 const MAX_IMAGE_SIZE_BYTES = 2 * BYTES_PER_MB;
-const MAX_TOTAL_IMAGE_SIZE_BYTES = 8 * BYTES_PER_MB;
+const MAX_TOTAL_IMAGE_SIZE_BYTES = 7 * BYTES_PER_MB;
 
 const appResourceInfoStore = useAppResourceInfoStore();
 const currentStep = ref(1)
@@ -620,6 +620,12 @@ const goToNextStep = () => {
 const isSubmitting = ref(false);
 const isSkipSubmit = ref(false);
 const submitError = ref('');
+const submitErrorElement = ref<HTMLDivElement | null>(null);
+
+const scrollToSubmitError = async () => {
+    await nextTick();
+    submitErrorElement.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
 const skipAndSubmit = () => {
     isSkipSubmit.value = true;
@@ -629,6 +635,7 @@ const skipAndSubmit = () => {
 const submitAd = async (skipDetails = false) => {
     if (imageSizeInvalid.value) {
         submitError.value = 'Each image must be 2 MB or less and all images together must not exceed 7 MB.';
+        await scrollToSubmitError();
         return;
     }
     submitError.value = '';
@@ -705,6 +712,7 @@ const submitAd = async (skipDetails = false) => {
         // Handle error
         const errorMessage = error?.data?.message || error?.message || 'An error occurred while creating the ad. Please try again.';
         submitError.value = errorMessage;
+        await scrollToSubmitError();
         console.error('Error creating ad:', error);
     } finally {
         isSubmitting.value = false;
