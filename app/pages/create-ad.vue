@@ -161,10 +161,26 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Photos</label>
                             <p class="text-xs text-gray-500 mb-2">Note: the first image will be used as the primary
                                 image for the ad</p>
+                            <div class="mb-3 space-y-1">
+                                <div class="flex justify-between text-xs text-gray-600">
+                                    <span>Image storage used</span>
+                                    <span>
+                                        {{ imageSizePercentage.toFixed(0) }}%
+                                        ({{ (totalImageSize / BYTES_PER_MB).toFixed(2) }} MB / 7 MB)
+                                    </span>
+                                </div>
+                                <Progress :model-value="imageProgressValue" aria-label="Total image size used"
+                                    class="h-2" />
+                                <p v-if="totalImageSizeExceeded" class="text-sm text-red-600" role="alert">
+                                    The total size of all images must not exceed 7 MB.
+                                </p>
+                            </div>
                             <div id="adImages" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <!-- Image Previews -->
                                 <div v-for="(preview, index) in imagePreviews" :key="preview.id"
-                                    class="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
+                                    class="relative aspect-square rounded-lg overflow-hidden" :class="preview.file.size > MAX_IMAGE_SIZE_BYTES
+                                        ? 'border-2 border-red-500'
+                                        : 'border border-gray-200'">
                                     <img :src="preview.url" :alt="'Image ' + (index + 1)"
                                         class="w-full h-full object-cover" />
                                     <button type="button" @click="removeImage(index)"
@@ -321,13 +337,13 @@
 
                         <!-- Action Buttons -->
                         <div class="flex justify-between pt-4">
-                            <button type="button" @click="skipAndSubmit()" :disabled="isSubmitting"
+                            <button type="button" @click="skipAndSubmit()" :disabled="isSubmitting || imageSizeInvalid"
                                 class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                 <Icon v-if="isSubmitting && isSkipSubmit" name="svg-spinners:ring-resize"
                                     class="w-5 h-5" />
                                 Skip & Submit
                             </button>
-                            <button type="submit" :disabled="isSubmitting"
+                            <button type="submit" :disabled="isSubmitting || imageSizeInvalid"
                                 class="bg-blue-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                 <Icon v-if="isSubmitting && !isSkipSubmit" name="svg-spinners:ring-resize"
                                     class="w-5 h-5" />
@@ -360,7 +376,12 @@ import { useCategories } from '~/composables/useCategories';
 import { useStates } from '~/composables/useStates';
 import type { PromotionPlan } from '~/types/promotionPlan';
 import type { SubcategoryAttribute } from '~/types/subcategoryAttribute';
+import { Progress } from '~/components/ui/progress';
 import { toast } from 'vue-sonner';
+
+const BYTES_PER_MB = 1024 * 1024;
+const MAX_IMAGE_SIZE_BYTES = 2 * BYTES_PER_MB;
+const MAX_TOTAL_IMAGE_SIZE_BYTES = 8 * BYTES_PER_MB;
 
 const appResourceInfoStore = useAppResourceInfoStore();
 const currentStep = ref(1)
@@ -415,6 +436,19 @@ interface ImagePreview {
     file: File;
 }
 const imagePreviews = ref<ImagePreview[]>([]);
+const totalImageSize = computed(() => adForm.value.images.reduce(
+    (total: number, image: File) => total + image.size,
+    0
+));
+const imageSizePercentage = computed(() =>
+    (totalImageSize.value / MAX_TOTAL_IMAGE_SIZE_BYTES) * 100
+);
+const imageProgressValue = computed(() => Math.min(imageSizePercentage.value, 100));
+const imageSizeInvalid = computed(() =>
+    imagePreviews.value.some(preview => preview.file.size > MAX_IMAGE_SIZE_BYTES)
+    || totalImageSize.value > MAX_TOTAL_IMAGE_SIZE_BYTES
+);
+const totalImageSizeExceeded = computed(() => totalImageSize.value > MAX_TOTAL_IMAGE_SIZE_BYTES);
 
 const handleImageSelect = (event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -481,12 +515,20 @@ const checkAdForm = () => {
         adFormHasError.value = true;
         adFormRules.value.images = { hasError: true, message: 'Please select at least one image' };
     } else {
-        adFormRules.value.images = { hasError: false, message: '' };
+        adFormRules.value.images = {
+            hasError: imageSizeInvalid.value,
+            message: imageSizeInvalid.value
+                ? 'Each image must be 2 MB or less and all images together must not exceed 7 MB'
+                : ''
+        };
+        if (imageSizeInvalid.value) {
+            adFormHasError.value = true;
+        }
     }
 }
-watch(adForm.value, () => {
+watch(adForm, () => {
     checkAdForm()
-})
+}, { deep: true })
 
 // Subcategory attributes (dynamic additional info)
 const subcategoryAttributes = ref<SubcategoryAttribute[]>([]);
@@ -579,6 +621,10 @@ const skipAndSubmit = () => {
 }
 
 const submitAd = async (skipDetails = false) => {
+    if (imageSizeInvalid.value) {
+        submitError.value = 'Each image must be 2 MB or less and all images together must not exceed 7 MB.';
+        return;
+    }
     submitError.value = '';
     isSubmitting.value = true;
     if (!skipDetails) {
