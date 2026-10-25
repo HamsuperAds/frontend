@@ -244,6 +244,10 @@
                                         'free' : '₦' + Number(plan.price).toLocaleString() }})</span>
                                 </label>
                             </div>
+                            <span v-if="adFormHasError && adFormRules.promotion_plan_id.hasError"
+                                class="errorText block">
+                                {{ adFormRules.promotion_plan_id.message }}
+                            </span>
                             <button type="button" @click="showPricingDialog = true"
                                 class="text-sm text-blue-600 hover:underline mt-2">
                                 See pricing details
@@ -506,10 +510,15 @@ const adFormRules = ref<Record<string, any>>({
     lga_id: { min: 1, max: 774, customMessage: 'Please select an LGA' },
     price: { min: 5, max: 100000000 },
     place: { minLength: 3, maxLength: 100 },
+    promotion_plan_id: { hasError: true, message: 'Please select a promotion plan' },
 });
 
 const checkAdForm = () => {
     adFormRules.value = validate(adForm.value, adFormRules.value);
+    adFormRules.value.promotion_plan_id = {
+        hasError: !adForm.value.promotion_plan_id,
+        message: 'Please select a promotion plan'
+    };
     if (adForm.value.images.length == 0) {
         adFormRules.value.images = { hasError: true, message: 'Please select at least one image' };
     } else {
